@@ -1,0 +1,280 @@
+"""Filter funnel: PLUTO -> building class partition -> HPD join -> tier assignment.
+
+Outputs a list of per-BBL records with tier, confidence, reason_codes, blockers.
+"""
+
+import csv
+import json
+from datetime import date
+from pathlib import Path
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import (
+    DATA_RAW, DATA_PROCESSED, MIN_RESIDENTIAL_UNITS,
+    TIER_LEGAL_TRANSIENT, TIER_CLASS_B, TIER_PARTIAL,
+    TIER_UNKNOWN, TIER_EXCLUDED, TIER_PRIOR_OPERATOR,
+    CONFIDENCE_HIGH, CONFIDENCE_MEDIUM, CONFIDENCE_LOW,
+)
+
+TODAY = date.today().strftime("%Y%m%d")
+
+# Building classes that indicate direct hotel/transient use
+HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9",
+                 "HB", "HH", "HR", "HS", "RH"}
+
+# Mixed residential/commercial classes — the interesting middle
+MIXED_CLASSES = {"RM", "RR", "RC", "RD", "RK", "RI", "RW", "RS", "RX"}
+
+# 1-4 family: drop these (not the target building profile)
+SMALL_RESIDENTIAL = {"A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9",
+                     "B1", "B2", "B3", "B9"}
+
+
+def _normalize_bbl(raw_bbl: str) -> str:
+    """PLUTO BBLs come as floats like '1000010010.00000000'. Normalize to 10-digit str."""
+    return str(int(float(raw_bbl)))
+
+
+def _hpd_bbl(row: dict) -> str:
+    """Construct 10-digit BBL from HPD boroid/block/lot."""
+    return f"{row['boroid']}{int(row['block']):05d}{int(row['lot']):04d}"
+
+
+def load_pluto(path: Path = None) -> list[dict]:
+    if path is None:
+        path = DATA_RAW / f"pluto_{TODAY}.json"
+    return json.loads(path.read_text())
+
+
+def load_hpd(path: Path = None) -> list[dict]:
+    if path is None:
+        path = DATA_RAW / f"hpd_{TODAY}.json"
+    return json.loads(path.read_text())
+
+
+def load_prior_operators(path: Path = None) -> dict[str, dict]:
+    """Load prior-operator ground truth keyed by BBL."""
+    if path is None:
+        path = Path(__file__).parent.parent / "ground_truth.csv"
+    result = {}
+    with open(path) as f:
+        for row in csv.DictReader(f):
+            if row["label_type"] == "prior_operator" and row.get("bbl"):
+                result[row["bbl"]] = {
+                    "name": row["name"],
+                    "address": row["address"],
+                    "notes": row.get("notes", ""),
+                }
+    return result
+
+
+def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
+    pluto = load_pluto(pluto_path)
+    hpd = load_hpd(hpd_path)
+    prior_ops = load_prior_operators()
+
+    # --- Step 1: PLUTO filter ---
+    # Keep lots with buildings that have enough residential units OR are hotel-class
+    survivors = []
+    for row in pluto:
+        bbl = _normalize_bbl(row["bbl"])
+        bldgclass = (row.get("bldgclass") or "").strip().upper()
+        unitsres = int(float(row.get("unitsres") or 0))
+        numbldgs = int(float(row.get("numbldgs") or 0))
+
+        # Drop lots with no building
+        if numbldgs < 1:
+            continue
+
+        # Drop 1-4 family
+        if bldgclass in SMALL_RESIDENTIAL:
+            continue
+
+        # Keep if: hotel class, mixed class, meets unit minimum, or is a prior operator
+        is_hotel = bldgclass[:2] in {c[:2] for c in HOTEL_CLASSES} or bldgclass in HOTEL_CLASSES
+        is_mixed = bldgclass in MIXED_CLASSES
+        meets_units = unitsres >= MIN_RESIDENTIAL_UNITS
+        is_prior_op = bbl in prior_ops
+
+        if is_hotel or is_mixed or meets_units or is_prior_op:
+            row["_bbl"] = bbl
+            row["_bldgclass"] = bldgclass
+            row["_unitsres"] = unitsres
+            survivors.append(row)
+
+    print(f"PLUTO filter: {len(pluto)} -> {len(survivors)} survivors")
+
+    # --- Step 2: HPD join ---
+    # Build HPD lookup by BBL (some BBLs have multiple HPD records — take max classB)
+    hpd_by_bbl = {}
+    for row in hpd:
+        bbl = _hpd_bbl(row)
+        class_b = int(row.get("legalclassb") or 0)
+        class_a = int(row.get("legalclassa") or 0)
+        existing = hpd_by_bbl.get(bbl)
+        if existing is None or class_b > existing["legalclassb"]:
+            hpd_by_bbl[bbl] = {
+                "legalclassa": class_a,
+                "legalclassb": class_b,
+                "dobbuildingclass": row.get("dobbuildingclass", ""),
+                "legalstories": row.get("legalstories", ""),
+                "bin": row.get("bin", ""),
+            }
+
+    # --- Step 3: Tier assignment ---
+    results = []
+    seen_bbls = set()
+
+    for row in survivors:
+        bbl = row["_bbl"]
+        if bbl in seen_bbls:
+            continue
+        seen_bbls.add(bbl)
+
+        bldgclass = row["_bldgclass"]
+        unitsres = row["_unitsres"]
+        hpd_info = hpd_by_bbl.get(bbl, {})
+        class_b = hpd_info.get("legalclassb", 0)
+        class_a = hpd_info.get("legalclassa", 0)
+        is_prior_op = bbl in prior_ops
+
+        reason_codes = []
+        blockers = []
+
+        # Determine tier
+        is_hotel_class = bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H"
+        is_mixed_class = bldgclass in MIXED_CLASSES
+
+        if is_hotel_class and class_b > 0:
+            tier = TIER_LEGAL_TRANSIENT
+            confidence = CONFIDENCE_HIGH
+            reason_codes.append("bldg_class_hotel")
+            reason_codes.append("hpd_class_b")
+        elif class_b > 0 and is_hotel_class:
+            tier = TIER_LEGAL_TRANSIENT
+            confidence = CONFIDENCE_HIGH
+            reason_codes.append("hpd_class_b")
+            reason_codes.append("bldg_class_hotel")
+        elif class_b > 0 and class_a == 0:
+            # Pure Class B, no residential apartments — strong transient signal
+            tier = TIER_LEGAL_TRANSIENT
+            confidence = CONFIDENCE_HIGH
+            reason_codes.append("hpd_class_b_only")
+        elif class_b > 0 and class_a > 0:
+            # Mixed Class A + B — split-use building
+            tier = TIER_CLASS_B
+            confidence = CONFIDENCE_MEDIUM
+            reason_codes.append("hpd_class_b")
+            reason_codes.append("hpd_class_a_mixed")
+        elif is_hotel_class:
+            # Hotel building class but no HPD Class B data
+            tier = TIER_LEGAL_TRANSIENT
+            confidence = CONFIDENCE_MEDIUM
+            reason_codes.append("bldg_class_hotel")
+        elif is_mixed_class:
+            tier = TIER_PARTIAL
+            confidence = CONFIDENCE_LOW
+            reason_codes.append(f"bldg_class_{bldgclass}")
+        else:
+            tier = TIER_UNKNOWN
+            confidence = CONFIDENCE_LOW
+            reason_codes.append(f"bldg_class_{bldgclass}")
+
+        # Prior operator overlay (doesn't change eligibility tier)
+        prior_op_info = prior_ops.get(bbl)
+
+        # Reversion window overlay: hotel building class but currently
+        # residential-only in HPD (Class A > 0, Class B = 0).
+        # These buildings can revert to transient use before Dec 9, 2027
+        # under the Citywide Hotel Text Amendment (adopted Dec 9, 2021).
+        reversion_window = None
+        if is_hotel_class and class_a > 0 and class_b == 0:
+            reversion_window = {
+                "deadline": "2027-12-09",
+                "signal": "hotel_class_residential_only",
+                "class_a_units": class_a,
+                "note": f"Building class {bldgclass} (hotel) but HPD shows {class_a} Class A units and 0 Class B rooms — may have converted to residential. Can revert to hotel use without special permit before Dec 9, 2027.",
+            }
+            reason_codes.append("reversion_window")
+
+        record = {
+            "bbl": bbl,
+            "address": row.get("address", ""),
+            "bldgclass": bldgclass,
+            "unitsres": unitsres,
+            "unitstotal": int(float(row.get("unitstotal") or 0)),
+            "numfloors": float(row.get("numfloors") or 0),
+            "bldgarea": int(float(row.get("bldgarea") or 0)),
+            "comarea": int(float(row.get("comarea") or 0)),
+            "resarea": int(float(row.get("resarea") or 0)),
+            "lotarea": int(float(row.get("lotarea") or 0)),
+            "zonedist1": row.get("zonedist1", ""),
+            "ownername": row.get("ownername", ""),
+            "tier": tier,
+            "confidence": confidence,
+            "reason_codes": reason_codes,
+            "blockers": blockers,
+            "hpd_class_a": class_a,
+            "hpd_class_b": class_b,
+            "hpd_dob_class": hpd_info.get("dobbuildingclass", ""),
+            "hpd_stories": hpd_info.get("legalstories", ""),
+            "prior_operator": prior_op_info,
+            "reversion_window": reversion_window,
+            "source_pulled_on": TODAY,
+            "coo_evidence": None,  # socket for v2
+        }
+        results.append(record)
+
+    # Add prior operators that didn't survive the PLUTO filter
+    for bbl, op_info in prior_ops.items():
+        if bbl not in seen_bbls:
+            hpd_info = hpd_by_bbl.get(bbl, {})
+            results.append({
+                "bbl": bbl,
+                "address": op_info["address"],
+                "bldgclass": "",
+                "unitsres": 0,
+                "unitstotal": 0,
+                "numfloors": 0,
+                "bldgarea": 0,
+                "comarea": 0,
+                "resarea": 0,
+                "lotarea": 0,
+                "zonedist1": "",
+                "ownername": "",
+                "tier": TIER_PRIOR_OPERATOR,
+                "confidence": CONFIDENCE_LOW,
+                "reason_codes": ["prior_operator_only"],
+                "blockers": [],
+                "hpd_class_a": hpd_info.get("legalclassa", 0),
+                "hpd_class_b": hpd_info.get("legalclassb", 0),
+                "hpd_dob_class": hpd_info.get("dobbuildingclass", ""),
+                "hpd_stories": hpd_info.get("legalstories", ""),
+                "prior_operator": op_info,
+                "source_pulled_on": TODAY,
+                "coo_evidence": None,
+            })
+
+    # Summary
+    from collections import Counter
+    tier_counts = Counter(r["tier"] for r in results)
+    print(f"Pipeline output: {len(results)} buildings")
+    for tier, count in tier_counts.most_common():
+        print(f"  {tier}: {count}")
+
+    return results
+
+
+def save_pipeline_output(results: list[dict], path: Path = None) -> Path:
+    if path is None:
+        DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+        path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
+    path.write_text(json.dumps(results, indent=2, default=str))
+    print(f"Saved -> {path}")
+    return path
+
+
+if __name__ == "__main__":
+    results = run_pipeline()
+    save_pipeline_output(results)

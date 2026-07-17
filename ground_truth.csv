@@ -1,0 +1,16 @@
+label_type,name,address,expected_tier,notes,bbl,bin
+eligibility_positive,The Phillips Club,155 West 66th Street Manhattan NY,legal_transient,known hotel/residential split-use,1011387503,1028838
+eligibility_positive,Hotel Beacon,2130 Broadway Manhattan NY,legal_transient,hotel with residential above — canonical split-use,1011660035,1030727
+prior_operator,The Nash (Sonder),222 East 39th Street Manhattan NY,prior_operator,Sonder-operated aparthotel,1009190042,1020361
+prior_operator,One Platt (Sonder),116 John Street Manhattan NY,prior_operator,Sonder-operated,1000690032,1001126
+prior_operator,Chambers (Sonder),15 West 56th Street Manhattan NY,prior_operator,Sonder Chambers Hotel,1012720026,1084673
+prior_operator,Sonder Battery Park,2 Washington Street Manhattan NY,prior_operator,FiDi — marked closed Jul 2026,1000157501,1087080
+prior_operator,Sonder Wall Street / Stock Exchange,20 Broad Street Manhattan NY,prior_operator,FiDi near NYSE,1000230050,1000816
+prior_operator,Sonder Henri on 24,37 West 24th Street Manhattan NY,prior_operator,Flatiron district,1008260017,1084652
+prior_operator,Sonder Flatiron,9 West 26th Street Manhattan NY,prior_operator,NoMad / Flatiron,1008280025,1015645
+prior_operator,Placemakr Wall Street,110 Wall Street Manhattan NY,prior_operator,207-unit aparthotel FiDi — also prev WhyHotel,1000370008,1000872
+prior_operator,Mint House 70 Pine (Kasa),70 Pine Street Manhattan NY,prior_operator,67-story Art Deco — Kasa now operates,1000417504,1001007
+prior_operator,Kasa Lantern LES,120 Allen Street Manhattan NY,prior_operator,10-story 20 short-stay rooms Lower East Side,1004150077,1089952
+negative,Co-op Example - 1049 Fifth Avenue,1049 Fifth Avenue Manhattan NY,excluded,co-op building — should not appear in eligibility,1014977501,1046842
+negative,Prewar Walkup - 432 East 9th Street,432 East 9th Street Manhattan NY,excluded,rent-stabilized prewar walkup,1004360025,1005877
+negative,Luxury Rental - One Manhattan Square,252 South Street Manhattan NY,excluded,Class A luxury rental no transient history,1002487501,1089771
