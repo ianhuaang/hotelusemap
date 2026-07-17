@@ -1,8 +1,9 @@
-"""Pull HPD Buildings Subject to Jurisdiction for Manhattan."""
+"""Pull HPD Buildings Subject to Jurisdiction for Manhattan, Brooklyn, and Queens."""
 
 import json
 import ssl
 import time
+import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -22,7 +23,7 @@ COLUMNS = [
 ]
 
 
-def pull_hpd_manhattan() -> Path:
+def pull_hpd() -> Path:
     ctx = ssl.create_default_context(cafile=certifi.where())
     today = date.today().strftime("%Y%m%d")
     outfile = DATA_RAW / f"hpd_{today}.json"
@@ -34,16 +35,20 @@ def pull_hpd_manhattan() -> Path:
     DATA_RAW.mkdir(parents=True, exist_ok=True)
 
     select = ",".join(COLUMNS)
-    where = "boroid='1'"
+    # Manhattan (1) + Brooklyn (3) + Queens (4)
+    where = "boroid IN ('1', '3', '4')"
     all_rows = []
     offset = 0
 
     while True:
-        url = (
-            f"{SOCRATA_BASE_URL}/{HPD_BUILDINGS_DATASET_ID}.json"
-            f"?$select={select}&$where={where}"
-            f"&$limit={BATCH_SIZE}&$offset={offset}&$order=buildingid"
-        )
+        params = urllib.parse.urlencode({
+            "$select": select,
+            "$where": where,
+            "$limit": BATCH_SIZE,
+            "$offset": offset,
+            "$order": "buildingid",
+        })
+        url = f"{SOCRATA_BASE_URL}/{HPD_BUILDINGS_DATASET_ID}.json?{params}"
         req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
             batch = json.loads(resp.read())
@@ -62,4 +67,4 @@ def pull_hpd_manhattan() -> Path:
 
 
 if __name__ == "__main__":
-    pull_hpd_manhattan()
+    pull_hpd()

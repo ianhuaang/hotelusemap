@@ -17,8 +17,6 @@ const SIGNAL_TIERS = [
   },
 ];
 
-const TIER_RANK = Object.fromEntries(SIGNAL_TIERS.map((t) => [t.key, t.rank]));
-
 const PRIOR_OP = {
   key: "prior_operator", label: "Prior operator", color: "#a855f7",
   info: "Buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Shows operational viability but does not confirm legal transient capacity.",
@@ -31,9 +29,6 @@ const REVERSION = {
 
 const ALL_TIERS = [...SIGNAL_TIERS, PRIOR_OP, REVERSION];
 const TIER_COLORS = Object.fromEntries(ALL_TIERS.map((t) => [t.key, t.color]));
-
-const CONFIDENCE_LEVELS = ["high", "medium", "low"];
-const OPACITY_BY_CONFIDENCE = { high: 0.85, medium: 0.55, low: 0.3 };
 
 function tierColor(tier) {
   return TIER_COLORS[tier] || "#94a3b8";
@@ -58,10 +53,7 @@ function buildOpacityExpr() {
   ];
 }
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, minConfidence) {
-  const confIdx = CONFIDENCE_LEVELS.indexOf(minConfidence);
-  const allowedConf = CONFIDENCE_LEVELS.slice(0, confIdx + 1);
-
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -70,7 +62,6 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, minCo
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
   const reversionFilter = ["==", ["get", "has_reversion"], true];
 
-  // Build overlay conditions
   const overlayConditions = [];
   if (showPriorOps) overlayConditions.push(priorOpFilter);
   if (showReversion) overlayConditions.push(reversionFilter);
@@ -83,27 +74,102 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, minCo
     ? ["any", ...overlayConditions]
     : ["literal", false];
 
-  return [
+  const baseFilter = [
     "all",
     visibilityFilter,
     ["any",
       [">=", ["get", "unitsres"], minUnits],
       alwaysShowFilter,
     ],
-    ["any",
-      ["in", ["get", "confidence"], ["literal", allowedConf]],
-      alwaysShowFilter,
-    ],
   ];
+
+  if (filterTempCoo) {
+    return ["all", baseFilter, ["==", ["get", "coo_has_temporary"], true]];
+  }
+
+  return baseFilter;
 }
 
-function DetailPanel({ feature, onClose }) {
+// --- CSV export ---
+const CSV_COLUMNS = [
+  { key: "address", label: "Address" },
+  { key: "bbl", label: "BBL" },
+  { key: "tier", label: "Tier" },
+  { key: "confidence", label: "Confidence" },
+  { key: "bldgclass", label: "Building Class" },
+  { key: "unitsres", label: "Residential Units" },
+  { key: "unitstotal", label: "Total Units" },
+  { key: "numfloors", label: "Floors" },
+  { key: "hpd_class_a", label: "HPD Class A" },
+  { key: "hpd_class_b", label: "HPD Class B" },
+  { key: "zonedist1", label: "Zoning" },
+  { key: "ownername", label: "Owner" },
+  { key: "height_roof", label: "Roof Height (ft)" },
+  { key: "bin", label: "BIN" },
+  { key: "prior_operator_name", label: "Prior Operator" },
+  { key: "reversion_deadline", label: "Reversion Deadline" },
+  { key: "last_sale_date", label: "Last Sale Date" },
+  { key: "last_sale_price", label: "Last Sale Price" },
+  { key: "permit_count", label: "DOB Permits (3yr)" },
+  { key: "owner_portfolio_size", label: "Owner Portfolio Size" },
+  { key: "coo_count", label: "C of O Records" },
+  { key: "coo_latest_type", label: "Latest C of O Type" },
+  { key: "coo_dwelling_units", label: "C of O Dwelling Units" },
+  { key: "reason_codes", label: "Reason Codes" },
+];
+
+function parseJsonProp(val) {
+  if (typeof val === "string") {
+    try { return JSON.parse(val); } catch { return val; }
+  }
+  return val;
+}
+
+function exportToCsv(features) {
+  const escCsv = (v) => {
+    const s = String(v ?? "");
+    return s.includes(",") || s.includes('"') || s.includes("\n")
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+
+  const header = CSV_COLUMNS.map((c) => c.label).join(",");
+  const rows = features.map((f) => {
+    const p = f.properties;
+    const priorOp = parseJsonProp(p.prior_operator);
+    const reversion = parseJsonProp(p.reversion_window);
+    const reasons = parseJsonProp(p.reason_codes) || [];
+
+    const row = {
+      ...p,
+      numfloors: p.numfloors ? Math.round(p.numfloors) : "",
+      height_roof: p.height_roof ? Math.round(p.height_roof) : "",
+      prior_operator_name: priorOp?.name || "",
+      reversion_deadline: reversion?.deadline || "",
+      reason_codes: Array.isArray(reasons) ? reasons.join("; ") : reasons,
+    };
+    return CSV_COLUMNS.map((c) => escCsv(row[c.key])).join(",");
+  });
+
+  const csv = [header, ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `nyc_transient_export_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Components ---
+
+function DetailPanel({ feature, onClose, onAddToList, isInList }) {
   if (!feature) return null;
   const p = feature.properties;
-  const reasonCodes = typeof p.reason_codes === "string" ? JSON.parse(p.reason_codes) : p.reason_codes || [];
-  const blockers = typeof p.blockers === "string" ? JSON.parse(p.blockers) : p.blockers || [];
-  const priorOp = typeof p.prior_operator === "string" ? JSON.parse(p.prior_operator) : p.prior_operator;
-  const reversion = typeof p.reversion_window === "string" ? JSON.parse(p.reversion_window) : p.reversion_window;
+  const reasonCodes = parseJsonProp(p.reason_codes) || [];
+  const blockers = parseJsonProp(p.blockers) || [];
+  const priorOp = parseJsonProp(p.prior_operator);
+  const reversion = parseJsonProp(p.reversion_window);
 
   return (
     <div className="absolute top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
@@ -120,9 +186,17 @@ function DetailPanel({ feature, onClose }) {
           >
             {p.tier?.replace(/_/g, " ")}
           </span>
-          <span className="text-xs text-gray-500">
-            {p.confidence} confidence
-          </span>
+          <span className="text-xs text-gray-500">{p.confidence} confidence</span>
+          <button
+            onClick={() => onAddToList(feature)}
+            className={`ml-auto px-2.5 py-1 text-xs rounded-md cursor-pointer transition-colors ${
+              isInList
+                ? "bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600"
+                : "bg-gray-800 text-white hover:bg-gray-700"
+            }`}
+          >
+            {isInList ? "Remove from list" : "+ Add to list"}
+          </button>
         </div>
 
         {priorOp && (
@@ -159,9 +233,7 @@ function DetailPanel({ feature, onClose }) {
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Reason codes</div>
             <div className="flex flex-wrap gap-1">
               {reasonCodes.map((code) => (
-                <span key={code} className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">
-                  {code}
-                </span>
+                <span key={code} className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{code}</span>
               ))}
             </div>
           </div>
@@ -172,9 +244,7 @@ function DetailPanel({ feature, onClose }) {
             <div className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-1">Blockers</div>
             <div className="flex flex-wrap gap-1">
               {blockers.map((b) => (
-                <span key={b} className="bg-red-50 text-red-700 text-xs px-2 py-0.5 rounded">
-                  {b}
-                </span>
+                <span key={b} className="bg-red-50 text-red-700 text-xs px-2 py-0.5 rounded">{b}</span>
               ))}
             </div>
           </div>
@@ -187,12 +257,116 @@ function DetailPanel({ feature, onClose }) {
           </div>
         )}
 
+        {/* Owner + portfolio */}
         {p.ownername && (
           <div>
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Owner</div>
             <div className="text-sm text-gray-700">{p.ownername}</div>
+            {p.owner_portfolio_size > 1 && (
+              <div className="mt-1 text-[10px] text-blue-600 font-medium">
+                Owns {p.owner_portfolio_size} buildings in pipeline
+              </div>
+            )}
           </div>
         )}
+
+        {/* Last sale */}
+        {p.last_sale_date && (
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Last sale</div>
+            <div className="text-sm text-gray-700">
+              {p.last_sale_price > 0 ? `$${Number(p.last_sale_price).toLocaleString()}` : "Undisclosed"}{" "}
+              <span className="text-gray-400">on {p.last_sale_date}</span>
+            </div>
+            {p.sale_count > 1 && (
+              <div className="text-[10px] text-gray-400 mt-0.5">{p.sale_count} sales in last 10 years</div>
+            )}
+          </div>
+        )}
+
+        {/* DOB permits */}
+        {(() => {
+          const permits = parseJsonProp(p.permits) || [];
+          if (permits.length === 0) return null;
+          return (
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                DOB permits ({p.permit_count})
+              </div>
+              <div className="space-y-1.5">
+                {permits.slice(0, 3).map((permit, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded">
+                        {permit.job_type_label || permit.job_type}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{permit.action_date}</span>
+                      {permit.cost > 0 && (
+                        <span className="text-[10px] text-gray-400 ml-auto">${Number(permit.cost).toLocaleString()}</span>
+                      )}
+                    </div>
+                    {permit.description && (
+                      <div className="text-[11px] text-gray-600 mt-0.5 line-clamp-2">{permit.description}</div>
+                    )}
+                    <div className="text-[10px] text-gray-400 mt-0.5">{permit.status}</div>
+                  </div>
+                ))}
+                {permits.length > 3 && (
+                  <div className="text-[10px] text-gray-400">+ {permits.length - 3} more</div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* C of O history */}
+        {(() => {
+          const coos = parseJsonProp(p.coo_records) || [];
+          const hasTmp = p.coo_has_temporary;
+          if (p.coo_count === 0 && !hasTmp) return null;
+          return (
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Certificate of Occupancy ({p.coo_count})
+              </div>
+              {hasTmp && (
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-[11px] text-amber-700 font-medium">Has Temporary C of Os — strong transient signal</span>
+                </div>
+              )}
+              {p.coo_dwelling_units != null && (
+                <div className="text-[11px] text-gray-600 mb-1.5">
+                  C of O dwelling units: <span className="font-semibold">{p.coo_dwelling_units}</span>
+                  {p.unitsres > 0 && p.coo_dwelling_units !== p.unitsres && (
+                    <span className="text-amber-600 ml-1">(PLUTO says {p.unitsres})</span>
+                  )}
+                </div>
+              )}
+              <div className="space-y-1.5">
+                {coos.slice(0, 3).map((coo, i) => (
+                  <div key={i} className="bg-gray-50 rounded-lg p-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                        coo.co_type === "Temporary" ? "text-amber-700 bg-amber-100" : "text-gray-500 bg-gray-200"
+                      }`}>
+                        {coo.co_type || "—"}
+                      </span>
+                      <span className="text-[10px] text-gray-400">{coo.issue_date}</span>
+                      <span className="text-[10px] text-gray-500 ml-auto">{coo.job_type}</span>
+                    </div>
+                    {coo.dwelling_units && (
+                      <div className="text-[10px] text-gray-500 mt-0.5">{coo.dwelling_units} dwelling units</div>
+                    )}
+                  </div>
+                ))}
+                {p.coo_count > 3 && (
+                  <div className="text-[10px] text-gray-400">+ {p.coo_count - 3} more</div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="text-xs text-gray-400 space-y-0.5 pt-2 border-t border-gray-100">
           <div>BBL: {p.bbl}</div>
@@ -203,6 +377,76 @@ function DetailPanel({ feature, onClose }) {
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700">
           LL18 data pending — prohibited buildings list not yet integrated
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ListTray({ list, onRemove, onClear, onExpand, expanded }) {
+  const items = Array.from(list.values());
+  if (items.length === 0) return null;
+
+  if (!expanded) {
+    return (
+      <div className="absolute bottom-6 right-4 z-20">
+        <button
+          onClick={onExpand}
+          className="flex items-center gap-2.5 bg-gray-800 text-white pl-4 pr-3 py-2.5 rounded-lg shadow-xl cursor-pointer hover:bg-gray-700 transition-colors"
+        >
+          <span className="text-sm font-medium">Export list</span>
+          <span className="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">{items.length}</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute bottom-6 right-4 w-96 max-h-[60vh] bg-white rounded-xl shadow-2xl border border-gray-200 z-20 flex flex-col">
+      <div className="flex items-center justify-between p-3 border-b border-gray-100 shrink-0">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-gray-900">Export list</h3>
+          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">{items.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportToCsv(items)}
+            className="px-3 py-1.5 bg-gray-800 text-white text-xs rounded-md hover:bg-gray-700 cursor-pointer transition-colors font-medium"
+          >
+            Download CSV
+          </button>
+          <button
+            onClick={onClear}
+            className="px-2 py-1.5 text-xs text-gray-400 hover:text-red-500 cursor-pointer transition-colors"
+          >
+            Clear
+          </button>
+          <button onClick={onExpand} className="text-gray-400 hover:text-gray-600 text-lg leading-none cursor-pointer ml-1">&times;</button>
+        </div>
+      </div>
+      <div className="overflow-y-auto divide-y divide-gray-50 flex-1">
+        {items.map((f) => {
+          const p = f.properties;
+          const priorOp = parseJsonProp(p.prior_operator);
+          return (
+            <div key={p.bbl} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 group">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: tierColor(p.tier) }} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-gray-900 truncate">{p.address}</div>
+                <div className="text-[10px] text-gray-400">
+                  {p.unitsres} units &middot; {p.bldgclass || "—"}
+                  {priorOp ? ` · ${priorOp.name}` : ""}
+                  {p.has_reversion ? " · reversion" : ""}
+                </div>
+              </div>
+              <button
+                onClick={() => onRemove(p.bbl)}
+                className="text-gray-300 group-hover:text-red-400 text-sm cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -245,14 +489,20 @@ function InfoTip({ text }) {
   );
 }
 
-function FilterPanel({ tierThreshold, setTierThreshold, showPriorOps, setShowPriorOps, showReversion, setShowReversion, minUnits, setMinUnits, minConfidence, setMinConfidence, featureCount }) {
-  const thresholdTier = SIGNAL_TIERS[tierThreshold];
-
+function FilterPanel({
+  tierThreshold, setTierThreshold,
+  showPriorOps, setShowPriorOps,
+  showReversion, setShowReversion,
+  minUnits, setMinUnits,
+  filterTempCoo, setFilterTempCoo,
+  featureCount, overlayCounts,
+  onAddAllVisible, onAddCategory,
+}) {
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
         <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Capacity</h1>
-        <p className="text-[11px] text-gray-500 mt-0.5">Manhattan below 96th St &middot; v1 cheap signals</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">Manhattan &middot; Downtown BK &middot; Williamsburg &middot; LIC &middot; v1</p>
       </div>
 
       <div className="p-4 space-y-4">
@@ -289,7 +539,7 @@ function FilterPanel({ tierThreshold, setTierThreshold, showPriorOps, setShowPri
           </div>
         </div>
 
-        {/* Prior operator overlay toggle */}
+        {/* Overlay toggles */}
         <div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
             <input
@@ -313,7 +563,7 @@ function FilterPanel({ tierThreshold, setTierThreshold, showPriorOps, setShowPri
             </span>
             <div className="flex items-center">
               <span className="text-xs text-gray-700">Prior operators</span>
-              <span className="text-[10px] text-gray-400 ml-1">overlay</span>
+              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.priorOps})</span>
               <InfoTip text={PRIOR_OP.info} />
             </div>
           </label>
@@ -340,8 +590,38 @@ function FilterPanel({ tierThreshold, setTierThreshold, showPriorOps, setShowPri
             </span>
             <div className="flex items-center">
               <span className="text-xs text-gray-700">Reversion window</span>
-              <span className="text-[10px] text-gray-400 ml-1">overlay</span>
+              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.reversion})</span>
               <InfoTip text={REVERSION.info} />
+            </div>
+          </label>
+        </div>
+
+        {/* Temp C of O filter */}
+        <div>
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+            <input
+              type="checkbox"
+              checked={filterTempCoo}
+              onChange={(e) => setFilterTempCoo(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
+              style={{
+                borderColor: "#f59e0b",
+                backgroundColor: filterTempCoo ? "#f59e0b" : "transparent",
+              }}
+            >
+              {filterTempCoo && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <div className="flex items-center">
+              <span className="text-xs text-gray-700">Temporary C of O only</span>
+              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.tempCoo})</span>
+              <InfoTip text="Show only buildings with Temporary Certificates of Occupancy — a strong signal of active transient/hotel operations. These buildings renew their temp CO every 90 days." />
             </div>
           </label>
         </div>
@@ -362,28 +642,30 @@ function FilterPanel({ tierThreshold, setTierThreshold, showPriorOps, setShowPri
           />
         </div>
 
-        {/* Confidence floor */}
-        <div>
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Min confidence</div>
-          <div className="flex gap-1">
-            {CONFIDENCE_LEVELS.map((level) => (
-              <button
-                key={level}
-                onClick={() => setMinConfidence(level)}
-                className={`flex-1 text-xs py-1 rounded cursor-pointer transition-colors ${
-                  minConfidence === level
-                    ? "bg-gray-800 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {level}
-              </button>
-            ))}
+        {/* Add to list actions */}
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add to export list</div>
+          <button
+            onClick={onAddAllVisible}
+            className="w-full px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors text-left"
+          >
+            + All visible buildings
+            <span className="text-gray-400 ml-1">({featureCount})</span>
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onAddCategory("has_prior_op")}
+              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 cursor-pointer transition-colors"
+            >
+              + Prior operators
+            </button>
+            <button
+              onClick={() => onAddCategory("has_reversion")}
+              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 cursor-pointer transition-colors"
+            >
+              + Reversion window
+            </button>
           </div>
-        </div>
-
-        <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
-          {featureCount.toLocaleString()} buildings shown
         </div>
       </div>
     </div>
@@ -477,14 +759,103 @@ function Legend() {
 export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
-  const [selectedFeature, setSelectedFeature] = useState(null);
-  const [tierThreshold, setTierThreshold] = useState(1); // Default: show legal_transient + class_b
+  const allFeaturesRef = useRef([]);
+  const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
+  const [exportList, setExportList] = useState(new Map()); // bbl -> feature
+  const [listExpanded, setListExpanded] = useState(false);
+  const [tierThreshold, setTierThreshold] = useState(1);
   const [showPriorOps, setShowPriorOps] = useState(true);
   const [showReversion, setShowReversion] = useState(true);
   const [minUnits, setMinUnits] = useState(0);
-  const [minConfidence, setMinConfidence] = useState("low");
+  const [filterTempCoo, setFilterTempCoo] = useState(false);
   const [featureCount, setFeatureCount] = useState(0);
+  const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
 
+  // Load GeoJSON for overlay counts + bulk select
+  useEffect(() => {
+    fetch("/buildings.geojson")
+      .then((r) => r.json())
+      .then((data) => {
+        const feats = data.features || [];
+        allFeaturesRef.current = feats;
+        setOverlayCounts({
+          priorOps: feats.filter((f) => f.properties.has_prior_op).length,
+          reversion: feats.filter((f) => f.properties.has_reversion).length,
+          tempCoo: feats.filter((f) => f.properties.coo_has_temporary).length,
+        });
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleAddToList = useCallback((feature) => {
+    setExportList((prev) => {
+      const next = new Map(prev);
+      const bbl = feature.properties.bbl;
+      if (next.has(bbl)) {
+        next.delete(bbl);
+      } else {
+        next.set(bbl, feature);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleRemoveFromList = useCallback((bbl) => {
+    setExportList((prev) => {
+      const next = new Map(prev);
+      next.delete(bbl);
+      return next;
+    });
+  }, []);
+
+  const handleAddCategory = useCallback((propKey) => {
+    setExportList((prev) => {
+      const next = new Map(prev);
+      for (const f of allFeaturesRef.current) {
+        if (f.properties[propKey]) {
+          next.set(f.properties.bbl, f);
+        }
+      }
+      return next;
+    });
+    setListExpanded(true);
+  }, []);
+
+  const handleAddAllVisible = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const features = map.queryRenderedFeatures({ layers: ["buildings-fill"] });
+    setExportList((prev) => {
+      const next = new Map(prev);
+      const seen = new Set();
+      for (const f of features) {
+        const bbl = f.properties.bbl;
+        if (!seen.has(bbl)) {
+          seen.add(bbl);
+          next.set(bbl, f);
+        }
+      }
+      return next;
+    });
+    setListExpanded(true);
+  }, []);
+
+  const handleClearList = useCallback(() => {
+    setExportList(new Map());
+    setListExpanded(false);
+  }, []);
+
+  // Update selection highlight on map
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getSource("buildings")) return;
+    map.removeFeatureState({ source: "buildings" });
+    for (const bbl of exportList.keys()) {
+      map.setFeatureState({ source: "buildings", id: bbl }, { selected: true });
+    }
+  }, [exportList]);
+
+  // Map init
   useEffect(() => {
     const map = new maplibregl.Map({
       container: mapContainer.current,
@@ -503,8 +874,8 @@ export default function App() {
         },
         layers: [{ id: "carto-light", type: "raster", source: "carto-light" }],
       },
-      center: [-73.985, 40.748],
-      zoom: 13,
+      center: [-73.97, 40.72],
+      zoom: 12,
       minZoom: 11,
       maxZoom: 19,
     });
@@ -534,17 +905,24 @@ export default function App() {
         source: "buildings",
         paint: {
           "line-color": buildColorExpr(),
-          "line-width": [
-            "interpolate", ["linear"], ["zoom"],
-            13, 0.3,
-            16, 1,
-            18, 2,
-          ],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 16, 1, 18, 2],
           "line-opacity": 0.6,
         },
       });
 
-      // Reversion window highlight outline — thick rose border on qualifying buildings
+      // Selection highlight — black outline on buildings in export list
+      map.addLayer({
+        id: "selection-outline",
+        type: "line",
+        source: "buildings",
+        paint: {
+          "line-color": "#000",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2, 16, 3.5, 18, 5],
+          "line-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0],
+        },
+      });
+
+      // Reversion window highlight outline
       map.addLayer({
         id: "reversion-outline",
         type: "line",
@@ -552,17 +930,12 @@ export default function App() {
         filter: ["==", ["get", "has_reversion"], true],
         paint: {
           "line-color": REVERSION.color,
-          "line-width": [
-            "interpolate", ["linear"], ["zoom"],
-            13, 2.5,
-            16, 4,
-            18, 6,
-          ],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2.5, 16, 4, 18, 6],
           "line-opacity": 0.9,
         },
       });
 
-      // Prior operator highlight outline — purple border
+      // Prior operator highlight outline
       map.addLayer({
         id: "prior-op-outline",
         type: "line",
@@ -570,50 +943,13 @@ export default function App() {
         filter: ["==", ["get", "has_prior_op"], true],
         paint: {
           "line-color": PRIOR_OP.color,
-          "line-width": [
-            "interpolate", ["linear"], ["zoom"],
-            13, 2.5,
-            16, 4,
-            18, 6,
-          ],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2.5, 16, 4, 18, 6],
           "line-opacity": 0.9,
         },
       });
 
-      // Point markers for overlays — visible at low zoom where footprints are tiny
-      map.addSource("buildings-points", {
-        type: "geojson",
-        data: "/buildings.geojson",
-        promoteId: "bbl",
-      });
 
-      map.addLayer({
-        id: "prior-op-circle",
-        type: "circle",
-        source: "buildings-points",
-        filter: ["==", ["get", "has_prior_op"], true],
-        paint: {
-          "circle-color": PRIOR_OP.color,
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 4, 14, 7, 17, 3],
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 1.5,
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 15, 0.9, 17, 0],
-        },
-      });
 
-      map.addLayer({
-        id: "reversion-circle",
-        type: "circle",
-        source: "buildings-points",
-        filter: ["==", ["get", "has_reversion"], true],
-        paint: {
-          "circle-color": REVERSION.color,
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, 3, 14, 5, 17, 2],
-          "circle-stroke-color": "#fff",
-          "circle-stroke-width": 1,
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 15, 0.8, 17, 0],
-        },
-      });
 
       map.on("mousemove", "buildings-fill", () => {
         map.getCanvas().style.cursor = "pointer";
@@ -624,7 +960,7 @@ export default function App() {
 
       map.on("click", "buildings-fill", (e) => {
         if (e.features?.length) {
-          setSelectedFeature(e.features[0]);
+          setInspectedFeature(e.features[0]);
         }
       });
 
@@ -642,19 +978,19 @@ export default function App() {
     return () => map.remove();
   }, []);
 
+  // Filter update
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, minConfidence);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
 
-    // Toggle overlay layers (outlines + circle markers)
-    for (const id of ["reversion-outline", "reversion-circle"]) {
+    for (const id of ["reversion-outline"]) {
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showReversion ? "visible" : "none");
     }
-    for (const id of ["prior-op-outline", "prior-op-circle"]) {
+    for (const id of ["prior-op-outline"]) {
       if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showPriorOps ? "visible" : "none");
     }
 
@@ -663,7 +999,7 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, minConfidence]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo]);
 
   return (
     <div className="relative w-full h-full">
@@ -678,16 +1014,29 @@ export default function App() {
         setShowReversion={setShowReversion}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
-        minConfidence={minConfidence}
-        setMinConfidence={setMinConfidence}
+        filterTempCoo={filterTempCoo}
+        setFilterTempCoo={setFilterTempCoo}
         featureCount={featureCount}
+        overlayCounts={overlayCounts}
+        onAddAllVisible={handleAddAllVisible}
+        onAddCategory={handleAddCategory}
       />
 
       <SearchBar mapRef={mapRef} />
 
       <DetailPanel
-        feature={selectedFeature}
-        onClose={() => setSelectedFeature(null)}
+        feature={inspectedFeature}
+        onClose={() => setInspectedFeature(null)}
+        onAddToList={handleAddToList}
+        isInList={inspectedFeature ? exportList.has(inspectedFeature.properties.bbl) : false}
+      />
+
+      <ListTray
+        list={exportList}
+        onRemove={handleRemoveFromList}
+        onClear={handleClearList}
+        onExpand={() => setListExpanded(!listExpanded)}
+        expanded={listExpanded}
       />
 
       <Legend />

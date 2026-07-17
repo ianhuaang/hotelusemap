@@ -15,6 +15,7 @@ from config import (
     TIER_LEGAL_TRANSIENT, TIER_CLASS_B, TIER_PARTIAL,
     TIER_UNKNOWN, TIER_EXCLUDED, TIER_PRIOR_OPERATOR,
     CONFIDENCE_HIGH, CONFIDENCE_MEDIUM, CONFIDENCE_LOW,
+    TARGET_CDS,
 )
 
 TODAY = date.today().strftime("%Y%m%d")
@@ -82,6 +83,12 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         bldgclass = (row.get("bldgclass") or "").strip().upper()
         unitsres = int(float(row.get("unitsres") or 0))
         numbldgs = int(float(row.get("numbldgs") or 0))
+        borough = (row.get("borough") or "").strip().upper()
+        cd = str(row.get("cd") or "").strip()
+
+        # For BK/QN, only keep target community districts
+        if borough in ("BK", "QN") and cd not in TARGET_CDS:
+            continue
 
         # Drop lots with no building
         if numbldgs < 1:

@@ -100,7 +100,33 @@ def build_geojson(
             "construction_year": fp.get("construction_year"),
             "bin": fp.get("bin", ""),
             "source_pulled_on": record["source_pulled_on"],
+            "last_sale_date": record.get("last_sale_date"),
+            "last_sale_price": record.get("last_sale_price"),
+            "sale_count": record.get("sale_count", 0),
+            "permit_count": record.get("permit_count", 0),
+            "owner_portfolio_size": record.get("owner_portfolio_size", 0),
+            "coo_count": record.get("coo_count", 0),
+            "coo_latest_date": record.get("coo_latest_date"),
+            "coo_latest_type": record.get("coo_latest_type"),
+            "coo_has_temporary": record.get("coo_has_temporary", False),
+            "coo_dwelling_units": record.get("coo_dwelling_units"),
         }
+
+        # Include top 3 permits (trimmed to save space)
+        permits = record.get("permits", [])
+        if permits:
+            properties["permits"] = [
+                {k: p[k] for k in ("job_type_label", "description", "action_date", "cost", "status") if p.get(k)}
+                for p in permits[:3]
+            ]
+
+        # Include top 3 C of O records
+        coos = record.get("coo_records", [])
+        if coos:
+            properties["coo_records"] = [
+                {k: c[k] for k in ("issue_date", "job_type", "co_type", "dwelling_units") if c.get(k)}
+                for c in coos[:3]
+            ]
 
         if record.get("prior_operator"):
             properties["prior_operator"] = record["prior_operator"]

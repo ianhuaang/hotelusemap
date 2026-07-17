@@ -12,6 +12,10 @@ CACHE_DIR = PROJECT_ROOT / "cache"
 PLUTO_DATASET_ID = "64uk-42ks"
 BUILDING_FOOTPRINTS_DATASET_ID = "5zhs-2jue"
 HPD_BUILDINGS_DATASET_ID = "kj4p-ruqc"
+DOF_SALES_DATASET_ID = "w2pb-icbu"
+DOB_FILINGS_DATASET_ID = "ic3t-wcy2"
+COO_LEGACY_DATASET_ID = "bs8b-p36w"   # DOB BIS C of O (2012–Mar 2021)
+COO_NOW_DATASET_ID = "pkdm-hqz6"      # DOB NOW C of O (Mar 2021+)
 
 SOCRATA_BASE_URL = "https://data.cityofnewyork.us/resource"
 
@@ -20,6 +24,14 @@ GEOSEARCH_URL = "https://geosearch.planninglabs.nyc/v2/search"
 
 # Pipeline thresholds — deliberately low; tighten later
 MIN_RESIDENTIAL_UNITS = 20
+
+# Target community districts outside Manhattan (borough digit + 2-digit CD)
+# Manhattan: all CDs included (no CD filter)
+# Brooklyn: 301=Williamsburg/Greenpoint, 302=Downtown BK/DUMBO/Heights, 306=Park Slope/Gowanus
+# Queens: 401=LIC/Astoria
+TARGET_CDS_BK = {"301", "302", "306"}
+TARGET_CDS_QN = {"401"}
+TARGET_CDS = TARGET_CDS_BK | TARGET_CDS_QN
 
 # Borough codes (PLUTO uses text, HPD uses numeric)
 BOROUGH_TEXT_TO_NUM = {"MN": "1", "BX": "2", "BK": "3", "QN": "4", "SI": "5"}

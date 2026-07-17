@@ -1,8 +1,12 @@
-"""Pull PLUTO data for Manhattan from NYC Open Data. Immutable, date-stamped output."""
+"""Pull PLUTO data for target areas from NYC Open Data. Immutable, date-stamped output.
+
+Pulls all of Manhattan + specific community districts in Brooklyn and Queens.
+"""
 
 import json
 import ssl
 import time
+import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
@@ -11,7 +15,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL, PLUTO_DATASET_ID
+from config import DATA_RAW, SOCRATA_BASE_URL, PLUTO_DATASET_ID, TARGET_CDS
 
 BATCH_SIZE = 5000
 COLUMNS = [
@@ -21,7 +25,7 @@ COLUMNS = [
 ]
 
 
-def pull_pluto_manhattan() -> Path:
+def pull_pluto() -> Path:
     ctx = ssl.create_default_context(cafile=certifi.where())
     today = date.today().strftime("%Y%m%d")
     outfile = DATA_RAW / f"pluto_{today}.json"
@@ -33,16 +37,21 @@ def pull_pluto_manhattan() -> Path:
     DATA_RAW.mkdir(parents=True, exist_ok=True)
 
     select = ",".join(COLUMNS)
-    where = "borough='MN'"
+    # All of Manhattan + target CDs in Brooklyn/Queens
+    cd_list = ",".join(f"'{cd}'" for cd in sorted(TARGET_CDS))
+    where = f"borough='MN' OR cd IN ({cd_list})"
     all_rows = []
     offset = 0
 
     while True:
-        url = (
-            f"{SOCRATA_BASE_URL}/{PLUTO_DATASET_ID}.json"
-            f"?$select={select}&$where={where}"
-            f"&$limit={BATCH_SIZE}&$offset={offset}&$order=bbl"
-        )
+        params = urllib.parse.urlencode({
+            "$select": select,
+            "$where": where,
+            "$limit": BATCH_SIZE,
+            "$offset": offset,
+            "$order": "bbl",
+        })
+        url = f"{SOCRATA_BASE_URL}/{PLUTO_DATASET_ID}.json?{params}"
         req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
         with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
             batch = json.loads(resp.read())
@@ -61,4 +70,4 @@ def pull_pluto_manhattan() -> Path:
 
 
 if __name__ == "__main__":
-    pull_pluto_manhattan()
+    pull_pluto()
