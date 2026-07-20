@@ -586,12 +586,14 @@ function FilterPanel({
   minUnits, setMinUnits,
   featureCount, overlayCounts,
   onAddAllVisible, onAddCategory,
+  dataDate,
 }) {
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
         <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Capacity</h1>
-        <p className="text-[11px] text-gray-500 mt-0.5">Manhattan &middot; Downtown BK &middot; Williamsburg &middot; LIC &middot; v1</p>
+        <p className="text-[11px] text-gray-500 mt-0.5">Manhattan &middot; Downtown BK &middot; Williamsburg &middot; LIC</p>
+        {dataDate && <p className="text-[10px] text-gray-400 mt-0.5">Data as of {dataDate}</p>}
       </div>
 
       <div className="p-4 space-y-4">
@@ -1078,6 +1080,7 @@ export default function App() {
   const [activeView, setActiveView] = useState("map"); // "map" | "table"
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
+  const [dataDate, setDataDate] = useState(null);
 
   // Load GeoJSON for overlay counts + bulk select
   useEffect(() => {
@@ -1091,6 +1094,12 @@ export default function App() {
           reversion: feats.filter((f) => f.properties.has_reversion).length,
           tempCoo: feats.filter((f) => f.properties.coo_has_temporary).length,
         });
+        // Extract data date from first feature's source_pulled_on (YYYYMMDD)
+        const raw = feats[0]?.properties?.source_pulled_on || "";
+        if (raw.length === 8) {
+          const d = new Date(`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`);
+          setDataDate(d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }));
+        }
       })
       .catch(() => {});
   }, []);
@@ -1388,6 +1397,7 @@ export default function App() {
           : handleAddAllVisible
         }
         onAddCategory={handleAddCategory}
+        dataDate={dataDate}
       />
 
       {activeView === "map" && <SearchBar mapRef={mapRef} />}
