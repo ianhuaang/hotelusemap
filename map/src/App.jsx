@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import maplibregl from "maplibre-gl";
 
 // Ordered best → weakest. Prior operator is an overlay, not part of the hierarchy.
@@ -53,7 +53,7 @@ function buildOpacityExpr() {
   ];
 }
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo) {
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -74,8 +74,7 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ? ["any", ...overlayConditions]
     : ["literal", false];
 
-  const baseFilter = [
-    "all",
+  const conditions = [
     visibilityFilter,
     ["any",
       [">=", ["get", "unitsres"], minUnits],
@@ -83,11 +82,26 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ],
   ];
 
-  if (filterTempCoo) {
-    return ["all", baseFilter, ["==", ["get", "coo_has_temporary"], true]];
+  if (filters.filterTempCoo) {
+    conditions.push(["==", ["get", "coo_has_temporary"], true]);
+  }
+  if (filters.filterHasClassB) {
+    conditions.push([">", ["get", "hpd_class_b"], 0]);
+  }
+  if (filters.filterMultiOwner) {
+    conditions.push([">", ["get", "owner_portfolio_size"], 1]);
+  }
+  if (filters.filterRecentSale) {
+    conditions.push([">=", ["get", "last_sale_date"], filters._recentSaleCutoff]);
+  }
+  if (filters.filterCommercialZone) {
+    conditions.push(["any",
+      ["==", ["slice", ["get", "zonedist1"], 0, 1], "C"],
+      ["==", ["slice", ["get", "zonedist1"], 0, 1], "M"],
+    ]);
   }
 
-  return baseFilter;
+  return ["all", ...conditions];
 }
 
 // --- CSV export ---
@@ -163,7 +177,78 @@ function exportToCsv(features) {
 
 // --- Components ---
 
+function LL18Modal({ onClose, address }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h2 className="text-base font-bold text-gray-900">LL18 Prohibited Buildings Check</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
+        </div>
+        <div className="p-5 space-y-4 text-sm text-gray-700">
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What is Local Law 18?</div>
+            <p>
+              Local Law 18 (2022) requires all short-term rental hosts in NYC to register with the Mayor's Office of Special Enforcement (OSE).
+              Buildings can opt onto the <strong>Prohibited Buildings List (PBL)</strong>, which blocks any short-term rental registrations for that address.
+            </p>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Why it matters for Kasa</div>
+            <p>
+              If a building is on the PBL, short-term stays under 30 days cannot be legally registered there, regardless of the building's transient capacity or zoning. Always check before outreach.
+            </p>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">How to check</div>
+            <ol className="list-decimal list-inside space-y-1.5 text-[13px]">
+              <li>Click the link below to open the OSE portal</li>
+              <li>Enter the building's <strong>house number</strong> and <strong>street name</strong></li>
+              <li>Select the <strong>borough</strong></li>
+              <li>Click <strong>Search</strong></li>
+            </ol>
+          </div>
+
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What to look for</div>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-red-100 text-red-600 text-[10px] font-bold flex items-center justify-center shrink-0">!</span>
+                <span><strong>"Building is on the Prohibited Buildings List"</strong> — this building is a no-go for stays under 30 days</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-green-100 text-green-600 text-[10px] font-bold flex items-center justify-center shrink-0">&#10003;</span>
+                <span><strong>"Building is not on the Prohibited Buildings List"</strong> — short-term rental registration is possible</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">?</span>
+                <span><strong>"No results found"</strong> — address format may not match. Try variations (e.g., "W 42 ST" vs "WEST 42ND STREET")</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
+            <strong>Note:</strong> Even if a building is not on the PBL, LL18 still requires individual host registration for stays under 30 days. Kasa's operator model may be structured differently — confirm with Legal.
+          </div>
+
+          <a
+            href="https://strr-portal.ose.nyc.gov/s/searchbuildingsaddress"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full text-center px-4 py-2.5 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Open OSE Prohibited Buildings Portal &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DetailPanel({ feature, onClose, onAddToList, isInList }) {
+  const [showLL18, setShowLL18] = useState(false);
   if (!feature) return null;
   const p = feature.properties;
   const reasonCodes = parseJsonProp(p.reason_codes) || [];
@@ -374,9 +459,14 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
           <div>Pulled: {p.source_pulled_on}</div>
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700">
-          LL18 data pending — prohibited buildings list not yet integrated
-        </div>
+        <button
+          onClick={() => setShowLL18(true)}
+          className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700 text-left hover:bg-amber-100 cursor-pointer transition-colors"
+        >
+          <span className="font-semibold">LL18 check required</span> — tap to learn how to verify this building &rarr;
+        </button>
+
+        {showLL18 && <LL18Modal onClose={() => setShowLL18(false)} address={p.address} />}
       </div>
     </div>
   );
@@ -494,7 +584,6 @@ function FilterPanel({
   showPriorOps, setShowPriorOps,
   showReversion, setShowReversion,
   minUnits, setMinUnits,
-  filterTempCoo, setFilterTempCoo,
   featureCount, overlayCounts,
   onAddAllVisible, onAddCategory,
 }) {
@@ -596,49 +685,15 @@ function FilterPanel({
           </label>
         </div>
 
-        {/* Temp C of O filter */}
-        <div>
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
-            <input
-              type="checkbox"
-              checked={filterTempCoo}
-              onChange={(e) => setFilterTempCoo(e.target.checked)}
-              className="sr-only"
-            />
-            <span
-              className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
-              style={{
-                borderColor: "#f59e0b",
-                backgroundColor: filterTempCoo ? "#f59e0b" : "transparent",
-              }}
-            >
-              {filterTempCoo && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </span>
-            <div className="flex items-center">
-              <span className="text-xs text-gray-700">Temporary C of O only</span>
-              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.tempCoo})</span>
-              <InfoTip text="Show only buildings with Temporary Certificates of Occupancy — a strong signal of active transient/hotel operations. These buildings renew their temp CO every 90 days." />
-            </div>
-          </label>
-        </div>
-
-        {/* Unit count slider */}
-        <div>
-          <div className="flex justify-between items-baseline mb-1">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Min units</span>
-            <span className="text-xs font-mono text-gray-700">{minUnits}</span>
-          </div>
+        {/* Min units */}
+        <div className="flex items-center justify-between px-2.5">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Min units</span>
           <input
-            type="range"
+            type="number"
             min={0}
-            max={200}
             value={minUnits}
-            onChange={(e) => setMinUnits(Number(e.target.value))}
-            className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
+            onChange={(e) => setMinUnits(Math.max(0, Number(e.target.value) || 0))}
+            className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
           />
         </div>
 
@@ -756,6 +811,248 @@ function Legend() {
   );
 }
 
+// --- Table columns ---
+const TABLE_COLS = [
+  { key: "address", label: "Address", sortable: true, width: "min-w-[200px]" },
+  { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
+  { key: "unitsres", label: "Units", sortable: true, numeric: true, width: "min-w-[70px]" },
+  { key: "numfloors", label: "Floors", sortable: true, numeric: true, width: "min-w-[70px]" },
+  { key: "bldgclass", label: "Class", sortable: true, width: "min-w-[65px]" },
+  { key: "hpd_class_b", label: "Class B", sortable: true, numeric: true, width: "min-w-[75px]" },
+  { key: "ownername", label: "Owner", sortable: true, width: "min-w-[180px]" },
+  { key: "owner_portfolio_size", label: "Portfolio", sortable: true, numeric: true, width: "min-w-[80px]" },
+  { key: "last_sale_price", label: "Last Sale", sortable: true, numeric: true, width: "min-w-[110px]" },
+  { key: "last_sale_date", label: "Sale Date", sortable: true, width: "min-w-[95px]" },
+  { key: "permit_count", label: "Permits", sortable: true, numeric: true, width: "min-w-[75px]" },
+  { key: "coo_count", label: "C of Os", sortable: true, numeric: true, width: "min-w-[75px]" },
+  { key: "coo_has_temporary", label: "Temp CO", sortable: true, width: "min-w-[80px]" },
+  { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
+];
+
+function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters) {
+  const allowedTiers = SIGNAL_TIERS
+    .filter((t) => t.rank <= tierThreshold)
+    .map((t) => t.key);
+
+  return features.filter((f) => {
+    const p = f.properties;
+    const tierOk = allowedTiers.includes(p.tier);
+    const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
+    if (!tierOk && !overlayOk) return false;
+
+    if (!overlayOk && (p.unitsres || 0) < minUnits) return false;
+
+    if (filters.filterTempCoo && !p.coo_has_temporary) return false;
+    if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
+    if (filters.filterMultiOwner && !(p.owner_portfolio_size > 1)) return false;
+    if (filters.filterRecentSale && (!p.last_sale_date || p.last_sale_date < filters._recentSaleCutoff)) return false;
+    if (filters.filterCommercialZone) {
+      const z = (p.zonedist1 || "")[0];
+      if (z !== "C" && z !== "M") return false;
+    }
+
+    return true;
+  });
+}
+
+function dedupeFeatures(features) {
+  // Group by address + owner to collapse condo lots / multi-BBL complexes
+  const groups = new Map();
+  for (const f of features) {
+    const p = f.properties;
+    const key = `${(p.address || "").trim()}|${(p.ownername || "").trim()}`;
+    if (!groups.has(key)) {
+      groups.set(key, f);
+    } else {
+      // Keep the one with the highest-priority tier
+      const existing = groups.get(key).properties;
+      const TIER_RANK = { legal_transient: 0, class_b: 1, partial: 2, prior_operator: 3, unknown: 4, excluded: 5 };
+      if ((TIER_RANK[p.tier] ?? 99) < (TIER_RANK[existing.tier] ?? 99)) {
+        groups.set(key, f);
+      }
+    }
+  }
+  return Array.from(groups.values());
+}
+
+function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter }) {
+  const [sortKey, setSortKey] = useState("unitsres");
+  const [sortDir, setSortDir] = useState("desc");
+  const [searchText, setSearchText] = useState("");
+
+  // Deduplicate multi-BBL buildings (condo lots, complexes)
+  const dedupedFeatures = useMemo(() => dedupeFeatures(features), [features]);
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
+  const filtered = searchText.length >= 2
+    ? dedupedFeatures.filter((f) => {
+        const p = f.properties;
+        const text = searchText.toLowerCase();
+        return (p.address || "").toLowerCase().includes(text)
+          || (p.ownername || "").toLowerCase().includes(text)
+          || (p.bbl || "").includes(text);
+      })
+    : dedupedFeatures;
+
+  const sorted = [...filtered].sort((a, b) => {
+    const col = TABLE_COLS.find((c) => c.key === sortKey);
+    let va = a.properties[sortKey];
+    let vb = b.properties[sortKey];
+    if (col?.numeric) {
+      va = Number(va) || 0;
+      vb = Number(vb) || 0;
+    } else {
+      va = String(va || "").toLowerCase();
+      vb = String(vb || "").toLowerCase();
+    }
+    if (va < vb) return sortDir === "asc" ? -1 : 1;
+    if (va > vb) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const fmtPrice = (v) => {
+    if (!v || v === 0) return "—";
+    return `$${Number(v).toLocaleString()}`;
+  };
+
+  const cellValue = (col, p) => {
+    const v = p[col.key];
+    if (col.key === "tier") {
+      return (
+        <span
+          className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold text-white"
+          style={{ backgroundColor: tierColor(p.tier) }}
+        >
+          {(p.tier || "").replace(/_/g, " ")}
+        </span>
+      );
+    }
+    if (col.key === "last_sale_price") return fmtPrice(v);
+    if (col.key === "numfloors") return v ? Math.round(v) : "—";
+    if (col.key === "coo_has_temporary") return v ? "Yes" : "";
+    if (col.key === "owner_portfolio_size") return v > 1 ? v : "";
+    if (col.key === "ownername") {
+      return (
+        <span className="truncate block max-w-[180px]" title={v}>{v || "—"}</span>
+      );
+    }
+    if (v == null || v === "") return "—";
+    return String(v);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-white">
+      {/* Search + filters bar */}
+      <div className="px-4 py-3 border-b border-gray-200 shrink-0 space-y-2">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search address, owner, or BBL..."
+            className="flex-1 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-300"
+          />
+          <span className="text-xs text-gray-400 shrink-0">{sorted.length} buildings</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { key: "filterHasClassB", label: "Class B rooms" },
+            { key: "filterTempCoo", label: "Temp C of O" },
+            { key: "filterMultiOwner", label: "Multi-building owner" },
+            { key: "filterRecentSale", label: "Sold last 3yr" },
+            { key: "filterCommercialZone", label: "C/M zoning" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key, !extraFilters[key])}
+              className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors cursor-pointer ${
+                extraFilters[key]
+                  ? "bg-gray-800 text-white border-gray-800"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full text-left">
+          <thead className="sticky top-0 bg-gray-50 z-10">
+            <tr>
+              <th className="px-3 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-10">
+                <span className="sr-only">Select</span>
+              </th>
+              {TABLE_COLS.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                  className={`px-3 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide ${col.width} ${
+                    col.sortable ? "cursor-pointer hover:text-gray-700 select-none" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    {col.label}
+                    {sortKey === col.key && (
+                      <span className="text-gray-700">{sortDir === "asc" ? "↑" : "↓"}</span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {sorted.map((f) => {
+              const p = f.properties;
+              const inList = exportList.has(p.bbl);
+              return (
+                <tr
+                  key={p.bbl}
+                  onClick={() => onSelectFeature(f)}
+                  className={`hover:bg-gray-50 cursor-pointer transition-colors ${inList ? "bg-blue-50/50" : ""}`}
+                >
+                  <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => onAddToList(f)}
+                      className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors cursor-pointer ${
+                        inList ? "bg-gray-800 border-gray-800" : "border-gray-300 hover:border-gray-500"
+                      }`}
+                    >
+                      {inList && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </td>
+                  {TABLE_COLS.map((col) => (
+                    <td key={col.key} className={`px-3 py-2 text-xs text-gray-700 ${col.width}`}>
+                      {cellValue(col, p)}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {sorted.length === 0 && (
+          <div className="text-center text-sm text-gray-400 py-12">No buildings match the current filters</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -767,7 +1064,18 @@ export default function App() {
   const [showPriorOps, setShowPriorOps] = useState(true);
   const [showReversion, setShowReversion] = useState(true);
   const [minUnits, setMinUnits] = useState(0);
-  const [filterTempCoo, setFilterTempCoo] = useState(false);
+  const [extraFilters, setExtraFilters] = useState({
+    filterTempCoo: false,
+    filterHasClassB: false,
+    filterMultiOwner: false,
+    filterRecentSale: false,
+    filterCommercialZone: false,
+    _recentSaleCutoff: new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+  });
+  const setFilter = useCallback((key, val) => {
+    setExtraFilters((prev) => ({ ...prev, [key]: val }));
+  }, []);
+  const [activeView, setActiveView] = useState("map"); // "map" | "table"
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
 
@@ -889,10 +1197,16 @@ export default function App() {
         promoteId: "bbl",
       });
 
+      const initFilter = buildFilter(1, true, true, 0, {
+        filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
+        filterRecentSale: false, filterCommercialZone: false,
+      });
+
       map.addLayer({
         id: "buildings-fill",
         type: "fill",
         source: "buildings",
+        filter: initFilter,
         paint: {
           "fill-color": buildColorExpr(),
           "fill-opacity": buildOpacityExpr(),
@@ -903,6 +1217,7 @@ export default function App() {
         id: "buildings-outline",
         type: "line",
         source: "buildings",
+        filter: initFilter,
         paint: {
           "line-color": buildColorExpr(),
           "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 16, 1, 18, 2],
@@ -983,7 +1298,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
 
@@ -999,11 +1314,56 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, filterTempCoo]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters]);
+
+  // Compute filtered features for table view
+  const tableFeatures = useMemo(() => {
+    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, overlayCounts]);
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
+    <div className="relative w-full h-full flex flex-col">
+      {/* View toggle */}
+      <div className={`absolute top-4 z-30 flex bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden ${inspectedFeature ? "right-[26rem]" : "right-4"}`}>
+        <button
+          onClick={() => setActiveView("map")}
+          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+            activeView === "map" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Map
+        </button>
+        <button
+          onClick={() => setActiveView("table")}
+          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+            activeView === "table" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Table
+        </button>
+      </div>
+
+      {/* Map view */}
+      <div ref={mapContainer} className="w-full h-full" style={{ display: activeView === "map" ? "block" : "none" }} />
+
+      {/* Table view */}
+      {activeView === "table" && (
+        <div className="flex-1 flex">
+          {/* Filter panel takes left side */}
+          <div className="w-72 shrink-0" />
+          {/* Table fills the rest */}
+          <div className="flex-1 h-full overflow-hidden">
+            <TableView
+              features={tableFeatures}
+              onSelectFeature={(f) => setInspectedFeature(f)}
+              exportList={exportList}
+              onAddToList={handleAddToList}
+              extraFilters={extraFilters}
+              setFilter={setFilter}
+            />
+          </div>
+        </div>
+      )}
 
       <FilterPanel
         tierThreshold={tierThreshold}
@@ -1014,15 +1374,23 @@ export default function App() {
         setShowReversion={setShowReversion}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
-        filterTempCoo={filterTempCoo}
-        setFilterTempCoo={setFilterTempCoo}
-        featureCount={featureCount}
+        featureCount={activeView === "table" ? tableFeatures.length : featureCount}
         overlayCounts={overlayCounts}
-        onAddAllVisible={handleAddAllVisible}
+        onAddAllVisible={activeView === "table"
+          ? () => {
+              setExportList((prev) => {
+                const next = new Map(prev);
+                for (const f of tableFeatures) next.set(f.properties.bbl, f);
+                return next;
+              });
+              setListExpanded(true);
+            }
+          : handleAddAllVisible
+        }
         onAddCategory={handleAddCategory}
       />
 
-      <SearchBar mapRef={mapRef} />
+      {activeView === "map" && <SearchBar mapRef={mapRef} />}
 
       <DetailPanel
         feature={inspectedFeature}
@@ -1039,7 +1407,7 @@ export default function App() {
         expanded={listExpanded}
       />
 
-      <Legend />
+      {activeView === "map" && <Legend />}
     </div>
   );
 }

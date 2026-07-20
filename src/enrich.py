@@ -73,6 +73,12 @@ def _normalize_owner(name: str) -> str:
     return s
 
 
+_SKIP_OWNERS = {
+    "UNAVAILABLE OWNER", "UNAVAILABLE", "UNKNOWN", "UNKNOWN OWNER",
+    "N/A", "NA", "NONE", "NOT AVAILABLE", "NO OWNER", "OWNER UNKNOWN",
+}
+
+
 def _build_owner_groups(records: list[dict]) -> dict[str, str]:
     """Build a mapping from raw owner name -> canonical group name.
 
@@ -85,7 +91,7 @@ def _build_owner_groups(records: list[dict]) -> dict[str, str]:
 
     for record in records:
         raw = (record.get("ownername") or "").strip().upper()
-        if not raw:
+        if not raw or raw in _SKIP_OWNERS or _normalize_owner(raw) == "UNAVAILABLE":
             continue
         norm = _normalize_owner(raw)
         if not norm:
@@ -259,8 +265,10 @@ def enrich_pipeline(
     owner_bbls: dict[str, list[str]] = defaultdict(list)
     for record in pipeline:
         raw = (record.get("ownername") or "").strip().upper()
+        if not raw or raw in _SKIP_OWNERS:
+            continue
         canon = owner_canonical.get(raw, raw)
-        if canon:
+        if canon and canon not in _SKIP_OWNERS:
             owner_bbls[canon].append(record["bbl"])
 
     # Enrich each record
