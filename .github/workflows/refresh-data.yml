@@ -1,0 +1,61 @@
+name: Refresh NYC Open Data
+
+on:
+  schedule:
+    # Every Monday at 6am UTC (2am ET)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: pip install certifi
+
+      - name: Pull PLUTO
+        run: python src/pull_pluto.py
+
+      - name: Pull HPD
+        run: python src/pull_hpd.py
+
+      - name: Pull building footprints
+        run: python src/pull_footprints.py
+
+      - name: Pull DOF sales
+        run: python src/pull_sales.py
+
+      - name: Pull DOB permits
+        run: python src/pull_permits.py
+
+      - name: Pull C of O records
+        run: python src/pull_coo.py
+
+      - name: Run pipeline
+        run: python src/pipeline.py
+
+      - name: Run enrichment
+        run: python src/enrich.py
+
+      - name: Build GeoJSON
+        run: python src/build_geojson.py
+
+      - name: Copy GeoJSON to map
+        run: |
+          TODAY=$(date +%Y%m%d)
+          cp data/processed/buildings_${TODAY}.geojson map/public/buildings.geojson
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add map/public/buildings.geojson
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "Auto-refresh: update buildings data $(date +%Y-%m-%d)"
+          git push
