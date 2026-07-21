@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from "react";
 import maplibregl from "maplibre-gl";
 
 // Ordered best → weakest. Prior operator is an overlay, not part of the hierarchy.
@@ -47,11 +47,14 @@ function buildOpacityExpr() {
     "match",
     ["get", "confidence"],
     "high", 0.85,
-    "medium", 0.55,
-    "low", 0.3,
-    0.3,
+    "medium", 0.65,
+    "low", 0.5,
+    0.5,
   ];
 }
+
+const CLUSTER_ZOOM_THRESHOLD = 14; // below this: clusters; above: footprints
+
 
 function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters) {
   const allowedTiers = SIGNAL_TIERS
@@ -107,6 +110,7 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
 // --- CSV export ---
 const CSV_COLUMNS = [
   { key: "address", label: "Address" },
+  { key: "neighborhood", label: "Neighborhood" },
   { key: "bbl", label: "BBL" },
   { key: "tier", label: "Tier" },
   { key: "confidence", label: "Confidence" },
@@ -137,6 +141,22 @@ function parseJsonProp(val) {
     try { return JSON.parse(val); } catch { return val; }
   }
   return val;
+}
+
+function parseBbl(bbl) {
+  const s = String(bbl || "").padStart(10, "0");
+  return { borough: s[0], block: s.slice(1, 6), lot: s.slice(6, 10) };
+}
+
+function buildRecordLinks(bbl, bin) {
+  const { borough, block, lot } = parseBbl(bbl);
+  return {
+    hpd: `https://hpdonline.nyc.gov/hpdonline/building/search-results?boroId=${borough}&block=${block}&lot=${lot}`,
+    dob: bin
+      ? `https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?bin=${bin}&requestid=1`
+      : `https://a810-bisweb.nyc.gov/bisweb/PropertyBrowseByBBLServlet?allborough=${borough}&allblock=${block}&alllot=${lot}&go5=+GO+&requestid=0`,
+    acris: `https://a836-acris.nyc.gov/bblsearch/bblsearch.asp?borough=${borough}&block=${block}&lot=${lot}`,
+  };
 }
 
 function exportToCsv(features) {
@@ -259,8 +279,11 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
   return (
     <div className="absolute top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900 truncate pr-2">{p.address}</h2>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900 truncate pr-2">{p.address}</h2>
+          {p.neighborhood && <div className="text-xs text-gray-400 mt-0.5">{p.neighborhood}</div>}
+        </div>
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer shrink-0">&times;</button>
       </div>
 
       <div className="p-4 space-y-4">
@@ -453,11 +476,32 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
           );
         })()}
 
-        <div className="text-xs text-gray-400 space-y-0.5 pt-2 border-t border-gray-100">
-          <div>BBL: {p.bbl}</div>
-          <div>BIN: {p.bin}</div>
-          <div>Pulled: {p.source_pulled_on}</div>
-        </div>
+        {/* Due diligence links */}
+        {(() => {
+          const links = buildRecordLinks(p.bbl, p.bin);
+          return (
+            <div className="pt-2 border-t border-gray-100 space-y-2">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Public records</div>
+              <div className="flex gap-2">
+                <a href={links.hpd} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 text-center px-2 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-md text-[11px] font-medium text-blue-600 transition-colors">
+                  HPD
+                </a>
+                <a href={links.dob} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 text-center px-2 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-md text-[11px] font-medium text-blue-600 transition-colors">
+                  DOB
+                </a>
+                <a href={links.acris} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 text-center px-2 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-md text-[11px] font-medium text-blue-600 transition-colors">
+                  ACRIS
+                </a>
+              </div>
+              <div className="text-[10px] text-gray-400">
+                BBL: {p.bbl} · BIN: {p.bin} · Pulled: {p.source_pulled_on}
+              </div>
+            </div>
+          );
+        })()}
 
         <button
           onClick={() => setShowLL18(true)}
@@ -597,9 +641,10 @@ function FilterPanel({
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Signal threshold */}
+        {/* Current legal status */}
         <div>
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Show buildings down to</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Current legal status</div>
+          <div className="text-xs font-semibold text-gray-500 mb-2">Show buildings down to</div>
           <div className="space-y-1">
             {SIGNAL_TIERS.map((tier, idx) => {
               const active = idx <= tierThreshold;
@@ -630,8 +675,9 @@ function FilterPanel({
           </div>
         </div>
 
-        {/* Overlay toggles */}
+        {/* Opportunity context */}
         <div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Opportunity context</div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
             <input
               type="checkbox"
@@ -816,6 +862,7 @@ function Legend() {
 // --- Table columns ---
 const TABLE_COLS = [
   { key: "address", label: "Address", sortable: true, width: "min-w-[200px]" },
+  { key: "neighborhood", label: "Neighborhood", sortable: true, width: "min-w-[160px]" },
   { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
   { key: "unitsres", label: "Units", sortable: true, numeric: true, width: "min-w-[70px]" },
   { key: "numfloors", label: "Floors", sortable: true, numeric: true, width: "min-w-[70px]" },
@@ -1055,6 +1102,230 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
   );
 }
 
+function buildOwnerGroups(features) {
+  const groups = new Map();
+  for (const f of features) {
+    const p = f.properties;
+    const canon = p.owner_canonical || p.ownername || "";
+    if (!canon || canon === "UNAVAILABLE OWNER") continue;
+    if (!groups.has(canon)) {
+      groups.set(canon, {
+        name: canon,
+        displayName: p.ownername || canon,
+        buildings: [],
+        totalUnits: 0,
+        totalClassB: 0,
+        tiers: new Set(),
+        hasPriorOp: false,
+        hasReversion: false,
+        hasTempCoo: false,
+        latestSaleDate: null,
+      });
+    }
+    const g = groups.get(canon);
+    // Deduplicate by address within owner group
+    if (!g.buildings.some((b) => b.properties.address === p.address && b.properties.ownername === p.ownername)) {
+      g.buildings.push(f);
+    }
+    g.totalUnits += (p.unitsres || 0);
+    g.totalClassB += (p.hpd_class_b || 0);
+    g.tiers.add(p.tier);
+    if (p.has_prior_op) g.hasPriorOp = true;
+    if (p.has_reversion) g.hasReversion = true;
+    if (p.coo_has_temporary) g.hasTempCoo = true;
+    if (p.last_sale_date && (!g.latestSaleDate || p.last_sale_date > g.latestSaleDate)) {
+      g.latestSaleDate = p.last_sale_date;
+    }
+  }
+  return Array.from(groups.values());
+}
+
+function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
+  const [sortKey, setSortKey] = useState("totalUnits");
+  const [sortDir, setSortDir] = useState("desc");
+  const [searchText, setSearchText] = useState("");
+  const [expandedOwner, setExpandedOwner] = useState(null);
+
+  const owners = useMemo(() => buildOwnerGroups(features), [features]);
+
+  const filtered = searchText.length >= 2
+    ? owners.filter((o) => o.name.toLowerCase().includes(searchText.toLowerCase())
+        || o.buildings.some((b) => (b.properties.address || "").toLowerCase().includes(searchText.toLowerCase())))
+    : owners;
+
+  const sorted = [...filtered].sort((a, b) => {
+    let va, vb;
+    if (sortKey === "name") {
+      va = a.name.toLowerCase();
+      vb = b.name.toLowerCase();
+    } else if (sortKey === "buildings") {
+      va = a.buildings.length;
+      vb = b.buildings.length;
+    } else if (sortKey === "totalUnits") {
+      va = a.totalUnits;
+      vb = b.totalUnits;
+    } else if (sortKey === "totalClassB") {
+      va = a.totalClassB;
+      vb = b.totalClassB;
+    } else if (sortKey === "bestTier") {
+      const rank = { legal_transient: 0, class_b: 1, partial: 2, unknown: 3 };
+      va = Math.min(...[...a.tiers].map((t) => rank[t] ?? 99));
+      vb = Math.min(...[...b.tiers].map((t) => rank[t] ?? 99));
+    }
+    if (va < vb) return sortDir === "asc" ? -1 : 1;
+    if (va > vb) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  };
+
+  const OWNER_COLS = [
+    { key: "name", label: "Owner", width: "min-w-[220px]" },
+    { key: "buildings", label: "Buildings", width: "min-w-[85px]" },
+    { key: "totalUnits", label: "Total Units", width: "min-w-[95px]" },
+    { key: "totalClassB", label: "Class B Rooms", width: "min-w-[100px]" },
+    { key: "bestTier", label: "Best Tier", width: "min-w-[120px]" },
+  ];
+
+  const bestTier = (tiers) => {
+    const rank = ["legal_transient", "class_b", "partial", "unknown"];
+    for (const t of rank) if (tiers.has(t)) return t;
+    return "unknown";
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-white">
+      <div className="px-4 py-3 border-b border-gray-200 shrink-0">
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            placeholder="Search owner or address..."
+            className="flex-1 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-300"
+          />
+          <span className="text-xs text-gray-400 shrink-0">{sorted.length} owners</span>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <table className="w-full text-left">
+          <thead className="sticky top-0 bg-gray-50 z-10">
+            <tr>
+              {OWNER_COLS.map((col) => (
+                <th
+                  key={col.key}
+                  onClick={() => handleSort(col.key)}
+                  className={`px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide cursor-pointer hover:text-gray-700 select-none ${col.width}`}
+                >
+                  <div className="flex items-center gap-1">
+                    {col.label}
+                    {sortKey === col.key && <span className="text-gray-700">{sortDir === "asc" ? "↑" : "↓"}</span>}
+                  </div>
+                </th>
+              ))}
+              <th className="px-4 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide min-w-[120px]">Signals</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {sorted.map((owner) => {
+              const isExpanded = expandedOwner === owner.name;
+              const bt = bestTier(owner.tiers);
+              return (
+                <Fragment key={owner.name}>
+                  <tr
+                    onClick={() => setExpandedOwner(isExpanded ? null : owner.name)}
+                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}>▶</span>
+                        <div>
+                          <div className="text-xs font-medium text-gray-900 truncate max-w-[200px]" title={owner.displayName}>{owner.displayName}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-700">{owner.buildings.length}</td>
+                    <td className="px-4 py-3 text-xs text-gray-700 font-medium">{owner.totalUnits.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-xs text-gray-700">{owner.totalClassB > 0 ? owner.totalClassB.toLocaleString() : "—"}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold text-white"
+                        style={{ backgroundColor: tierColor(bt) }}
+                      >
+                        {bt.replace(/_/g, " ")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        {owner.hasPriorOp && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-purple-100 text-purple-700">Prior op</span>}
+                        {owner.hasReversion && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-rose-100 text-rose-700">Reversion</span>}
+                        {owner.hasTempCoo && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-100 text-amber-700">Temp CO</span>}
+                        {owner.latestSaleDate && <span className="px-1.5 py-0.5 text-[9px] rounded bg-gray-100 text-gray-500">Sale {owner.latestSaleDate.slice(0,4)}</span>}
+                      </div>
+                    </td>
+                  </tr>
+                  {isExpanded && owner.buildings.map((f) => {
+                    const p = f.properties;
+                    const inList = exportList.has(p.bbl);
+                    return (
+                      <tr
+                        key={p.bbl}
+                        className={`bg-gray-50/50 hover:bg-gray-100/50 cursor-pointer ${inList ? "bg-blue-50/30" : ""}`}
+                      >
+                        <td className="pl-12 pr-4 py-2">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onAddToList(f); }}
+                              className={`w-3.5 h-3.5 rounded border-2 flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                                inList ? "bg-gray-800 border-gray-800" : "border-gray-300 hover:border-gray-500"
+                              }`}
+                            >
+                              {inList && (
+                                <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                            <span
+                              className="text-[11px] text-blue-600 hover:underline"
+                              onClick={(e) => { e.stopPropagation(); onSelectFeature(f); }}
+                            >
+                              {p.address}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2">
+                          <span
+                            className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-semibold text-white"
+                            style={{ backgroundColor: tierColor(p.tier) }}
+                          >
+                            {(p.tier || "").replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-[11px] text-gray-600">{p.unitsres || 0}</td>
+                        <td className="px-4 py-2 text-[11px] text-gray-600">{p.hpd_class_b > 0 ? p.hpd_class_b : "—"}</td>
+                        <td className="px-4 py-2 text-[11px] text-gray-500">{p.bldgclass}</td>
+                        <td className="px-4 py-2 text-[11px] text-gray-500">{p.zonedist1}</td>
+                      </tr>
+                    );
+                  })}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+        {sorted.length === 0 && (
+          <div className="text-center text-sm text-gray-400 py-12">No owners match the current filters</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -1077,7 +1348,7 @@ export default function App() {
   const setFilter = useCallback((key, val) => {
     setExtraFilters((prev) => ({ ...prev, [key]: val }));
   }, []);
-  const [activeView, setActiveView] = useState("map"); // "map" | "table"
+  const [activeView, setActiveView] = useState("map"); // "map" | "table" | "owners"
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
   const [dataDate, setDataDate] = useState(null);
@@ -1191,31 +1462,105 @@ export default function App() {
         },
         layers: [{ id: "carto-light", type: "raster", source: "carto-light" }],
       },
-      center: [-73.97, 40.72],
-      zoom: 12,
-      minZoom: 11,
+      center: [-73.97, 40.75],
+      zoom: 11.5,
+      minZoom: 10,
       maxZoom: 19,
     });
 
     map.addControl(new maplibregl.NavigationControl(), "bottom-right");
 
     map.on("load", () => {
+      // Polygon source for building footprints (zoomed in)
       map.addSource("buildings", {
         type: "geojson",
         data: "/buildings.geojson",
         promoteId: "bbl",
       });
 
+      // Point source for clusters (zoomed out) — built from centroids
+      fetch("/buildings.geojson")
+        .then((r) => r.json())
+        .then((data) => {
+          // Build points from centroids, deduplicating by address (condo lots share an address)
+          const TIER_RANK = { legal_transient: 0, class_b: 1, partial: 2, prior_operator: 3, unknown: 4, excluded: 5 };
+          const pointMap = new Map(); // address → best point
+          for (const f of (data.features || [])) {
+            const coords = f.geometry?.coordinates;
+            if (!coords) continue;
+            const ring = f.geometry.type === "MultiPolygon" ? coords[0][0] : coords[0];
+            let cx = 0, cy = 0;
+            for (const [x, y] of ring) { cx += x; cy += y; }
+            cx /= ring.length; cy /= ring.length;
+            const addr = (f.properties.address || "").trim();
+            const key = addr || `${cx.toFixed(4)},${cy.toFixed(4)}`;
+            const existing = pointMap.get(key);
+            if (!existing || (TIER_RANK[f.properties.tier] ?? 99) < (TIER_RANK[existing.properties.tier] ?? 99)) {
+              pointMap.set(key, {
+                type: "Feature",
+                geometry: { type: "Point", coordinates: [cx, cy] },
+                properties: f.properties,
+              });
+            }
+          }
+          const points = { type: "FeatureCollection", features: Array.from(pointMap.values()) };
+
+          map.addSource("buildings-points", {
+            type: "geojson",
+            data: points,
+          });
+
+          // Clean circles — tier color only, slightly larger for overlay signals
+          map.addLayer({
+            id: "buildings-dots",
+            type: "circle",
+            source: "buildings-points",
+            filter: initFilter,
+            maxzoom: CLUSTER_ZOOM_THRESHOLD + 0.5,
+            paint: {
+              "circle-color": buildColorExpr(),
+              "circle-radius": [
+                "interpolate", ["linear"], ["zoom"],
+                10, 2.5,
+                12, 3.5,
+                CLUSTER_ZOOM_THRESHOLD, 5,
+              ],
+              "circle-opacity": [
+                "interpolate", ["linear"], ["zoom"],
+                CLUSTER_ZOOM_THRESHOLD - 0.5, 0.8,
+                CLUSTER_ZOOM_THRESHOLD + 0.5, 0,
+              ],
+              "circle-stroke-width": 0.5,
+              "circle-stroke-color": "#fff",
+              "circle-stroke-opacity": [
+                "interpolate", ["linear"], ["zoom"],
+                CLUSTER_ZOOM_THRESHOLD - 0.5, 0.6,
+                CLUSTER_ZOOM_THRESHOLD + 0.5, 0,
+              ],
+            },
+          }, "buildings-fill");
+
+          // Click dot → open detail
+          map.on("click", "buildings-dots", (e) => {
+            if (e.features?.length) setInspectedFeature(e.features[0]);
+          });
+          map.on("mousemove", "buildings-dots", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "buildings-dots", () => { map.getCanvas().style.cursor = ""; });
+
+        });
+
       const initFilter = buildFilter(1, true, true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
       });
 
+      // Building footprint layers — only visible when zoomed in
       map.addLayer({
         id: "buildings-fill",
         type: "fill",
         source: "buildings",
         filter: initFilter,
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
         paint: {
           "fill-color": buildColorExpr(),
           "fill-opacity": buildOpacityExpr(),
@@ -1227,52 +1572,54 @@ export default function App() {
         type: "line",
         source: "buildings",
         filter: initFilter,
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
         paint: {
           "line-color": buildColorExpr(),
-          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 0.3, 16, 1, 18, 2],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.5, 16, 1, 18, 2],
           "line-opacity": 0.6,
         },
       });
 
-      // Selection highlight — black outline on buildings in export list
+      // Selection highlight
       map.addLayer({
         id: "selection-outline",
         type: "line",
         source: "buildings",
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
         paint: {
           "line-color": "#000",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2, 16, 3.5, 18, 5],
+          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 2, 16, 3.5, 18, 5],
           "line-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0],
         },
       });
 
-      // Reversion window highlight outline
+      // Reversion window outline — dark warm tone that pairs with green/blue/amber fills
       map.addLayer({
         id: "reversion-outline",
         type: "line",
         source: "buildings",
         filter: ["==", ["get", "has_reversion"], true],
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
         paint: {
-          "line-color": REVERSION.color,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2.5, 16, 4, 18, 6],
-          "line-opacity": 0.9,
+          "line-color": "#b91c1c",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.8, 16, 1.5, 18, 2],
+          "line-opacity": 0.6,
         },
       });
 
-      // Prior operator highlight outline
+      // Prior operator outline — dark cool tone
       map.addLayer({
         id: "prior-op-outline",
         type: "line",
         source: "buildings",
         filter: ["==", ["get", "has_prior_op"], true],
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
         paint: {
-          "line-color": PRIOR_OP.color,
-          "line-width": ["interpolate", ["linear"], ["zoom"], 13, 2.5, 16, 4, 18, 6],
-          "line-opacity": 0.9,
+          "line-color": "#6b21a8",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.8, 16, 1.5, 18, 2],
+          "line-opacity": 0.6,
         },
       });
-
-
 
 
       map.on("mousemove", "buildings-fill", () => {
@@ -1310,13 +1657,10 @@ export default function App() {
     const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
+    if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
 
-    for (const id of ["reversion-outline"]) {
-      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showReversion ? "visible" : "none");
-    }
-    for (const id of ["prior-op-outline"]) {
-      if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", showPriorOps ? "visible" : "none");
-    }
+    if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", showReversion ? "visible" : "none");
+    if (map.getLayer("prior-op-outline")) map.setLayoutProperty("prior-op-outline", "visibility", showPriorOps ? "visible" : "none");
 
     setTimeout(() => {
       const features = map.queryRenderedFeatures({ layers: ["buildings-fill"] });
@@ -1350,6 +1694,14 @@ export default function App() {
         >
           Table
         </button>
+        <button
+          onClick={() => setActiveView("owners")}
+          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+            activeView === "owners" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Owners
+        </button>
       </div>
 
       {/* Map view */}
@@ -1374,6 +1726,20 @@ export default function App() {
         </div>
       )}
 
+      {activeView === "owners" && (
+        <div className="flex-1 flex">
+          <div className="w-72 shrink-0" />
+          <div className="flex-1 h-full overflow-hidden">
+            <OwnerView
+              features={tableFeatures}
+              onSelectFeature={(f) => setInspectedFeature(f)}
+              exportList={exportList}
+              onAddToList={handleAddToList}
+            />
+          </div>
+        </div>
+      )}
+
       <FilterPanel
         tierThreshold={tierThreshold}
         setTierThreshold={setTierThreshold}
@@ -1383,9 +1749,9 @@ export default function App() {
         setShowReversion={setShowReversion}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
-        featureCount={activeView === "table" ? tableFeatures.length : featureCount}
+        featureCount={activeView !== "map" ? tableFeatures.length : featureCount}
         overlayCounts={overlayCounts}
-        onAddAllVisible={activeView === "table"
+        onAddAllVisible={activeView !== "map"
           ? () => {
               setExportList((prev) => {
                 const next = new Map(prev);

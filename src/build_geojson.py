@@ -13,6 +13,26 @@ from config import DATA_RAW, DATA_PROCESSED
 
 TODAY = date.today().strftime("%Y%m%d")
 
+# Manhattan community districts + target BK/QN districts → neighborhood names
+CD_TO_NEIGHBORHOOD = {
+    "101": "Financial District / Tribeca",
+    "102": "Greenwich Village / SoHo",
+    "103": "Lower East Side / Chinatown",
+    "104": "Chelsea / Hudson Yards",
+    "105": "Midtown West",
+    "106": "Midtown East / Murray Hill",
+    "107": "Upper West Side",
+    "108": "Upper East Side",
+    "109": "Morningside Heights / Harlem",
+    "110": "Central Harlem",
+    "111": "East Harlem",
+    "112": "Washington Heights / Inwood",
+    "301": "Williamsburg / Greenpoint",
+    "302": "Downtown Brooklyn / Fort Greene",
+    "306": "Park Slope / Red Hook",
+    "401": "Astoria / Long Island City",
+}
+
 
 def build_geojson(
     pipeline_path: Path = None,
@@ -95,6 +115,8 @@ def build_geojson(
             "hpd_class_b": record["hpd_class_b"],
             "hpd_dob_class": record["hpd_dob_class"],
             "ownername": record["ownername"],
+            "cd": record.get("cd", ""),
+            "neighborhood": CD_TO_NEIGHBORHOOD.get(record.get("cd", ""), ""),
             "zonedist1": record["zonedist1"],
             "height_roof": fp.get("height_roof"),
             "construction_year": fp.get("construction_year"),
@@ -104,6 +126,7 @@ def build_geojson(
             "last_sale_price": record.get("last_sale_price"),
             "sale_count": record.get("sale_count", 0),
             "permit_count": record.get("permit_count", 0),
+            "owner_canonical": record.get("owner_canonical", record.get("ownername", "")),
             "owner_portfolio_size": record.get("owner_portfolio_size", 0),
             "coo_count": record.get("coo_count", 0),
             "coo_latest_date": record.get("coo_latest_date"),
