@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd map && npm install && npm run build",
+  "outputDirectory": "map/dist",
   "framework": null
 }
