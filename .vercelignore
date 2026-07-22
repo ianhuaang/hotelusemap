@@ -1,9 +1,8 @@
 data/
 cache/
-src/
+/src/
 *.py
 .venv/
 __pycache__/
 .github/
 *.csv
-*.md
