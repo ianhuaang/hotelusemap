@@ -1,5 +1,10 @@
 {
   "buildCommand": "cd map && npm install && npm run build",
   "outputDirectory": "map/dist",
-  "framework": null
+  "framework": null,
+  "build": {
+    "env": {
+      "NODE_VERSION": "22"
+    }
+  }
 }

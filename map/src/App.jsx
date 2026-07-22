@@ -56,7 +56,7 @@ function buildOpacityExpr() {
 const CLUSTER_ZOOM_THRESHOLD = 14; // below this: clusters; above: footprints
 
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters) {
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -102,6 +102,9 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "C"],
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "M"],
     ]);
+  }
+  if (hideHotels) {
+    conditions.push(["!=", ["slice", ["get", "bldgclass"], 0, 1], "H"]);
   }
 
   return ["all", ...conditions];
@@ -627,6 +630,7 @@ function FilterPanel({
   tierThreshold, setTierThreshold,
   showPriorOps, setShowPriorOps,
   showReversion, setShowReversion,
+  hideHotels, setHideHotels,
   minUnits, setMinUnits,
   featureCount, overlayCounts,
   onAddAllVisible, onAddCategory,
@@ -643,8 +647,7 @@ function FilterPanel({
       <div className="p-4 space-y-4">
         {/* Current legal status */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Current legal status</div>
-          <div className="text-xs font-semibold text-gray-500 mb-2">Show buildings down to</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Current legal status</div>
           <div className="space-y-1">
             {SIGNAL_TIERS.map((tier, idx) => {
               const active = idx <= tierThreshold;
@@ -673,6 +676,7 @@ function FilterPanel({
               );
             })}
           </div>
+
         </div>
 
         {/* Opportunity context */}
@@ -733,16 +737,41 @@ function FilterPanel({
           </label>
         </div>
 
-        {/* Min units */}
-        <div className="flex items-center justify-between px-2.5">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Min units</span>
-          <input
-            type="number"
-            min={0}
-            value={minUnits}
-            onChange={(e) => setMinUnits(Math.max(0, Number(e.target.value) || 0))}
-            className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
-          />
+        {/* Refinements */}
+        <div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Refinements</div>
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+            <input
+              type="checkbox"
+              checked={hideHotels}
+              onChange={(e) => setHideHotels(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                hideHotels ? "bg-gray-800 border-gray-800" : "border-gray-300"
+              }`}
+            >
+              {hideHotels && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs text-gray-700">Hide existing hotels</span>
+            <InfoTip text="Remove H-class buildings (hotels, SROs, boutique hotels) from the map. These are likely already operating as hotels and not available for new management deals." />
+          </label>
+
+          <div className="flex items-center justify-between px-2.5 mt-2">
+            <span className="text-xs text-gray-700">Min units</span>
+            <input
+              type="number"
+              min={0}
+              value={minUnits}
+              onChange={(e) => setMinUnits(Math.max(0, Number(e.target.value) || 0))}
+              className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
         </div>
 
         {/* Add to list actions */}
@@ -878,7 +907,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters) {
+function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -899,6 +928,7 @@ function applyFilters(features, tierThreshold, showPriorOps, showReversion, minU
       const z = (p.zonedist1 || "")[0];
       if (z !== "C" && z !== "M") return false;
     }
+    if (hideHotels && (p.bldgclass || "").startsWith("H")) return false;
 
     return true;
   });
@@ -1336,6 +1366,7 @@ export default function App() {
   const [tierThreshold, setTierThreshold] = useState(1);
   const [showPriorOps, setShowPriorOps] = useState(true);
   const [showReversion, setShowReversion] = useState(true);
+  const [hideHotels, setHideHotels] = useState(false);
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -1552,7 +1583,7 @@ export default function App() {
       const initFilter = buildFilter(1, true, true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      });
+      }, false);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -1654,7 +1685,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
@@ -1667,12 +1698,12 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels]);
 
   // Compute filtered features for table view
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, overlayCounts]);
+    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, overlayCounts]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -1747,6 +1778,8 @@ export default function App() {
         setShowPriorOps={setShowPriorOps}
         showReversion={showReversion}
         setShowReversion={setShowReversion}
+        hideHotels={hideHotels}
+        setHideHotels={setHideHotels}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
         featureCount={activeView !== "map" ? tableFeatures.length : featureCount}
