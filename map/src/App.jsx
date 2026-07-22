@@ -56,7 +56,16 @@ function buildOpacityExpr() {
 const CLUSTER_ZOOM_THRESHOLD = 14; // below this: clusters; above: footprints
 
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels) {
+function computeScore(p, weights) {
+  const total = weights.legal + weights.avail + weights.quality;
+  if (total === 0) return 0;
+  const wL = weights.legal / total;
+  const wA = weights.avail / total;
+  const wQ = weights.quality / total;
+  return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
+}
+
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -80,7 +89,13 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
   const conditions = [
     visibilityFilter,
     ["any",
-      [">=", ["get", "unitsres"], minUnits],
+      [">=",
+        ["case",
+          [">", ["get", "unitsres"], 0], ["get", "unitsres"],
+          ["get", "unitstotal"],
+        ],
+        minUnits,
+      ],
       alwaysShowFilter,
     ],
   ];
@@ -105,6 +120,14 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
   }
   if (hideHotels) {
     conditions.push(["!=", ["slice", ["get", "bldgclass"], 0, 1], "H"]);
+  }
+  if (distressOnly) {
+    conditions.push(["any",
+      ["==", ["get", "has_tax_lien"], true],
+      ["==", ["get", "has_lis_pendens"], true],
+      [">", ["get", "hpd_open_violations"], 0],
+      [">", ["get", "ecb_open_violations"], 0],
+    ]);
   }
 
   return ["all", ...conditions];
@@ -270,7 +293,186 @@ function LL18Modal({ onClose, address }) {
   );
 }
 
-function DetailPanel({ feature, onClose, onAddToList, isInList }) {
+function DistressRow({ signal }) {
+  const [open, setOpen] = useState(false);
+  const bg = signal.severity === "high" ? "bg-red-50" : "bg-amber-50";
+  const dot = signal.severity === "high" ? "bg-red-500" : "bg-amber-400";
+  const text = signal.severity === "high" ? "text-red-800" : "text-amber-900";
+  return (
+    <div className={`${bg} rounded-lg overflow-hidden`}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center gap-2 px-3 py-2 cursor-pointer text-left`}
+      >
+        <span className={`w-2 h-2 rounded-full ${dot} shrink-0`} />
+        <span className={`text-xs ${text} font-medium flex-1`}>{signal.label}</span>
+        <span className={`text-[10px] ${text} opacity-60 transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
+      </button>
+      {open && (
+        <div className="px-3 pb-2 -mt-0.5">
+          <p className="text-[11px] text-gray-600 leading-relaxed">{signal.detail}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function useNotes() {
+  const STORAGE_KEY = "nyc-transient-notes";
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
+  };
+  const [notes, setNotes] = useState(load);
+  const save = (bbl, text) => {
+    setNotes((prev) => {
+      const next = { ...prev };
+      if (text.trim()) next[bbl] = text.trim();
+      else delete next[bbl];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+  return { notes, save };
+}
+
+function NoteEditor({ bbl, notes, onSave }) {
+  const existing = notes[bbl] || "";
+  const [text, setText] = useState(existing);
+  const [editing, setEditing] = useState(false);
+  const changed = text.trim() !== existing;
+
+  useEffect(() => { setText(notes[bbl] || ""); setEditing(false); }, [bbl, notes]);
+
+  if (!editing && !existing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="w-full text-left px-3 py-2 text-xs text-gray-400 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+      >
+        + Add a note...
+      </button>
+    );
+  }
+
+  if (!editing) {
+    return (
+      <div
+        onClick={() => setEditing(true)}
+        className="px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg cursor-pointer hover:bg-amber-100 transition-colors"
+      >
+        <div className="text-[10px] text-amber-600 font-semibold uppercase tracking-wide mb-0.5">Note</div>
+        <div className="text-xs text-amber-900 whitespace-pre-wrap">{existing}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="Add notes about this building..."
+        rows={3}
+        autoFocus
+        className="w-full px-3 py-2 text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-gray-300 resize-none"
+      />
+      <div className="flex gap-1.5 justify-end">
+        <button
+          onClick={() => { setText(existing); setEditing(false); }}
+          className="px-2.5 py-1 text-[11px] text-gray-500 hover:text-gray-700 cursor-pointer"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => { onSave(bbl, text); setEditing(false); }}
+          disabled={!changed}
+          className={`px-2.5 py-1 text-[11px] rounded-md cursor-pointer transition-colors ${
+            changed ? "bg-gray-800 text-white hover:bg-gray-700" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+          }`}
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScoreExplainer({ p }) {
+  const [open, setOpen] = useState(false);
+
+  const legal = [];
+  if (p.tier === "legal_transient") legal.push({ label: "Legal transient tier", pts: 30, hit: true });
+  else legal.push({ label: "Legal transient tier", pts: 30, hit: false });
+  if (p.tier === "class_b") legal.push({ label: "Class B (split-use) tier", pts: 20, hit: true });
+  else legal.push({ label: "Class B tier", pts: 20, hit: false });
+  if (p.tier === "partial") legal.push({ label: "Partial signal tier", pts: 8, hit: true });
+  else legal.push({ label: "Partial signal tier", pts: 8, hit: false });
+  legal.push({ label: "Temporary C of O", pts: 10, hit: !!p.coo_has_temporary });
+  legal.push({ label: "HPD Class B rooms > 0", pts: 10, hit: (p.hpd_class_b || 0) > 0 });
+
+  const avail = [
+    { label: "Prior operator departed", pts: 15, hit: !!p.has_prior_op },
+    { label: "Tax lien on property", pts: 8, hit: !!p.has_tax_lien },
+    { label: "Lis pendens / judgment", pts: 8, hit: !!p.has_lis_pendens },
+    { label: "Recent sale (last 2 yrs)", pts: 5, hit: !!(p.last_sale_date && p.last_sale_date >= `${new Date().getFullYear() - 2}-01-01`) },
+    { label: "Reversion window", pts: 5, hit: !!p.has_reversion },
+    { label: "ECB balance > $10K", pts: 4, hit: (p.ecb_total_balance || 0) > 10000 },
+  ];
+
+  const quality = [
+    { label: "Not an existing hotel", pts: 7, hit: !(p.bldgclass || "").startsWith("H") },
+    { label: "Low Class C violations (<10)", pts: 5, hit: (p.hpd_class_c_violations || 0) < 10 },
+    { label: "Multi-building owner", pts: 3, hit: (p.owner_portfolio_size || 0) > 1 },
+  ];
+
+  // Only show tier signals that are relevant (the one that hit, or all if none hit)
+  const legalFiltered = legal.filter((s) => s.hit || !["Legal transient tier", "Class B tier", "Class B (split-use) tier", "Partial signal tier"].includes(s.label) || s.hit);
+  // Simpler: show all, highlight which fired
+  const sections = [
+    { label: "Legal certainty", color: "#16a34a", signals: legal },
+    { label: "Availability", color: "#2563eb", signals: avail },
+    { label: "Building quality", color: "#8b5cf6", signals: quality },
+  ];
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 cursor-pointer text-left"
+      >
+        <span className={`text-[10px] text-gray-400 transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
+        <span className="text-[10px] text-gray-400 hover:text-gray-600">Why this score</span>
+      </button>
+      {open && (
+        <div className="mt-2 space-y-3">
+          {sections.map(({ label, color, signals }) => (
+            <div key={label}>
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }} />
+                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+              </div>
+              <div className="space-y-0.5 pl-3.5">
+                {signals.map((sig) => (
+                  <div key={sig.label} className="flex items-center gap-2">
+                    <span className={`text-[11px] ${sig.hit ? "text-gray-800" : "text-gray-300"}`}>
+                      {sig.hit ? "+" : "\u00A0\u00A0"}{sig.hit ? sig.pts : 0}
+                    </span>
+                    <span className={`text-[11px] ${sig.hit ? "text-gray-700" : "text-gray-300"}`}>
+                      {sig.label}
+                    </span>
+                    {sig.hit && <span className="text-[10px] text-emerald-500">&#10003;</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, notes, onSaveNote }) {
   const [showLL18, setShowLL18] = useState(false);
   if (!feature) return null;
   const p = feature.properties;
@@ -298,6 +500,15 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
             {p.tier?.replace(/_/g, " ")}
           </span>
           <span className="text-xs text-gray-500">{p.confidence} confidence</span>
+          {(() => {
+            const score = computeScore(p, scoreWeights);
+            const color = score >= 60 ? "bg-emerald-600" : score >= 35 ? "bg-amber-500" : "bg-gray-400";
+            return (
+              <span className={`${color} text-white text-xs font-bold px-2 py-0.5 rounded-md tabular-nums`}>
+                {score}
+              </span>
+            );
+          })()}
           <button
             onClick={() => onAddToList(feature)}
             className={`ml-auto px-2.5 py-1 text-xs rounded-md cursor-pointer transition-colors ${
@@ -309,6 +520,26 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
             {isInList ? "Remove from list" : "+ Add to list"}
           </button>
         </div>
+
+        {/* Score breakdown bars */}
+        <div className="space-y-1.5">
+          {[
+            { label: "Legal certainty", value: p.score_legal ?? 0, color: "#16a34a" },
+            { label: "Availability", value: p.score_avail ?? 0, color: "#2563eb" },
+            { label: "Building quality", value: p.score_quality ?? 0, color: "#8b5cf6" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="flex items-center gap-2">
+              <span className="text-[10px] text-gray-400 w-24 shrink-0">{label}</span>
+              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full rounded-full transition-all" style={{ width: `${value}%`, backgroundColor: color }} />
+              </div>
+              <span className="text-[10px] text-gray-500 tabular-nums w-7 text-right">{value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Why this score */}
+        <ScoreExplainer p={p} />
 
         {priorOp && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
@@ -479,6 +710,50 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
           );
         })()}
 
+        {/* Distress signals */}
+        {(() => {
+          const hasLien = p.has_tax_lien;
+          const hasLp = p.has_lis_pendens;
+          const hpdV = p.hpd_open_violations || 0;
+          const hpdC = p.hpd_class_c_violations || 0;
+          const ecbV = p.ecb_open_violations || 0;
+          const ecbBal = p.ecb_total_balance || 0;
+          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0) return null;
+
+          const signals = [];
+          if (hasLien) signals.push({
+            label: "Tax lien on property",
+            detail: "The city has placed a lien on this property for unpaid taxes or charges. Indicates financial distress — the owner may be motivated to find revenue sources like a hotel management partner.",
+            severity: "high",
+          });
+          if (hasLp) signals.push({
+            label: `Lis pendens / judgment (${p.lis_pendens_count})`,
+            detail: "A legal action (lawsuit or judgment) has been filed against this property in the last 5 years. Strong signal of financial or legal distress — owner may be under pressure to generate income or sell.",
+            severity: "high",
+          });
+          if (hpdV > 0) signals.push({
+            label: `${hpdV} open HPD violations` + (hpdC > 0 ? ` (${hpdC} Class C)` : ""),
+            detail: "Open violations from NYC Housing Preservation & Development. Class C = immediately hazardous (structural, lead, fire safety). High counts may indicate deferred maintenance. Very high counts (20+) could mean the building needs significant capital — a risk factor, not just an opportunity signal.",
+            severity: hpdC > 5 ? "high" : "medium",
+          });
+          if (ecbV > 0) signals.push({
+            label: `${ecbV} ECB violations` + (ecbBal > 0 ? ` ($${ecbBal.toLocaleString()} balance)` : ""),
+            detail: "Active violations from the Environmental Control Board (OATH). These carry financial penalties. A large unpaid balance signals the owner may be under financial pressure — relevant when combined with legal transient eligibility.",
+            severity: ecbBal > 10000 ? "high" : "medium",
+          });
+
+          return (
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Distress signals</div>
+              <div className="space-y-1">
+                {signals.map((sig, i) => (
+                  <DistressRow key={i} signal={sig} />
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Due diligence links */}
         {(() => {
           const links = buildRecordLinks(p.bbl, p.bin);
@@ -505,6 +780,9 @@ function DetailPanel({ feature, onClose, onAddToList, isInList }) {
             </div>
           );
         })()}
+
+        {/* Notes */}
+        <NoteEditor bbl={p.bbl} notes={notes} onSave={onSaveNote} />
 
         <button
           onClick={() => setShowLL18(true)}
@@ -631,11 +909,14 @@ function FilterPanel({
   showPriorOps, setShowPriorOps,
   showReversion, setShowReversion,
   hideHotels, setHideHotels,
+  distressOnly, setDistressOnly,
   minUnits, setMinUnits,
+  scoreWeights, setScoreWeights,
   featureCount, overlayCounts,
   onAddAllVisible, onAddCategory,
   dataDate,
 }) {
+  const [showScoreConfig, setShowScoreConfig] = useState(false);
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
@@ -762,6 +1043,28 @@ function FilterPanel({
             <InfoTip text="Remove H-class buildings (hotels, SROs, boutique hotels) from the map. These are likely already operating as hotels and not available for new management deals." />
           </label>
 
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+            <input
+              type="checkbox"
+              checked={distressOnly}
+              onChange={(e) => setDistressOnly(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                distressOnly ? "bg-gray-800 border-gray-800" : "border-gray-300"
+              }`}
+            >
+              {distressOnly && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs text-gray-700">Distress signals only</span>
+            <InfoTip text="Show only buildings with financial distress indicators: tax liens, lis pendens/judgments, high ECB fines, or significant HPD violations. Combined with legal transient status, these are the strongest signals of a motivated owner." />
+          </label>
+
           <div className="flex items-center justify-between px-2.5 mt-2">
             <span className="text-xs text-gray-700">Min units</span>
             <input
@@ -772,6 +1075,47 @@ function FilterPanel({
               className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
+        </div>
+
+        {/* Deal score weights */}
+        <div>
+          <button
+            onClick={() => setShowScoreConfig(!showScoreConfig)}
+            className="flex items-center gap-1.5 cursor-pointer text-left w-full"
+          >
+            <span className={`text-[10px] text-gray-400 transition-transform ${showScoreConfig ? "rotate-90" : ""}`}>&#9654;</span>
+            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Deal score weights</span>
+          </button>
+          {showScoreConfig && (
+            <div className="mt-2 space-y-2.5 px-1">
+              {[
+                { key: "legal", label: "Legal certainty" },
+                { key: "avail", label: "Availability" },
+                { key: "quality", label: "Building quality" },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[11px] text-gray-600">{label}</span>
+                    <span className="text-[11px] font-mono text-gray-500 w-8 text-right">{scoreWeights[key]}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={scoreWeights[key]}
+                    onChange={(e) => setScoreWeights((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
+                    className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() => setScoreWeights({ legal: 50, avail: 35, quality: 15 })}
+                className="text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                Reset to defaults
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Add to list actions */}
@@ -804,7 +1148,7 @@ function FilterPanel({
   );
 }
 
-function SearchBar({ mapRef }) {
+function SearchBar({ mapRef, panelOpen }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -875,7 +1219,7 @@ function SearchBar({ mapRef }) {
 
 function Legend() {
   return (
-    <div className="absolute bottom-6 left-4 bg-white/90 backdrop-blur rounded-lg shadow-lg border border-gray-200 px-3 py-2 z-10">
+    <div className="absolute bottom-6 left-[19.5rem] bg-white/90 backdrop-blur rounded-lg shadow-lg border border-gray-200 px-3 py-2 z-10">
       <div className="flex gap-4">
         {ALL_TIERS.map((tier) => (
           <div key={tier.key} className="flex items-center gap-1.5">
@@ -891,6 +1235,7 @@ function Legend() {
 // --- Table columns ---
 const TABLE_COLS = [
   { key: "address", label: "Address", sortable: true, width: "min-w-[200px]" },
+  { key: "deal_score", label: "Score", sortable: true, numeric: true, width: "min-w-[65px]" },
   { key: "neighborhood", label: "Neighborhood", sortable: true, width: "min-w-[160px]" },
   { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
   { key: "unitsres", label: "Units", sortable: true, numeric: true, width: "min-w-[70px]" },
@@ -907,7 +1252,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels) {
+function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -918,7 +1263,8 @@ function applyFilters(features, tierThreshold, showPriorOps, showReversion, minU
     const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
     if (!tierOk && !overlayOk) return false;
 
-    if (!overlayOk && (p.unitsres || 0) < minUnits) return false;
+    const effectiveUnits = (p.unitsres || 0) > 0 ? p.unitsres : (p.unitstotal || 0);
+    if (!overlayOk && effectiveUnits < minUnits) return false;
 
     if (filters.filterTempCoo && !p.coo_has_temporary) return false;
     if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
@@ -929,6 +1275,10 @@ function applyFilters(features, tierThreshold, showPriorOps, showReversion, minU
       if (z !== "C" && z !== "M") return false;
     }
     if (hideHotels && (p.bldgclass || "").startsWith("H")) return false;
+    if (distressOnly) {
+      const hasDistress = p.has_tax_lien || p.has_lis_pendens || (p.hpd_open_violations || 0) > 0 || (p.ecb_open_violations || 0) > 0;
+      if (!hasDistress) return false;
+    }
 
     return true;
   });
@@ -954,8 +1304,11 @@ function dedupeFeatures(features) {
   return Array.from(groups.values());
 }
 
-function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter }) {
-  const [sortKey, setSortKey] = useState("unitsres");
+function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter, scoreWeights,
+  tierThreshold, setTierThreshold, hideHotels, setHideHotels, distressOnly, setDistressOnly, minUnits, setMinUnits,
+  showPriorOps, setShowPriorOps, showReversion, setShowReversion, notes,
+}) {
+  const [sortKey, setSortKey] = useState("deal_score");
   const [sortDir, setSortDir] = useState("desc");
   const [searchText, setSearchText] = useState("");
 
@@ -983,8 +1336,8 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
 
   const sorted = [...filtered].sort((a, b) => {
     const col = TABLE_COLS.find((c) => c.key === sortKey);
-    let va = a.properties[sortKey];
-    let vb = b.properties[sortKey];
+    let va = sortKey === "deal_score" ? computeScore(a.properties, scoreWeights) : a.properties[sortKey];
+    let vb = sortKey === "deal_score" ? computeScore(b.properties, scoreWeights) : b.properties[sortKey];
     if (col?.numeric) {
       va = Number(va) || 0;
       vb = Number(vb) || 0;
@@ -1003,6 +1356,20 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
   };
 
   const cellValue = (col, p) => {
+    if (col.key === "address") {
+      const hasNote = notes && notes[p.bbl];
+      return (
+        <span className="flex items-center gap-1.5">
+          <span className="truncate">{p.address || "—"}</span>
+          {hasNote && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Has note" />}
+        </span>
+      );
+    }
+    if (col.key === "deal_score") {
+      const score = computeScore(p, scoreWeights);
+      const color = score >= 60 ? "bg-emerald-600" : score >= 35 ? "bg-amber-500" : "bg-gray-400";
+      return <span className={`${color} text-white text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums`}>{score}</span>;
+    }
     const v = p[col.key];
     if (col.key === "tier") {
       return (
@@ -1015,6 +1382,13 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
       );
     }
     if (col.key === "last_sale_price") return fmtPrice(v);
+    if (col.key === "unitsres") {
+      const res = p.unitsres || 0;
+      const total = p.unitstotal || 0;
+      if (res > 0) return res;
+      if (total > 0) return <span className="text-gray-400" title="Total units (no residential)">{total}</span>;
+      return "—";
+    }
     if (col.key === "numfloors") return v ? Math.round(v) : "—";
     if (col.key === "coo_has_temporary") return v ? "Yes" : "";
     if (col.key === "owner_portfolio_size") return v > 1 ? v : "";
@@ -1028,16 +1402,22 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Search + filters bar */}
-      <div className="px-4 py-3 border-b border-gray-200 shrink-0 space-y-2">
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Header + search */}
+      <div className="px-8 pt-8 pb-4 shrink-0 space-y-3">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Building pipeline</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            All buildings ranked by deal score. Click a row to view details.
+          </p>
+        </div>
         <div className="flex items-center gap-3">
           <input
             type="text"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search address, owner, or BBL..."
-            className="flex-1 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-300"
+            className="flex-1 px-3 py-2 bg-white rounded-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-300"
           />
           <span className="text-xs text-gray-400 shrink-0">{sorted.length} buildings</span>
         </div>
@@ -1062,10 +1442,73 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
             </button>
           ))}
         </div>
+
+        {/* Core filters */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-500">Tiers:</span>
+            {SIGNAL_TIERS.map((tier, idx) => (
+              <button
+                key={tier.key}
+                onClick={() => setTierThreshold(idx)}
+                className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
+                  idx <= tierThreshold
+                    ? "text-white border-transparent"
+                    : "bg-white text-gray-400 border-gray-200"
+                }`}
+                style={idx <= tierThreshold ? { backgroundColor: tier.color, borderColor: tier.color } : {}}
+              >
+                {tier.label}
+              </button>
+            ))}
+          </div>
+          {[
+            { checked: showPriorOps, set: setShowPriorOps, label: "Prior operators", color: PRIOR_OP.color },
+            { checked: showReversion, set: setShowReversion, label: "Reversion", color: REVERSION.color },
+          ].map(({ checked, set, label, color }) => (
+            <button
+              key={label}
+              onClick={() => set(!checked)}
+              className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
+                checked ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-200"
+              }`}
+              style={checked ? { backgroundColor: color, borderColor: color } : {}}
+            >
+              {label}
+            </button>
+          ))}
+          <button
+            onClick={() => setHideHotels(!hideHotels)}
+            className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
+              hideHotels ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200"
+            }`}
+          >
+            Hide hotels
+          </button>
+          <button
+            onClick={() => setDistressOnly(!distressOnly)}
+            className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
+              distressOnly ? "bg-red-600 text-white border-red-600" : "bg-white text-gray-600 border-gray-200"
+            }`}
+          >
+            Distress only
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-500">Min units</span>
+            <input
+              type="number"
+              min={0}
+              value={minUnits}
+              onChange={(e) => setMinUnits(Math.max(0, Number(e.target.value) || 0))}
+              className="w-14 px-1.5 py-0.5 text-[11px] font-mono text-gray-700 bg-white border border-gray-200 rounded-md text-right outline-none focus:ring-1 focus:ring-gray-300"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto px-8 pb-8">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-left">
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
@@ -1127,12 +1570,13 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
         {sorted.length === 0 && (
           <div className="text-center text-sm text-gray-400 py-12">No buildings match the current filters</div>
         )}
+        </div>
       </div>
     </div>
   );
 }
 
-function buildOwnerGroups(features) {
+function _removed() { /* buildOwnerGroups + OwnerView removed */
   const groups = new Map();
   for (const f of features) {
     const p = f.properties;
@@ -1168,6 +1612,156 @@ function buildOwnerGroups(features) {
     }
   }
   return Array.from(groups.values());
+}
+
+const SCORE_SIGNALS = {
+  legal: [
+    { key: "tier_legal", label: "Legal transient tier", pts: 30, max: 50, desc: "Multiple sources confirm existing transient/hotel capacity." },
+    { key: "tier_classb", label: "Class B (split-use) tier", pts: 20, max: 50, desc: "HPD shows both Class A apartments and Class B transient rooms." },
+    { key: "tier_partial", label: "Partial signal tier", pts: 8, max: 50, desc: "Building class suggests mixed use but HPD didn't confirm Class B." },
+    { key: "coo_temp", label: "Temporary C of O", pts: 10, max: 50, desc: "Independent confirmation of transient use via Certificate of Occupancy." },
+    { key: "hpd_classb", label: "HPD Class B rooms", pts: 10, max: 50, desc: "HPD records show Class B (transient) room count > 0." },
+  ],
+  avail: [
+    { key: "prior_op", label: "Prior operator departed", pts: 15, max: 45, desc: "A flex-stay operator previously ran this building. Proven model, gap to fill." },
+    { key: "tax_lien", label: "Tax lien", pts: 8, max: 45, desc: "City lien for unpaid taxes. Owner under financial pressure." },
+    { key: "lis_pendens", label: "Lis pendens / judgment", pts: 8, max: 45, desc: "Legal action filed against the property in last 5 years." },
+    { key: "recent_sale", label: "Recent sale (last 2 yrs)", pts: 5, max: 45, desc: "New owner may be more open to management partnerships." },
+    { key: "reversion", label: "Reversion window", pts: 5, max: 45, desc: "Hotel-converted building can revert to transient before Dec 2027." },
+    { key: "ecb_balance", label: "ECB balance > $10K", pts: 4, max: 45, desc: "Unpaid DOB fines indicate financial pressure on the owner." },
+  ],
+  quality: [
+    { key: "not_hotel", label: "Not already a hotel", pts: 7, max: 15, desc: "Building isn't H-class, so it's not already operating as a branded hotel." },
+    { key: "low_violations", label: "Low Class C violations", pts: 5, max: 15, desc: "Fewer than 10 immediately hazardous violations. Building in decent shape." },
+    { key: "portfolio_owner", label: "Multi-building owner", pts: 3, max: 15, desc: "Owner has multiple buildings in pipeline. Portfolio deal potential." },
+  ],
+};
+
+function ScoreConfigPage({ scoreWeights, setScoreWeights, features }) {
+  const topBuildings = useMemo(() => {
+    const scored = features.map((f) => ({
+      feature: f,
+      score: computeScore(f.properties, scoreWeights),
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 10);
+  }, [features, scoreWeights]);
+
+  const categoryMeta = [
+    { key: "legal", label: "Legal certainty", color: "#16a34a", weight: scoreWeights.legal },
+    { key: "avail", label: "Availability", color: "#2563eb", weight: scoreWeights.avail },
+    { key: "quality", label: "Building quality", color: "#8b5cf6", weight: scoreWeights.quality },
+  ];
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50">
+      <div className="max-w-3xl mx-auto py-8 px-6 space-y-8">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">Deal score configuration</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Adjust how buildings are ranked. Each category has a weight (percentage of total score)
+            and individual signals that contribute to it.
+          </p>
+        </div>
+
+        {/* Category weight sliders */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <h3 className="text-sm font-semibold text-gray-800">Category weights</h3>
+          <p className="text-xs text-gray-400">These control how much each dimension matters in the final score. They don't need to add up to 100 — they're normalized automatically.</p>
+          {categoryMeta.map(({ key, label, color, weight }) => (
+            <div key={key}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
+                  <span className="text-sm text-gray-700">{label}</span>
+                </div>
+                <span className="text-sm font-mono text-gray-500 tabular-nums">{weight}%</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={weight}
+                onChange={(e) => setScoreWeights((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
+                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                style={{ accentColor: color }}
+              />
+            </div>
+          ))}
+          <button
+            onClick={() => setScoreWeights({ legal: 50, avail: 35, quality: 15 })}
+            className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
+          >
+            Reset to defaults (50 / 35 / 15)
+          </button>
+        </div>
+
+        {/* Signal breakdown by category */}
+        {categoryMeta.map(({ key, label, color }) => (
+          <div key={key} className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
+              <h3 className="text-sm font-semibold text-gray-800">{label}</h3>
+            </div>
+            <div className="space-y-3">
+              {SCORE_SIGNALS[key].map((sig) => (
+                <div key={sig.key} className="flex items-start gap-3">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <div className="w-14 shrink-0">
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${(sig.pts / sig.max) * 100}%`, backgroundColor: color }} />
+                      </div>
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs text-gray-800 font-medium">{sig.label}</div>
+                      <div className="text-[10px] text-gray-400 leading-snug">{sig.desc}</div>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono text-gray-400 tabular-nums shrink-0 pt-0.5">+{sig.pts}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* Live preview: top 10 */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 10 with current weights</h3>
+          <div className="space-y-2">
+            {topBuildings.map(({ feature, score }, i) => {
+              const p = feature.properties;
+              const scoreColor = score >= 60 ? "bg-emerald-600" : score >= 35 ? "bg-amber-500" : "bg-gray-400";
+              return (
+                <div key={p.bbl + i} className="flex items-center gap-3 py-1.5 border-b border-gray-50 last:border-0">
+                  <span className="text-[10px] text-gray-300 w-4 text-right tabular-nums">{i + 1}</span>
+                  <span className={`${scoreColor} text-white text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums`}>{score}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs text-gray-800 font-medium truncate">{p.address}</div>
+                    <div className="text-[10px] text-gray-400">
+                      {p.neighborhood || ""}
+                      {p.has_prior_op && <span className="ml-1.5 text-purple-500">Prior op</span>}
+                      {p.has_tax_lien && <span className="ml-1.5 text-red-500">Lien</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    {[
+                      { val: p.score_legal, color: "#16a34a" },
+                      { val: p.score_avail, color: "#2563eb" },
+                      { val: p.score_quality, color: "#8b5cf6" },
+                    ].map(({ val, color }, j) => (
+                      <div key={j} className="w-8 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full" style={{ width: `${val}%`, backgroundColor: color }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
@@ -1228,7 +1822,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
 
   return (
     <div className="h-full flex flex-col bg-white">
-      <div className="px-4 py-3 border-b border-gray-200 shrink-0">
+      <div className="px-4 py-3 pr-[22rem] border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-3">
           <input
             type="text"
@@ -1361,12 +1955,14 @@ export default function App() {
   const mapRef = useRef(null);
   const allFeaturesRef = useRef([]);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
+  const { notes, save: saveNote } = useNotes();
   const [exportList, setExportList] = useState(new Map()); // bbl -> feature
   const [listExpanded, setListExpanded] = useState(false);
   const [tierThreshold, setTierThreshold] = useState(1);
   const [showPriorOps, setShowPriorOps] = useState(true);
   const [showReversion, setShowReversion] = useState(true);
-  const [hideHotels, setHideHotels] = useState(false);
+  const [hideHotels, setHideHotels] = useState(true);
+  const [distressOnly, setDistressOnly] = useState(false);
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -1379,7 +1975,8 @@ export default function App() {
   const setFilter = useCallback((key, val) => {
     setExtraFilters((prev) => ({ ...prev, [key]: val }));
   }, []);
-  const [activeView, setActiveView] = useState("map"); // "map" | "table" | "owners"
+  const [activeView, setActiveView] = useState("map"); // "map" | "table" | "score"
+  const [scoreWeights, setScoreWeights] = useState({ legal: 50, avail: 35, quality: 15 });
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
   const [dataDate, setDataDate] = useState(null);
@@ -1583,7 +2180,7 @@ export default function App() {
       const initFilter = buildFilter(1, true, true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      }, false);
+      }, true, false);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -1685,7 +2282,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
@@ -1698,20 +2295,20 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly]);
 
   // Compute filtered features for table view
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, overlayCounts]);
+    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, overlayCounts]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
       {/* View toggle */}
-      <div className={`absolute top-4 z-30 flex bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden ${inspectedFeature ? "right-[26rem]" : "right-4"}`}>
+      {!inspectedFeature && <div className="absolute top-4 right-4 z-30 flex bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
         <button
           onClick={() => setActiveView("map")}
-          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+          className={`w-20 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
             activeView === "map" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
@@ -1719,21 +2316,21 @@ export default function App() {
         </button>
         <button
           onClick={() => setActiveView("table")}
-          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
+          className={`w-20 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
             activeView === "table" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
           Table
         </button>
         <button
-          onClick={() => setActiveView("owners")}
-          className={`px-3.5 py-2 text-xs font-medium transition-colors cursor-pointer ${
-            activeView === "owners" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
+          onClick={() => setActiveView("score")}
+          className={`w-20 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
+            activeView === "score" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
-          Owners
+          Score
         </button>
-      </div>
+      </div>}
 
       {/* Map view */}
       <div ref={mapContainer} className="w-full h-full" style={{ display: activeView === "map" ? "block" : "none" }} />
@@ -1741,10 +2338,7 @@ export default function App() {
       {/* Table view */}
       {activeView === "table" && (
         <div className="flex-1 flex">
-          {/* Filter panel takes left side */}
-          <div className="w-72 shrink-0" />
-          {/* Table fills the rest */}
-          <div className="flex-1 h-full overflow-hidden">
+          <div className={`flex-1 h-full overflow-hidden transition-all ${inspectedFeature ? "pr-[26rem]" : ""}`}>
             <TableView
               features={tableFeatures}
               onSelectFeature={(f) => setInspectedFeature(f)}
@@ -1752,26 +2346,36 @@ export default function App() {
               onAddToList={handleAddToList}
               extraFilters={extraFilters}
               setFilter={setFilter}
+              scoreWeights={scoreWeights}
+              tierThreshold={tierThreshold}
+              setTierThreshold={setTierThreshold}
+              hideHotels={hideHotels}
+              setHideHotels={setHideHotels}
+              distressOnly={distressOnly}
+              setDistressOnly={setDistressOnly}
+              minUnits={minUnits}
+              setMinUnits={setMinUnits}
+              showPriorOps={showPriorOps}
+              setShowPriorOps={setShowPriorOps}
+              showReversion={showReversion}
+              setShowReversion={setShowReversion}
+              notes={notes}
             />
           </div>
         </div>
       )}
 
-      {activeView === "owners" && (
-        <div className="flex-1 flex">
-          <div className="w-72 shrink-0" />
-          <div className="flex-1 h-full overflow-hidden">
-            <OwnerView
-              features={tableFeatures}
-              onSelectFeature={(f) => setInspectedFeature(f)}
-              exportList={exportList}
-              onAddToList={handleAddToList}
-            />
-          </div>
+      {activeView === "score" && (
+        <div className="flex-1 h-full overflow-hidden">
+          <ScoreConfigPage
+            scoreWeights={scoreWeights}
+            setScoreWeights={setScoreWeights}
+            features={tableFeatures}
+          />
         </div>
       )}
 
-      <FilterPanel
+      {activeView === "map" && <FilterPanel
         tierThreshold={tierThreshold}
         setTierThreshold={setTierThreshold}
         showPriorOps={showPriorOps}
@@ -1780,8 +2384,12 @@ export default function App() {
         setShowReversion={setShowReversion}
         hideHotels={hideHotels}
         setHideHotels={setHideHotels}
+        distressOnly={distressOnly}
+        setDistressOnly={setDistressOnly}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
+        scoreWeights={scoreWeights}
+        setScoreWeights={setScoreWeights}
         featureCount={activeView !== "map" ? tableFeatures.length : featureCount}
         overlayCounts={overlayCounts}
         onAddAllVisible={activeView !== "map"
@@ -1797,15 +2405,18 @@ export default function App() {
         }
         onAddCategory={handleAddCategory}
         dataDate={dataDate}
-      />
+      />}
 
-      {activeView === "map" && <SearchBar mapRef={mapRef} />}
+      {activeView === "map" && <SearchBar mapRef={mapRef} panelOpen={!!inspectedFeature} />}
 
       <DetailPanel
         feature={inspectedFeature}
         onClose={() => setInspectedFeature(null)}
         onAddToList={handleAddToList}
         isInList={inspectedFeature ? exportList.has(inspectedFeature.properties.bbl) : false}
+        scoreWeights={scoreWeights}
+        notes={notes}
+        onSaveNote={saveNote}
       />
 
       <ListTray
@@ -1816,7 +2427,7 @@ export default function App() {
         expanded={listExpanded}
       />
 
-      {activeView === "map" && <Legend />}
+      {/* Legend removed — tier colors are in the filter panel */}
     </div>
   );
 }

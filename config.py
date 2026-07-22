@@ -16,6 +16,11 @@ DOF_SALES_DATASET_ID = "w2pb-icbu"
 DOB_FILINGS_DATASET_ID = "ic3t-wcy2"
 COO_LEGACY_DATASET_ID = "bs8b-p36w"   # DOB BIS C of O (2012–Mar 2021)
 COO_NOW_DATASET_ID = "pkdm-hqz6"      # DOB NOW C of O (Mar 2021+)
+HPD_VIOLATIONS_DATASET_ID = "wvxf-dwi5"
+DOB_ECB_VIOLATIONS_DATASET_ID = "6bgk-3dad"
+TAX_LIENS_DATASET_ID = "9rz4-mjek"
+ACRIS_LEGALS_DATASET_ID = "8h5j-fqxa"
+ACRIS_MASTER_DATASET_ID = "bnx9-e6tj"
 
 SOCRATA_BASE_URL = "https://data.cityofnewyork.us/resource"
 

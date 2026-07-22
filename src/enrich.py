@@ -239,11 +239,112 @@ def load_coo(path: Path = None) -> dict[str, list[dict]]:
     return by_bbl
 
 
+def load_hpd_violations(path: Path = None) -> dict[str, dict]:
+    """Load open HPD violations, summarized per BBL."""
+    if path is None:
+        path = DATA_RAW / f"hpd_violations_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+
+    by_bbl: dict[str, dict] = {}
+    for row in raw:
+        bbl = row.get("bbl", "")
+        if not bbl:
+            continue
+        entry = by_bbl.setdefault(bbl, {"total": 0, "class_a": 0, "class_b": 0, "class_c": 0, "rent_impairing": 0})
+        entry["total"] += 1
+        cls = (row.get("class") or "").upper()
+        if cls == "A":
+            entry["class_a"] += 1
+        elif cls == "B":
+            entry["class_b"] += 1
+        elif cls == "C":
+            entry["class_c"] += 1
+        if (row.get("rentimpairing") or "").upper() == "Y":
+            entry["rent_impairing"] += 1
+
+    return by_bbl
+
+
+def load_ecb_violations(path: Path = None) -> dict[str, dict]:
+    """Load active DOB ECB violations, summarized per BBL."""
+    if path is None:
+        path = DATA_RAW / f"ecb_violations_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+
+    by_bbl: dict[str, dict] = {}
+    for row in raw:
+        bbl = row.get("bbl", "")
+        if not bbl:
+            continue
+        entry = by_bbl.setdefault(bbl, {"count": 0, "total_penalty": 0, "total_balance": 0, "hazardous": 0})
+        entry["count"] += 1
+        entry["total_penalty"] += int(float(row.get("penality_imposed") or 0))
+        entry["total_balance"] += int(float(row.get("balance_due") or 0))
+        sev = (row.get("severity") or "").upper()
+        if "HAZARDOUS" in sev or "CLASS - 1" in sev:
+            entry["hazardous"] += 1
+
+    return by_bbl
+
+
+def load_tax_liens(path: Path = None) -> dict[str, dict]:
+    """Load tax lien records, summarized per BBL."""
+    if path is None:
+        path = DATA_RAW / f"tax_liens_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+
+    by_bbl: dict[str, dict] = {}
+    for row in raw:
+        bbl = row.get("bbl", "")
+        if not bbl:
+            continue
+        entry = by_bbl.setdefault(bbl, {"count": 0, "has_lien_sale": False, "water_only": True})
+        entry["count"] += 1
+        if (row.get("cycle") or "").lower() == "lien sale":
+            entry["has_lien_sale"] = True
+        if (row.get("water_debt_only") or "").upper() != "YES":
+            entry["water_only"] = False
+
+    return by_bbl
+
+
+def load_lis_pendens(path: Path = None) -> dict[str, dict]:
+    """Load lis pendens filings, summarized per BBL."""
+    if path is None:
+        path = DATA_RAW / f"lis_pendens_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+
+    by_bbl: dict[str, dict] = {}
+    for row in raw:
+        bbl = row.get("bbl", "")
+        if not bbl:
+            continue
+        rec_date = (row.get("recorded_datetime") or "")[:10]
+        entry = by_bbl.setdefault(bbl, {"count": 0, "latest_date": ""})
+        entry["count"] += 1
+        if rec_date > entry["latest_date"]:
+            entry["latest_date"] = rec_date
+
+    return by_bbl
+
+
 def enrich_pipeline(
     pipeline_path: Path = None,
     sales_path: Path = None,
     permits_path: Path = None,
     coo_path: Path = None,
+    hpd_violations_path: Path = None,
+    ecb_violations_path: Path = None,
+    tax_liens_path: Path = None,
+    lis_pendens_path: Path = None,
 ) -> Path:
     if pipeline_path is None:
         pipeline_path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
@@ -252,6 +353,10 @@ def enrich_pipeline(
     sales_by_bbl = load_sales(sales_path)
     permits_by_bbl = load_permits(permits_path)
     coo_by_bbl = load_coo(coo_path)
+    hpd_viol_by_bbl = load_hpd_violations(hpd_violations_path)
+    ecb_viol_by_bbl = load_ecb_violations(ecb_violations_path)
+    liens_by_bbl = load_tax_liens(tax_liens_path)
+    lp_by_bbl = load_lis_pendens(lis_pendens_path)
 
     # Owner dedup: normalize names and build groups
     owner_canonical = _build_owner_groups(pipeline)
@@ -319,6 +424,37 @@ def enrich_pipeline(
             record["coo_has_temporary"] = False
             record["coo_dwelling_units"] = None
 
+        # Distress signals
+        hpd_v = hpd_viol_by_bbl.get(bbl)
+        if hpd_v:
+            record["hpd_open_violations"] = hpd_v["total"]
+            record["hpd_class_c_violations"] = hpd_v["class_c"]
+            record["hpd_rent_impairing"] = hpd_v["rent_impairing"]
+        else:
+            record["hpd_open_violations"] = 0
+            record["hpd_class_c_violations"] = 0
+            record["hpd_rent_impairing"] = 0
+
+        ecb_v = ecb_viol_by_bbl.get(bbl)
+        if ecb_v:
+            record["ecb_open_violations"] = ecb_v["count"]
+            record["ecb_total_balance"] = ecb_v["total_balance"]
+            record["ecb_hazardous"] = ecb_v["hazardous"]
+        else:
+            record["ecb_open_violations"] = 0
+            record["ecb_total_balance"] = 0
+            record["ecb_hazardous"] = 0
+
+        lien = liens_by_bbl.get(bbl)
+        record["has_tax_lien"] = lien is not None
+        record["tax_lien_count"] = lien["count"] if lien else 0
+        record["tax_lien_non_water"] = (not lien["water_only"]) if lien else False
+
+        lp = lp_by_bbl.get(bbl)
+        record["has_lis_pendens"] = lp is not None
+        record["lis_pendens_count"] = lp["count"] if lp else 0
+        record["lis_pendens_latest"] = lp["latest_date"] if lp else None
+
         if sales or permits or coos:
             enriched_count += 1
 
@@ -331,6 +467,11 @@ def enrich_pipeline(
     print(f"    with Temporary COs: {sum(1 for r in pipeline if r.get('coo_has_temporary'))}")
     multi = sum(1 for v in owner_bbls.values() if len(v) > 1)
     print(f"  Multi-building owners: {multi} (owning {sum(len(v) for v in owner_bbls.values() if len(v) > 1)} buildings)")
+    print(f"  HPD open violations: {sum(1 for r in pipeline if r.get('hpd_open_violations', 0) > 0)} buildings")
+    print(f"    with Class C: {sum(1 for r in pipeline if r.get('hpd_class_c_violations', 0) > 0)} buildings")
+    print(f"  ECB open violations: {sum(1 for r in pipeline if r.get('ecb_open_violations', 0) > 0)} buildings")
+    print(f"  Tax liens: {sum(1 for r in pipeline if r.get('has_tax_lien'))} buildings")
+    print(f"  Lis pendens: {sum(1 for r in pipeline if r.get('has_lis_pendens'))} buildings")
     return outpath
 
 

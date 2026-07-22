@@ -133,6 +133,14 @@ def build_geojson(
             "coo_latest_type": record.get("coo_latest_type"),
             "coo_has_temporary": record.get("coo_has_temporary", False),
             "coo_dwelling_units": record.get("coo_dwelling_units"),
+            # Distress signals
+            "hpd_open_violations": record.get("hpd_open_violations", 0),
+            "hpd_class_c_violations": record.get("hpd_class_c_violations", 0),
+            "ecb_open_violations": record.get("ecb_open_violations", 0),
+            "ecb_total_balance": record.get("ecb_total_balance", 0),
+            "has_tax_lien": record.get("has_tax_lien", False),
+            "has_lis_pendens": record.get("has_lis_pendens", False),
+            "lis_pendens_count": record.get("lis_pendens_count", 0),
         }
 
         # Include top 3 permits (trimmed to save space)
@@ -158,6 +166,55 @@ def build_geojson(
         if record.get("reversion_window"):
             properties["reversion_window"] = record["reversion_window"]
             properties["has_reversion"] = True
+
+        # Deal sub-scores (each 0-100, combined on frontend with adjustable weights)
+        # Legal certainty (max 50 raw pts -> normalized to 0-100)
+        legal = 0
+        tier = record["tier"]
+        if tier == "legal_transient":
+            legal += 30
+        elif tier == "class_b":
+            legal += 20
+        elif tier == "partial":
+            legal += 8
+        elif tier == "prior_operator":
+            legal += 5
+        if record.get("coo_has_temporary"):
+            legal += 10
+        if record.get("hpd_class_b", 0) > 0:
+            legal += 10
+        properties["score_legal"] = round(min(legal / 50, 1.0) * 100)
+
+        # Availability (max 45 raw pts -> normalized to 0-100)
+        avail = 0
+        if record.get("prior_operator"):
+            avail += 15
+        if record.get("has_tax_lien"):
+            avail += 8
+        if record.get("has_lis_pendens"):
+            avail += 8
+        sale_date = record.get("last_sale_date") or ""
+        if sale_date >= f"{date.today().year - 2}-01-01":
+            avail += 5
+        if record.get("reversion_window"):
+            avail += 5
+        if (record.get("ecb_total_balance") or 0) > 10000:
+            avail += 4
+        properties["score_avail"] = round(min(avail / 45, 1.0) * 100)
+
+        # Building quality (max 15 raw pts -> normalized to 0-100)
+        quality = 0
+        bldgclass = record.get("bldgclass") or ""
+        if not bldgclass.startswith("H"):
+            quality += 7
+        class_c = record.get("hpd_class_c_violations") or 0
+        if class_c < 10:
+            quality += 5
+        elif class_c < 20:
+            quality += 2
+        if (record.get("owner_portfolio_size") or 0) > 1:
+            quality += 3
+        properties["score_quality"] = round(min(quality / 15, 1.0) * 100)
 
         feature = {
             "type": "Feature",
