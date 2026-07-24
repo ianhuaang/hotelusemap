@@ -137,6 +137,10 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
 const CSV_COLUMNS = [
   { key: "address", label: "Address" },
   { key: "neighborhood", label: "Neighborhood" },
+  { key: "deal_score", label: "Deal Score" },
+  { key: "score_legal", label: "Score: Legal" },
+  { key: "score_avail", label: "Score: Availability" },
+  { key: "score_quality", label: "Score: Quality" },
   { key: "bbl", label: "BBL" },
   { key: "tier", label: "Tier" },
   { key: "confidence", label: "Confidence" },
@@ -148,17 +152,32 @@ const CSV_COLUMNS = [
   { key: "hpd_class_b", label: "HPD Class B" },
   { key: "zonedist1", label: "Zoning" },
   { key: "ownername", label: "Owner" },
-  { key: "height_roof", label: "Roof Height (ft)" },
-  { key: "bin", label: "BIN" },
+  { key: "owner_portfolio_size", label: "Owner Portfolio Size" },
+  { key: "acris_deed_owner", label: "ACRIS Deed Owner" },
+  { key: "acris_deed_date", label: "Deed Date" },
+  { key: "acris_deed_address", label: "Deed Owner Address" },
+  { key: "acris_borrower", label: "ACRIS Mortgage Borrower" },
+  { key: "acris_lender", label: "ACRIS Lender" },
+  { key: "hotel_name", label: "Hotel Name" },
+  { key: "hotel_phone", label: "Hotel Phone" },
+  { key: "hotel_website", label: "Hotel Website" },
   { key: "prior_operator_name", label: "Prior Operator" },
+  { key: "prior_operator_notes", label: "Prior Operator Notes" },
+  { key: "has_tax_lien", label: "Tax Lien" },
+  { key: "has_lis_pendens", label: "Lis Pendens" },
+  { key: "hpd_open_violations", label: "HPD Open Violations" },
+  { key: "hpd_class_c_violations", label: "HPD Class C Violations" },
+  { key: "ecb_open_violations", label: "ECB Violations" },
+  { key: "ecb_total_balance", label: "ECB Balance ($)" },
   { key: "reversion_deadline", label: "Reversion Deadline" },
   { key: "last_sale_date", label: "Last Sale Date" },
   { key: "last_sale_price", label: "Last Sale Price" },
-  { key: "permit_count", label: "DOB Permits (3yr)" },
-  { key: "owner_portfolio_size", label: "Owner Portfolio Size" },
+  { key: "permit_count", label: "DOB Permits" },
   { key: "coo_count", label: "C of O Records" },
-  { key: "coo_latest_type", label: "Latest C of O Type" },
+  { key: "coo_has_temporary", label: "Has Temp C of O" },
   { key: "coo_dwelling_units", label: "C of O Dwelling Units" },
+  { key: "height_roof", label: "Roof Height (ft)" },
+  { key: "bin", label: "BIN" },
   { key: "reason_codes", label: "Reason Codes" },
 ];
 
@@ -185,7 +204,7 @@ function buildRecordLinks(bbl, bin) {
   };
 }
 
-function exportToCsv(features) {
+function exportToCsv(features, scoreWeights) {
   const escCsv = (v) => {
     const s = String(v ?? "");
     return s.includes(",") || s.includes('"') || s.includes("\n")
@@ -202,10 +221,15 @@ function exportToCsv(features) {
 
     const row = {
       ...p,
+      deal_score: computeScore(p, scoreWeights || { legal: 50, avail: 35, quality: 15 }),
       numfloors: p.numfloors ? Math.round(p.numfloors) : "",
       height_roof: p.height_roof ? Math.round(p.height_roof) : "",
       prior_operator_name: priorOp?.name || "",
+      prior_operator_notes: priorOp?.notes || "",
       reversion_deadline: reversion?.deadline || "",
+      has_tax_lien: p.has_tax_lien ? "Yes" : "",
+      has_lis_pendens: p.has_lis_pendens ? "Yes" : "",
+      coo_has_temporary: p.coo_has_temporary ? "Yes" : "",
       reason_codes: Array.isArray(reasons) ? reasons.join("; ") : reasons,
     };
     return CSV_COLUMNS.map((c) => escCsv(row[c.key])).join(",");
@@ -223,75 +247,7 @@ function exportToCsv(features) {
 
 // --- Components ---
 
-function LL18Modal({ onClose, address }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="text-base font-bold text-gray-900">LL18 Prohibited Buildings Check</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer">&times;</button>
-        </div>
-        <div className="p-5 space-y-4 text-sm text-gray-700">
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What is Local Law 18?</div>
-            <p>
-              Local Law 18 (2022) requires all short-term rental hosts in NYC to register with the Mayor's Office of Special Enforcement (OSE).
-              Buildings can opt onto the <strong>Prohibited Buildings List (PBL)</strong>, which blocks any short-term rental registrations for that address.
-            </p>
-          </div>
 
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Why it matters for Kasa</div>
-            <p>
-              If a building is on the PBL, short-term stays under 30 days cannot be legally registered there, regardless of the building's transient capacity or zoning. Always check before outreach.
-            </p>
-          </div>
-
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">How to check</div>
-            <ol className="list-decimal list-inside space-y-1.5 text-[13px]">
-              <li>Click the link below to open the OSE portal</li>
-              <li>Enter the building's <strong>house number</strong> and <strong>street name</strong></li>
-              <li>Select the <strong>borough</strong></li>
-              <li>Click <strong>Search</strong></li>
-            </ol>
-          </div>
-
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">What to look for</div>
-            <div className="space-y-2">
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-red-100 text-red-600 text-[10px] font-bold flex items-center justify-center shrink-0">!</span>
-                <span><strong>"Building is on the Prohibited Buildings List"</strong> — this building is a no-go for stays under 30 days</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-green-100 text-green-600 text-[10px] font-bold flex items-center justify-center shrink-0">&#10003;</span>
-                <span><strong>"Building is not on the Prohibited Buildings List"</strong> — short-term rental registration is possible</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 w-4 h-4 rounded-full bg-gray-100 text-gray-500 text-[10px] font-bold flex items-center justify-center shrink-0">?</span>
-                <span><strong>"No results found"</strong> — address format may not match. Try variations (e.g., "W 42 ST" vs "WEST 42ND STREET")</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-            <strong>Note:</strong> Even if a building is not on the PBL, LL18 still requires individual host registration for stays under 30 days. Kasa's operator model may be structured differently — confirm with Legal.
-          </div>
-
-          <a
-            href="https://strr-portal.ose.nyc.gov/s/searchbuildingsaddress"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full text-center px-4 py-2.5 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Open OSE Prohibited Buildings Portal &rarr;
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function DistressRow({ signal }) {
   const [open, setOpen] = useState(false);
@@ -473,7 +429,6 @@ function ScoreExplainer({ p }) {
 }
 
 function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, notes, onSaveNote }) {
-  const [showLL18, setShowLL18] = useState(false);
   if (!feature) return null;
   const p = feature.properties;
   const reasonCodes = parseJsonProp(p.reason_codes) || [];
@@ -599,14 +554,55 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </div>
         )}
 
-        {/* Owner + portfolio */}
-        {p.ownername && (
+        {/* Hotel info */}
+        {p.hotel_name && (
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Current hotel</div>
+            <div className="text-sm text-gray-800 font-medium">{p.hotel_name}</div>
+            <div className="flex gap-3 mt-1">
+              {p.hotel_phone && (
+                <a href={`tel:${p.hotel_phone}`} className="text-[11px] text-blue-600 hover:underline">{p.hotel_phone}</a>
+              )}
+              {p.hotel_website && (
+                <a href={p.hotel_website.startsWith("http") ? p.hotel_website : `https://${p.hotel_website}`} target="_blank" rel="noopener noreferrer" className="text-[11px] text-blue-600 hover:underline">Website</a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Owner + portfolio + ACRIS */}
+        {(p.ownername || p.acris_deed_owner) && (
           <div>
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Owner</div>
-            <div className="text-sm text-gray-700">{p.ownername}</div>
+            <div className="text-sm text-gray-700">{p.ownername || "—"}</div>
             {p.owner_portfolio_size > 1 && (
               <div className="mt-1 text-[10px] text-blue-600 font-medium">
                 Owns {p.owner_portfolio_size} buildings in pipeline
+              </div>
+            )}
+            {(p.acris_deed_owner || p.acris_borrower) && (
+              <div className="mt-2 bg-gray-50 rounded-lg p-2.5 space-y-1.5">
+                <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">ACRIS records</div>
+                {p.acris_deed_owner && (
+                  <div>
+                    <span className="text-[10px] text-gray-400">Deed owner: </span>
+                    <span className="text-[11px] text-gray-700 font-medium">{p.acris_deed_owner}</span>
+                    {p.acris_deed_date && <span className="text-[10px] text-gray-400 ml-1">({p.acris_deed_date})</span>}
+                    {p.acris_deed_address && <div className="text-[10px] text-gray-400 ml-0">{p.acris_deed_address}</div>}
+                  </div>
+                )}
+                {p.acris_borrower && p.acris_borrower !== p.acris_deed_owner && (
+                  <div>
+                    <span className="text-[10px] text-gray-400">Mortgage borrower: </span>
+                    <span className="text-[11px] text-gray-700 font-medium">{p.acris_borrower}</span>
+                  </div>
+                )}
+                {p.acris_lender && (
+                  <div>
+                    <span className="text-[10px] text-gray-400">Lender: </span>
+                    <span className="text-[10px] text-gray-500">{p.acris_lender}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -784,20 +780,12 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
         {/* Notes */}
         <NoteEditor bbl={p.bbl} notes={notes} onSave={onSaveNote} />
 
-        <button
-          onClick={() => setShowLL18(true)}
-          className="w-full bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-700 text-left hover:bg-amber-100 cursor-pointer transition-colors"
-        >
-          <span className="font-semibold">LL18 check required</span> — tap to learn how to verify this building &rarr;
-        </button>
-
-        {showLL18 && <LL18Modal onClose={() => setShowLL18(false)} address={p.address} />}
       </div>
     </div>
   );
 }
 
-function ListTray({ list, onRemove, onClear, onExpand, expanded }) {
+function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights }) {
   const items = Array.from(list.values());
   if (items.length === 0) return null;
 
@@ -824,7 +812,7 @@ function ListTray({ list, onRemove, onClear, onExpand, expanded }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => exportToCsv(items)}
+            onClick={() => exportToCsv(items, scoreWeights)}
             className="px-3 py-1.5 bg-gray-800 text-white text-xs rounded-md hover:bg-gray-700 cursor-pointer transition-colors font-medium"
           >
             Download CSV
@@ -2425,6 +2413,7 @@ export default function App() {
         onClear={handleClearList}
         onExpand={() => setListExpanded(!listExpanded)}
         expanded={listExpanded}
+        scoreWeights={scoreWeights}
       />
 
       {/* Legend removed — tier colors are in the filter panel */}

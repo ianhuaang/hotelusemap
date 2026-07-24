@@ -141,6 +141,16 @@ def build_geojson(
             "has_tax_lien": record.get("has_tax_lien", False),
             "has_lis_pendens": record.get("has_lis_pendens", False),
             "lis_pendens_count": record.get("lis_pendens_count", 0),
+            # ACRIS owner identification
+            "acris_deed_owner": record.get("acris_deed_owner", ""),
+            "acris_deed_date": record.get("acris_deed_date", ""),
+            "acris_deed_address": record.get("acris_deed_address", ""),
+            "acris_borrower": record.get("acris_borrower", ""),
+            "acris_lender": record.get("acris_lender", ""),
+            # Hotel info
+            "hotel_name": record.get("hotel_name", ""),
+            "hotel_phone": record.get("hotel_phone", ""),
+            "hotel_website": record.get("hotel_website", ""),
         }
 
         # Include top 3 permits (trimmed to save space)

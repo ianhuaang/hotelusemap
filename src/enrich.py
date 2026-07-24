@@ -336,6 +336,26 @@ def load_lis_pendens(path: Path = None) -> dict[str, dict]:
     return by_bbl
 
 
+def load_hotel_info(path: Path = None) -> dict[str, dict]:
+    """Load hotel names/phone/website from OSM data."""
+    if path is None:
+        path = DATA_RAW / "hotel_info_osm.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+    return {r["bbl"]: r for r in raw if r.get("hotel_name")}
+
+
+def load_acris_owners(path: Path = None) -> dict[str, dict]:
+    """Load ACRIS owner/borrower names per BBL."""
+    if path is None:
+        path = DATA_RAW / f"acris_owners_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+    return {r["bbl"]: r for r in raw}
+
+
 def enrich_pipeline(
     pipeline_path: Path = None,
     sales_path: Path = None,
@@ -345,6 +365,7 @@ def enrich_pipeline(
     ecb_violations_path: Path = None,
     tax_liens_path: Path = None,
     lis_pendens_path: Path = None,
+    acris_owners_path: Path = None,
 ) -> Path:
     if pipeline_path is None:
         pipeline_path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
@@ -357,6 +378,8 @@ def enrich_pipeline(
     ecb_viol_by_bbl = load_ecb_violations(ecb_violations_path)
     liens_by_bbl = load_tax_liens(tax_liens_path)
     lp_by_bbl = load_lis_pendens(lis_pendens_path)
+    acris_owners = load_acris_owners(acris_owners_path)
+    hotel_info = load_hotel_info()
 
     # Owner dedup: normalize names and build groups
     owner_canonical = _build_owner_groups(pipeline)
@@ -455,6 +478,36 @@ def enrich_pipeline(
         record["lis_pendens_count"] = lp["count"] if lp else 0
         record["lis_pendens_latest"] = lp["latest_date"] if lp else None
 
+        # ACRIS owner identification
+        acris = acris_owners.get(bbl)
+        if acris:
+            grantees = acris.get("deed_grantees", [])
+            borrowers = acris.get("mtge_borrowers", [])
+            record["acris_deed_owner"] = grantees[0]["name"] if grantees else ""
+            record["acris_deed_date"] = acris.get("deed_date", "")
+            record["acris_deed_address"] = grantees[0].get("address", "") if grantees else ""
+            record["acris_borrower"] = borrowers[0]["name"] if borrowers else ""
+            record["acris_mtge_date"] = acris.get("mtge_date", "")
+            record["acris_lender"] = acris.get("mtge_lender", "")
+        else:
+            record["acris_deed_owner"] = ""
+            record["acris_deed_date"] = ""
+            record["acris_deed_address"] = ""
+            record["acris_borrower"] = ""
+            record["acris_mtge_date"] = ""
+            record["acris_lender"] = ""
+
+        # Hotel info (OSM)
+        hi = hotel_info.get(bbl)
+        if hi:
+            record["hotel_name"] = hi.get("hotel_name", "")
+            record["hotel_phone"] = hi.get("phone", "")
+            record["hotel_website"] = hi.get("website", "")
+        else:
+            record["hotel_name"] = ""
+            record["hotel_phone"] = ""
+            record["hotel_website"] = ""
+
         if sales or permits or coos:
             enriched_count += 1
 
@@ -472,6 +525,7 @@ def enrich_pipeline(
     print(f"  ECB open violations: {sum(1 for r in pipeline if r.get('ecb_open_violations', 0) > 0)} buildings")
     print(f"  Tax liens: {sum(1 for r in pipeline if r.get('has_tax_lien'))} buildings")
     print(f"  Lis pendens: {sum(1 for r in pipeline if r.get('has_lis_pendens'))} buildings")
+    print(f"  ACRIS owner data: {sum(1 for r in pipeline if r.get('acris_deed_owner'))} buildings")
     return outpath
 
 
