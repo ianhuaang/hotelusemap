@@ -65,7 +65,7 @@ function computeScore(p, weights) {
   return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
 }
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly) {
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -129,6 +129,9 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
       [">", ["get", "ecb_open_violations"], 0],
     ]);
   }
+  if (noOperatorOnly) {
+    conditions.push(["!", ["has", "hotel_name"]]);
+  }
 
   return ["all", ...conditions];
 }
@@ -137,10 +140,9 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
 const CSV_COLUMNS = [
   { key: "address", label: "Address" },
   { key: "neighborhood", label: "Neighborhood" },
-  { key: "deal_score", label: "Deal Score" },
-  { key: "score_legal", label: "Score: Legal" },
-  { key: "score_avail", label: "Score: Availability" },
-  { key: "score_quality", label: "Score: Quality" },
+  { key: "has_prior_op", label: "Prior Operator" },
+  { key: "has_reversion", label: "Reversion Window" },
+  { key: "coo_has_temporary", label: "Temp C of O" },
   { key: "bbl", label: "BBL" },
   { key: "tier", label: "Tier" },
   { key: "confidence", label: "Confidence" },
@@ -176,6 +178,8 @@ const CSV_COLUMNS = [
   { key: "coo_count", label: "C of O Records" },
   { key: "coo_has_temporary", label: "Has Temp C of O" },
   { key: "coo_dwelling_units", label: "C of O Dwelling Units" },
+  { key: "is_landmark", label: "LPC Landmark" },
+  { key: "historic_district", label: "Historic District" },
   { key: "height_roof", label: "Roof Height (ft)" },
   { key: "bin", label: "BIN" },
   { key: "reason_codes", label: "Reason Codes" },
@@ -221,7 +225,8 @@ function exportToCsv(features, scoreWeights) {
 
     const row = {
       ...p,
-      deal_score: computeScore(p, scoreWeights || { legal: 50, avail: 35, quality: 15 }),
+      has_prior_op: p.has_prior_op ? "Yes" : "",
+      has_reversion: p.has_reversion ? "Yes" : "",
       numfloors: p.numfloors ? Math.round(p.numfloors) : "",
       height_roof: p.height_roof ? Math.round(p.height_roof) : "",
       prior_operator_name: priorOp?.name || "",
@@ -289,6 +294,34 @@ function useNotes() {
     });
   };
   return { notes, save };
+}
+
+// --- CRM Status ---
+
+const CRM_STATUSES = [
+  { value: "", label: "—", color: "" },
+  { value: "not_contacted", label: "Not contacted", color: "bg-gray-100 text-gray-600" },
+  { value: "reached_out", label: "Reached out", color: "bg-blue-100 text-blue-700" },
+  { value: "meeting_set", label: "Meeting set", color: "bg-emerald-100 text-emerald-700" },
+  { value: "passed", label: "Passed", color: "bg-red-100 text-red-600" },
+];
+
+function useCrmStatuses() {
+  const STORAGE_KEY = "nyc-transient-crm-statuses";
+  const load = () => {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch { return {}; }
+  };
+  const [statuses, setStatuses] = useState(load);
+  const setStatus = (key, value) => {
+    setStatuses((prev) => {
+      const next = { ...prev };
+      if (value) next[key] = value;
+      else delete next[key];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+  return { statuses, setStatus };
 }
 
 function NoteEditor({ bbl, notes, onSave }) {
@@ -428,7 +461,7 @@ function ScoreExplainer({ p }) {
   );
 }
 
-function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, notes, onSaveNote }) {
+function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, notes, onSaveNote, crmStatuses, setCrmStatus, allFeatures }) {
   if (!feature) return null;
   const p = feature.properties;
   const reasonCodes = parseJsonProp(p.reason_codes) || [];
@@ -454,16 +487,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           >
             {p.tier?.replace(/_/g, " ")}
           </span>
-          <span className="text-xs text-gray-500">{p.confidence} confidence</span>
-          {(() => {
-            const score = computeScore(p, scoreWeights);
-            const color = score >= 60 ? "bg-emerald-600" : score >= 35 ? "bg-amber-500" : "bg-gray-400";
-            return (
-              <span className={`${color} text-white text-xs font-bold px-2 py-0.5 rounded-md tabular-nums`}>
-                {score}
-              </span>
-            );
-          })()}
+          {/* Signal tags instead of numeric score */}
+          {[
+            p.has_prior_op && { label: "Prior operator", color: "bg-purple-500" },
+            p.has_reversion && { label: "Reversion window", color: "bg-rose-500" },
+            p.has_tax_lien && { label: "Tax lien", color: "bg-red-600" },
+            p.has_lis_pendens && { label: "Lis pendens", color: "bg-red-600" },
+            p.coo_has_temporary && { label: "Temp C of O", color: "bg-amber-500" },
+            p.is_landmark && { label: "Landmark", color: "bg-amber-600" },
+            p.historic_district && { label: "Historic district", color: "bg-amber-500" },
+          ].filter(Boolean).map((sig, i) => (
+            <span key={i} className={`${sig.color} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md`}>
+              {sig.label}
+            </span>
+          ))}
           <button
             onClick={() => onAddToList(feature)}
             className={`ml-auto px-2.5 py-1 text-xs rounded-md cursor-pointer transition-colors ${
@@ -475,26 +512,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             {isInList ? "Remove from list" : "+ Add to list"}
           </button>
         </div>
-
-        {/* Score breakdown bars */}
-        <div className="space-y-1.5">
-          {[
-            { label: "Legal certainty", value: p.score_legal ?? 0, color: "#16a34a" },
-            { label: "Availability", value: p.score_avail ?? 0, color: "#2563eb" },
-            { label: "Building quality", value: p.score_quality ?? 0, color: "#8b5cf6" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-400 w-24 shrink-0">{label}</span>
-              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full rounded-full transition-all" style={{ width: `${value}%`, backgroundColor: color }} />
-              </div>
-              <span className="text-[10px] text-gray-500 tabular-nums w-7 text-right">{value}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Why this score */}
-        <ScoreExplainer p={p} />
 
         {priorOp && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
@@ -714,7 +731,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           const hpdC = p.hpd_class_c_violations || 0;
           const ecbV = p.ecb_open_violations || 0;
           const ecbBal = p.ecb_total_balance || 0;
-          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0) return null;
+          const hasLandmark = p.is_landmark || p.historic_district;
+          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0 && !hasLandmark) return null;
 
           const signals = [];
           if (hasLien) signals.push({
@@ -738,9 +756,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             severity: ecbBal > 10000 ? "high" : "medium",
           });
 
+          if (p.is_landmark) signals.push({
+            label: `LPC Individual Landmark${p.landmark_name ? ` — ${p.landmark_name}` : ""}`,
+            detail: "This building is individually designated by the Landmarks Preservation Commission. Any exterior alteration requires LPC approval. Renovations to improve the property will face additional cost and timeline.",
+            severity: "medium",
+          });
+          if (p.historic_district) signals.push({
+            label: `Historic District — ${p.historic_district}`,
+            detail: "This building is within an LPC-designated historic district. Exterior changes (windows, facade, signage, rooftop) require LPC review. Interior changes are generally unaffected.",
+            severity: "medium",
+          });
+
           return (
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Distress signals</div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Signals</div>
               <div className="space-y-1">
                 {signals.map((sig, i) => (
                   <DistressRow key={i} signal={sig} />
@@ -777,8 +806,45 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           );
         })()}
 
-        {/* Notes */}
-        <NoteEditor bbl={p.bbl} notes={notes} onSave={onSaveNote} />
+        {/* Submarket context */}
+        {p.neighborhood && allFeatures && (() => {
+          const peers = allFeatures.filter(f => f.properties.neighborhood === p.neighborhood && f.properties.bbl !== p.bbl);
+          if (peers.length < 3) return null;
+          const legal = peers.filter(f => f.properties.tier === "legal_transient").length;
+          const withLien = peers.filter(f => f.properties.has_tax_lien).length;
+          const noOp = peers.filter(f => !f.properties.hotel_name).length;
+          const landmark = peers.filter(f => f.properties.is_landmark || f.properties.historic_district).length;
+          return (
+            <div className="bg-gray-50 rounded-lg p-3">
+              <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Submarket — {p.neighborhood}</div>
+              <div className="flex gap-3 flex-wrap text-[11px]">
+                <span className="text-gray-700 font-medium">{peers.length} buildings</span>
+                {legal > 0 && <span className="text-emerald-600">{legal} legal transient</span>}
+                {noOp > 0 && <span className="text-gray-500">{noOp} no known operator</span>}
+                {withLien > 0 && <span className="text-red-500">{withLien} with liens</span>}
+                {landmark > 0 && <span className="text-amber-500">{landmark} landmark/historic</span>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* CRM Status + Notes */}
+        <div className="flex items-center gap-2">
+          <select
+            value={crmStatuses[p.bbl] || ""}
+            onChange={(e) => setCrmStatus(p.bbl, e.target.value)}
+            className={`px-2 py-1 text-[11px] rounded-md border border-gray-200 outline-none cursor-pointer ${
+              (CRM_STATUSES.find(s => s.value === (crmStatuses[p.bbl] || "")) || {}).color || "bg-gray-50 text-gray-400"
+            }`}
+          >
+            {CRM_STATUSES.map(s => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <div className="flex-1">
+            <NoteEditor bbl={p.bbl} notes={notes} onSave={onSaveNote} />
+          </div>
+        </div>
 
       </div>
     </div>
@@ -898,6 +964,7 @@ function FilterPanel({
   showReversion, setShowReversion,
   hideHotels, setHideHotels,
   distressOnly, setDistressOnly,
+  noOperatorOnly, setNoOperatorOnly,
   minUnits, setMinUnits,
   scoreWeights, setScoreWeights,
   featureCount, overlayCounts,
@@ -1051,6 +1118,28 @@ function FilterPanel({
             </span>
             <span className="text-xs text-gray-700">Distress signals only</span>
             <InfoTip text="Show only buildings with financial distress indicators: tax liens, lis pendens/judgments, high ECB fines, or significant HPD violations. Combined with legal transient status, these are the strongest signals of a motivated owner." />
+          </label>
+
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+            <input
+              type="checkbox"
+              checked={noOperatorOnly}
+              onChange={(e) => setNoOperatorOnly(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                noOperatorOnly ? "bg-gray-800 border-gray-800" : "border-gray-300"
+              }`}
+            >
+              {noOperatorOnly && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs text-gray-700">No known operator</span>
+            <InfoTip text="Show only buildings where we couldn't find an active hotel operation via Google Places. These have legal transient capacity but no identifiable operator — a potential management opportunity. Based on Google Places coverage, not a verified fact." />
           </label>
 
           <div className="flex items-center justify-between px-2.5 mt-2">
@@ -1223,7 +1312,7 @@ function Legend() {
 // --- Table columns ---
 const TABLE_COLS = [
   { key: "address", label: "Address", sortable: true, width: "min-w-[200px]" },
-  { key: "deal_score", label: "Score", sortable: true, numeric: true, width: "min-w-[65px]" },
+  { key: "signals", label: "Signals", sortable: true, numeric: true, width: "min-w-[100px]" },
   { key: "neighborhood", label: "Neighborhood", sortable: true, width: "min-w-[160px]" },
   { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
   { key: "unitsres", label: "Units", sortable: true, numeric: true, width: "min-w-[70px]" },
@@ -1240,7 +1329,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly) {
+function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -1267,6 +1356,7 @@ function applyFilters(features, tierThreshold, showPriorOps, showReversion, minU
       const hasDistress = p.has_tax_lien || p.has_lis_pendens || (p.hpd_open_violations || 0) > 0 || (p.ecb_open_violations || 0) > 0;
       if (!hasDistress) return false;
     }
+    if (noOperatorOnly && p.hotel_name) return false;
 
     return true;
   });
@@ -1296,7 +1386,7 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
   tierThreshold, setTierThreshold, hideHotels, setHideHotels, distressOnly, setDistressOnly, minUnits, setMinUnits,
   showPriorOps, setShowPriorOps, showReversion, setShowReversion, notes,
 }) {
-  const [sortKey, setSortKey] = useState("deal_score");
+  const [sortKey, setSortKey] = useState("signals");
   const [sortDir, setSortDir] = useState("desc");
   const [searchText, setSearchText] = useState("");
 
@@ -1324,8 +1414,9 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
 
   const sorted = [...filtered].sort((a, b) => {
     const col = TABLE_COLS.find((c) => c.key === sortKey);
-    let va = sortKey === "deal_score" ? computeScore(a.properties, scoreWeights) : a.properties[sortKey];
-    let vb = sortKey === "deal_score" ? computeScore(b.properties, scoreWeights) : b.properties[sortKey];
+    const sigCount = (p) => [p.has_prior_op, p.has_reversion, p.has_tax_lien, p.has_lis_pendens, p.coo_has_temporary].filter(Boolean).length;
+    let va = sortKey === "signals" ? sigCount(a.properties) : a.properties[sortKey];
+    let vb = sortKey === "signals" ? sigCount(b.properties) : b.properties[sortKey];
     if (col?.numeric) {
       va = Number(va) || 0;
       vb = Number(vb) || 0;
@@ -1353,10 +1444,18 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
         </span>
       );
     }
-    if (col.key === "deal_score") {
-      const score = computeScore(p, scoreWeights);
-      const color = score >= 60 ? "bg-emerald-600" : score >= 35 ? "bg-amber-500" : "bg-gray-400";
-      return <span className={`${color} text-white text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums`}>{score}</span>;
+    if (col.key === "signals") {
+      const sigs = [
+        p.has_prior_op && { label: "Prior op", color: "bg-purple-500" },
+        p.has_reversion && { label: "Reversion", color: "bg-rose-500" },
+        p.has_tax_lien && { label: "Lien", color: "bg-red-600" },
+        p.has_lis_pendens && { label: "LP", color: "bg-red-600" },
+        p.coo_has_temporary && { label: "Temp CO", color: "bg-amber-500" },
+        p.is_landmark && { label: "LPC", color: "bg-amber-600" },
+        p.historic_district && { label: "Hist. dist.", color: "bg-amber-500" },
+      ].filter(Boolean);
+      if (sigs.length === 0) return "";
+      return <span className="flex gap-0.5 flex-wrap">{sigs.map((s, i) => <span key={i} className={`${s.color} text-white text-[8px] font-bold px-1 py-0.5 rounded`}>{s.label}</span>)}</span>;
     }
     const v = p[col.key];
     if (col.key === "tier") {
@@ -1944,6 +2043,7 @@ export default function App() {
   const allFeaturesRef = useRef([]);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
   const { notes, save: saveNote } = useNotes();
+  const { statuses: crmStatuses, setStatus: setCrmStatus } = useCrmStatuses();
   const [exportList, setExportList] = useState(new Map()); // bbl -> feature
   const [listExpanded, setListExpanded] = useState(false);
   const [tierThreshold, setTierThreshold] = useState(1);
@@ -1951,6 +2051,7 @@ export default function App() {
   const [showReversion, setShowReversion] = useState(true);
   const [hideHotels, setHideHotels] = useState(true);
   const [distressOnly, setDistressOnly] = useState(false);
+  const [noOperatorOnly, setNoOperatorOnly] = useState(false);
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -1963,7 +2064,7 @@ export default function App() {
   const setFilter = useCallback((key, val) => {
     setExtraFilters((prev) => ({ ...prev, [key]: val }));
   }, []);
-  const [activeView, setActiveView] = useState("map"); // "map" | "table" | "score"
+  const [activeView, setActiveView] = useState("map"); // "map" | "table"
   const [scoreWeights, setScoreWeights] = useState({ legal: 50, avail: 35, quality: 15 });
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
@@ -2168,7 +2269,7 @@ export default function App() {
       const initFilter = buildFilter(1, true, true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      }, true, false);
+      }, true, false, false);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -2270,7 +2371,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
@@ -2283,11 +2384,11 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly]);
 
   // Compute filtered features for table view
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly);
+    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly);
   }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, overlayCounts]);
 
   return (
@@ -2309,14 +2410,6 @@ export default function App() {
           }`}
         >
           Table
-        </button>
-        <button
-          onClick={() => setActiveView("score")}
-          className={`w-20 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
-            activeView === "score" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
-          }`}
-        >
-          Score
         </button>
       </div>}
 
@@ -2353,16 +2446,6 @@ export default function App() {
         </div>
       )}
 
-      {activeView === "score" && (
-        <div className="flex-1 h-full overflow-hidden">
-          <ScoreConfigPage
-            scoreWeights={scoreWeights}
-            setScoreWeights={setScoreWeights}
-            features={tableFeatures}
-          />
-        </div>
-      )}
-
       {activeView === "map" && <FilterPanel
         tierThreshold={tierThreshold}
         setTierThreshold={setTierThreshold}
@@ -2374,6 +2457,8 @@ export default function App() {
         setHideHotels={setHideHotels}
         distressOnly={distressOnly}
         setDistressOnly={setDistressOnly}
+        noOperatorOnly={noOperatorOnly}
+        setNoOperatorOnly={setNoOperatorOnly}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
         scoreWeights={scoreWeights}
@@ -2405,6 +2490,9 @@ export default function App() {
         scoreWeights={scoreWeights}
         notes={notes}
         onSaveNote={saveNote}
+        crmStatuses={crmStatuses}
+        setCrmStatus={setCrmStatus}
+        allFeatures={allFeaturesRef.current}
       />
 
       <ListTray

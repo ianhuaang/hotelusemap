@@ -19,6 +19,7 @@ jobs:
       - name: Install Python dependencies
         run: pip install certifi
 
+      # Phase 1: Pull independent data sources (no dependencies)
       - name: Pull PLUTO
         run: python src/pull_pluto.py
 
@@ -34,12 +35,21 @@ jobs:
       - name: Pull DOB permits
         run: python src/pull_permits.py
 
-      - name: Pull C of O records
-        run: python src/pull_coo.py
+      - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
+        run: python src/pull_distress.py
 
+      # Phase 2: Run pipeline (needs PLUTO + HPD)
       - name: Run pipeline
         run: python src/pipeline.py
 
+      # Phase 3: Pull data that depends on pipeline output
+      - name: Pull C of O records
+        run: python src/pull_coo.py
+
+      - name: Pull ACRIS owners
+        run: python src/pull_acris_owners.py
+
+      # Phase 4: Enrich and build
       - name: Run enrichment
         run: python src/enrich.py
 
