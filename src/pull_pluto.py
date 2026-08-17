@@ -6,6 +6,7 @@ Pulls all of Manhattan + specific community districts in Brooklyn and Queens.
 import json
 import ssl
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
@@ -22,6 +23,7 @@ COLUMNS = [
     "bbl", "borough", "block", "lot", "address", "bldgclass", "landuse",
     "unitsres", "unitstotal", "numfloors", "numbldgs", "bldgarea", "comarea",
     "resarea", "lotarea", "ownername", "ownertype", "zonedist1", "cd",
+    "yearbuilt", "yearalter1", "yearalter2",
 ]
 
 
@@ -53,8 +55,19 @@ def pull_pluto() -> Path:
         })
         url = f"{SOCRATA_BASE_URL}/{PLUTO_DATASET_ID}.json?{params}"
         req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
-        with urllib.request.urlopen(req, timeout=30, context=ctx) as resp:
-            batch = json.loads(resp.read())
+
+        batch = None
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:
+                    batch = json.loads(resp.read())
+                break
+            except (ConnectionResetError, TimeoutError, urllib.error.URLError) as e:
+                if attempt == 3:
+                    raise
+                wait = 10 * (attempt + 1)
+                print(f"  retry {attempt + 1} at offset {offset}: {e} (waiting {wait}s)")
+                time.sleep(wait)
 
         if not batch:
             break

@@ -7,6 +7,7 @@ The legacy DOB dataset (ic3t-wcy2) stopped updating around 2020.
 import json
 import ssl
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date, timedelta
@@ -58,8 +59,19 @@ def pull_permits() -> Path:
         })
         url = f"{SOCRATA_BASE_URL}/{DOB_NOW_DATASET_ID}.json?{params}"
         req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
-        with urllib.request.urlopen(req, timeout=60, context=ctx) as resp:
-            batch = json.loads(resp.read())
+
+        batch = None
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:
+                    batch = json.loads(resp.read())
+                break
+            except (ConnectionResetError, TimeoutError, urllib.error.URLError) as e:
+                if attempt == 3:
+                    raise
+                wait = 10 * (attempt + 1)
+                print(f"  retry {attempt + 1} at offset {offset}: {e} (waiting {wait}s)")
+                time.sleep(wait)
 
         if not batch:
             break
