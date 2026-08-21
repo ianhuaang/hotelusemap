@@ -437,6 +437,9 @@ def load_hotel_licenses(path: Path = None) -> dict[str, dict]:
     if path is None:
         path = DATA_RAW / f"hotel_licenses_{TODAY}.json"
     if not path.exists():
+        files = sorted(DATA_RAW.glob("hotel_licenses_*.json"), reverse=True)
+        path = files[0] if files else path
+    if not path.exists():
         return {}
     raw = json.loads(path.read_text())
     by_bbl: dict[str, dict] = {}
@@ -561,6 +564,16 @@ def enrich_pipeline(
             record["coo_latest_type"] = None
             record["coo_has_temporary"] = False
             record["coo_dwelling_units"] = None
+
+        # Flag: temporary C of O only (no final) — may be operating on expired authorization
+        if record["coo_has_temporary"] and record.get("coo_latest_type") == "Temporary":
+            has_final = any(c.get("co_type") != "Temporary" for c in coos)
+            if not has_final:
+                record["coo_temp_only"] = True
+                if "coo_temp_only" not in [b.split(" —")[0] for b in record.get("blockers", [])]:
+                    record.setdefault("blockers", []).append(
+                        "Temporary C of O only — no final C of O on file, may be operating on expired authorization"
+                    )
 
         # Distress signals
         hpd_v = hpd_viol_by_bbl.get(bbl)

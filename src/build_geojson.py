@@ -196,6 +196,8 @@ def build_geojson(
             "has_hotel_license": record.get("has_hotel_license", False),
             "hotel_license_name": record.get("hotel_license_name", ""),
             "hotel_license_status": record.get("hotel_license_status", ""),
+            "coo_temp_only": record.get("coo_temp_only", False),
+            "special_permit_required": "special_permit_required" in record.get("reason_codes", []),
         }
 
         # Include top 3 permits (trimmed to save space)

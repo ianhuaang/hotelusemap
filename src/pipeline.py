@@ -21,8 +21,11 @@ from config import (
 TODAY = date.today().strftime("%Y%m%d")
 
 # Building classes that indicate direct hotel/transient use
-HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9",
-                 "HB", "HH", "HR", "HS", "RH"}
+HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H9",
+                 "HB", "HH", "HS", "RH"}
+
+# Excluded hotel-adjacent classes — legal constraints make them non-targets
+EXCLUDED_HOTEL_CLASSES = {"HR", "H8"}  # HR=SRO (rent-regulated), H8=dormitory
 
 # Mixed residential/commercial classes — the interesting middle
 MIXED_CLASSES = {"RM", "RR", "RC", "RD", "RK", "RI", "RW", "RS", "RX"}
@@ -168,15 +171,23 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         reason_codes = []
         blockers = []
 
-        is_hotel_class = bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H"
+        is_excluded_class = bldgclass in EXCLUDED_HOTEL_CLASSES
+        is_hotel_class = (bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H") and not is_excluded_class
         is_mixed_class = bldgclass in MIXED_CLASSES
         is_dob_transient = bbl in dob_transient_bbls
 
         # --- Tier assignment ---
-        # Three tiers: legal_transient, partial, unknown
-        # Class B split-use is an overlay, not a tier
 
-        if class_b > 0:
+        if is_excluded_class and class_b == 0:
+            tier = TIER_EXCLUDED
+            confidence = CONFIDENCE_HIGH
+            if bldgclass == "HR":
+                reason_codes.append("sro_regulated")
+                blockers.append("SRO — regulated under Multiple Dwelling Law, cannot convert to transient")
+            else:
+                reason_codes.append("dormitory")
+                blockers.append("Dormitory — institutional use, not a hotel target")
+        elif class_b > 0:
             # HPD confirms transient rooms exist
             tier = TIER_LEGAL_TRANSIENT
             confidence = CONFIDENCE_HIGH if class_a == 0 else CONFIDENCE_MEDIUM
@@ -230,6 +241,20 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "class_a_units": class_a,
                 "note": f"Building class {bldgclass} (hotel) but HPD shows {class_a} Class A units and 0 Class B rooms. Can revert to hotel use without special permit before Dec 9, 2027.",
             }
+
+        # Special permit blocker (2021 hotel text amendment)
+        # Non-reversion buildings need a CPC special permit to operate as a new hotel
+        # Reversion buildings are exempt until Dec 9, 2027
+        zonedist1 = (row.get("zonedist1") or "").strip()
+        needs_special_permit = (
+            tier == TIER_LEGAL_TRANSIENT
+            and not reversion_window
+            and class_b == 0
+            and not is_excluded_class
+        )
+        if needs_special_permit:
+            blockers.append("May require CPC special permit for new hotel use (2021 text amendment)")
+            reason_codes.append("special_permit_required")
 
         record = {
             "bbl": bbl,
