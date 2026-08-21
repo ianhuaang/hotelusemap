@@ -135,7 +135,7 @@ def _load_priority_bbls(pipeline_path: Path = None) -> set[str]:
         pipeline_path = DATA_PROCESSED / f"pipeline_{today}.json"
 
     pipeline = json.loads(pipeline_path.read_text())
-    return {r["bbl"] for r in pipeline if r["tier"] in ("legal_transient", "class_b")}
+    return {r["bbl"] for r in pipeline if r["tier"] in ("legal_transient", "partial")}
 
 
 def pull_coo_records() -> Path:

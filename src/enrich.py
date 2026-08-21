@@ -212,6 +212,82 @@ def load_permits(path: Path = None) -> dict[str, list[dict]]:
     return by_bbl
 
 
+# --- Transient keyword scanning in permit descriptions ---
+
+_TRANSIENT_PATTERNS = [
+    # Strong signals — these directly indicate transient/hotel use
+    (re.compile(r'\bhotel\b', re.I), "hotel", "strong"),
+    (re.compile(r'\btransient\b', re.I), "transient", "strong"),
+    (re.compile(r'\bSRO\b'), "SRO", "strong"),
+    (re.compile(r'\bsingle\s+room\s+occupancy\b', re.I), "single_room_occupancy", "strong"),
+    (re.compile(r'\bR[- ]?1\b'), "R-1", "strong"),
+    (re.compile(r'\bhostel\b', re.I), "hostel", "strong"),
+    # Moderate signals — suggestive but need context
+    (re.compile(r'\btourist\b', re.I), "tourist", "moderate"),
+    (re.compile(r'\bguest\s+room', re.I), "guest_rooms", "moderate"),
+    (re.compile(r'\bshort[- ]term\b', re.I), "short_term", "moderate"),
+    (re.compile(r'\brooming\b', re.I), "rooming", "moderate"),
+    (re.compile(r'\bdormitor', re.I), "dormitory", "moderate"),
+    (re.compile(r'\blodging\b', re.I), "lodging", "moderate"),
+    (re.compile(r'\bmotel\b', re.I), "motel", "strong"),
+    (re.compile(r'\binn\b', re.I), "inn", "moderate"),
+]
+
+
+def scan_permit_descriptions(path: Path = None) -> dict[str, dict]:
+    """Scan raw permit job_description fields for transient-related keywords.
+
+    Returns {bbl: {keywords: [...], strong_count: int, moderate_count: int,
+                   sample_descriptions: [...]}}
+    """
+    if path is None:
+        path = DATA_RAW / f"permits_{TODAY}.json"
+    if not path.exists():
+        return {}
+
+    raw = json.loads(path.read_text())
+    by_bbl: dict[str, dict] = {}
+
+    for row in raw:
+        bbl = _normalize_bbl(row.get("bbl", ""))
+        if not bbl:
+            continue
+        desc = (row.get("job_description") or "").strip()
+        if not desc:
+            continue
+
+        matched_keywords = set()
+        strong = 0
+        moderate = 0
+        for pattern, keyword, strength in _TRANSIENT_PATTERNS:
+            if pattern.search(desc):
+                matched_keywords.add(keyword)
+                if strength == "strong":
+                    strong += 1
+                else:
+                    moderate += 1
+
+        if not matched_keywords:
+            continue
+
+        entry = by_bbl.get(bbl)
+        if entry is None:
+            entry = {"keywords": set(), "strong_count": 0, "moderate_count": 0,
+                     "sample_descriptions": []}
+            by_bbl[bbl] = entry
+
+        entry["keywords"].update(matched_keywords)
+        entry["strong_count"] += strong
+        entry["moderate_count"] += moderate
+        if len(entry["sample_descriptions"]) < 3:
+            entry["sample_descriptions"].append(desc[:200])
+
+    for bbl, entry in by_bbl.items():
+        entry["keywords"] = sorted(entry["keywords"])
+
+    return by_bbl
+
+
 def load_coo(path: Path = None) -> dict[str, list[dict]]:
     if path is None:
         path = DATA_RAW / f"coo_{TODAY}.json"
@@ -356,6 +432,41 @@ def load_acris_owners(path: Path = None) -> dict[str, dict]:
     return {r["bbl"]: r for r in raw}
 
 
+def load_hotel_licenses(path: Path = None) -> dict[str, dict]:
+    """Load DCWP hotel license data keyed by BBL."""
+    if path is None:
+        path = DATA_RAW / f"hotel_licenses_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+    by_bbl: dict[str, dict] = {}
+    for r in raw:
+        bbl = (r.get("bbl") or "").strip()
+        if not bbl:
+            continue
+        status = r.get("license_status", "")
+        existing = by_bbl.get(bbl)
+        if existing is None or (status == "Active" and existing["license_status"] != "Active"):
+            by_bbl[bbl] = {
+                "business_name": r.get("business_name", ""),
+                "license_status": status,
+                "license_creation_date": (r.get("license_creation_date") or "")[:10],
+                "license_expiration": (r.get("lic_expir_dd") or "")[:10],
+                "contact_phone": r.get("contact_phone", ""),
+            }
+    return by_bbl
+
+
+def load_dob_occupancy(path: Path = None) -> dict[str, dict]:
+    """Load DOB transient occupancy signals (R-1, J-1) per BBL."""
+    if path is None:
+        path = DATA_RAW / f"dob_occupancy_{TODAY}.json"
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+    return {r["bbl"]: r for r in raw}
+
+
 def enrich_pipeline(
     pipeline_path: Path = None,
     sales_path: Path = None,
@@ -366,6 +477,7 @@ def enrich_pipeline(
     tax_liens_path: Path = None,
     lis_pendens_path: Path = None,
     acris_owners_path: Path = None,
+    dob_occupancy_path: Path = None,
 ) -> Path:
     if pipeline_path is None:
         pipeline_path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
@@ -380,6 +492,9 @@ def enrich_pipeline(
     lp_by_bbl = load_lis_pendens(lis_pendens_path)
     acris_owners = load_acris_owners(acris_owners_path)
     hotel_info = load_hotel_info()
+    dob_occ_by_bbl = load_dob_occupancy(dob_occupancy_path)
+    permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
+    hotel_licenses = load_hotel_licenses()
 
     # Owner dedup: normalize names and build groups
     owner_canonical = _build_owner_groups(pipeline)
@@ -508,6 +623,106 @@ def enrich_pipeline(
             record["hotel_phone"] = ""
             record["hotel_website"] = ""
 
+        # DOB occupancy classification (R-1/J-1 transient signal)
+        dob_occ = dob_occ_by_bbl.get(bbl)
+        if dob_occ:
+            record["dob_has_r1"] = dob_occ.get("has_r1", False)
+            record["dob_has_j1"] = dob_occ.get("has_j1", False)
+            record["dob_r1_filing_count"] = dob_occ.get("r1_filing_count", 0)
+            record["dob_transient_units"] = dob_occ.get("max_dwelling_units", 0)
+            # Tier upgrade: R-1 in DOB with no HPD Class B → partial medium
+            # (evidence of transient use, but needs current C of O verification)
+            tier = record.get("tier", "")
+            class_b = record.get("hpd_class_b", 0) or 0
+            if dob_occ["has_r1"] and class_b == 0 and tier == "unknown":
+                record["tier"] = "partial"
+                record["confidence"] = "medium"
+                if "dob_r1_occupancy" not in record.get("reason_codes", []):
+                    record.setdefault("reason_codes", []).append("dob_r1_occupancy")
+            elif dob_occ["has_r1"] and class_b == 0 and tier == "partial" and record.get("confidence") == "low":
+                record["confidence"] = "medium"
+                if "dob_r1_occupancy" not in record.get("reason_codes", []):
+                    record.setdefault("reason_codes", []).append("dob_r1_occupancy")
+        else:
+            record["dob_has_r1"] = False
+            record["dob_has_j1"] = False
+            record["dob_r1_filing_count"] = 0
+            record["dob_transient_units"] = 0
+
+        # Permit description keyword scanning for transient signals
+        pk = permit_keywords_by_bbl.get(bbl)
+        if pk:
+            record["permit_transient_keywords"] = pk["keywords"]
+            record["permit_transient_strong"] = pk["strong_count"]
+            record["permit_transient_moderate"] = pk["moderate_count"]
+            record["permit_transient_descriptions"] = pk["sample_descriptions"]
+            tier = record.get("tier", "")
+            if pk["strong_count"] >= 1 and tier in ("unknown", "partial"):
+                if tier == "unknown":
+                    record["tier"] = "partial"
+                    record["confidence"] = "medium"
+                elif tier == "partial" and record.get("confidence") == "low":
+                    record["confidence"] = "medium"
+                record.setdefault("reason_codes", []).append("permit_desc_transient")
+        else:
+            record["permit_transient_keywords"] = []
+            record["permit_transient_strong"] = 0
+            record["permit_transient_moderate"] = 0
+            record["permit_transient_descriptions"] = []
+
+        # DCWP hotel license
+        hl = hotel_licenses.get(bbl)
+        if hl:
+            record["hotel_license_name"] = hl["business_name"]
+            record["hotel_license_status"] = hl["license_status"]
+            record["hotel_license_expiration"] = hl["license_expiration"]
+            record["has_hotel_license"] = True
+            tier = record.get("tier", "")
+            status = hl["license_status"]
+            if status in ("Active", "Ready for Renewal"):
+                if tier in ("unknown", "partial"):
+                    record["tier"] = "legal_transient"
+                    record["confidence"] = "high"
+                    record.setdefault("reason_codes", []).append("dcwp_hotel_license")
+            elif status in ("Surrendered", "Failed to Renew"):
+                if tier in ("unknown",):
+                    record["tier"] = "partial"
+                    record["confidence"] = "medium"
+                record.setdefault("reason_codes", []).append("dcwp_license_lapsed")
+        else:
+            record["hotel_license_name"] = ""
+            record["hotel_license_status"] = ""
+            record["hotel_license_expiration"] = ""
+            record["has_hotel_license"] = False
+
+        # --- Composite signal scoring ---
+        # Stack weak signals that individually don't trigger upgrades
+        # but together indicate transient capacity
+        composite_signals = []
+        tier = record.get("tier", "")
+
+        if record.get("dob_has_j1") and not record.get("dob_has_r1"):
+            composite_signals.append("dob_j1_occupancy")
+        if record.get("coo_has_temporary"):
+            composite_signals.append("temporary_coo")
+        if record.get("permit_transient_moderate", 0) > 0 and record.get("permit_transient_strong", 0) == 0:
+            composite_signals.append("permit_desc_moderate")
+        if record.get("hotel_license_status") in ("Surrendered", "Failed to Renew"):
+            composite_signals.append("dcwp_license_lapsed_signal")
+        if record.get("prior_operator"):
+            composite_signals.append("prior_operator_signal")
+
+        if len(composite_signals) >= 3 and tier == "partial":
+            record["tier"] = "legal_transient"
+            record["confidence"] = "medium"
+            record.setdefault("reason_codes", []).extend(composite_signals)
+            record.setdefault("reason_codes", []).append("composite_signal")
+        elif len(composite_signals) >= 2 and tier == "unknown":
+            record["tier"] = "partial"
+            record["confidence"] = "medium"
+            record.setdefault("reason_codes", []).extend(composite_signals)
+            record.setdefault("reason_codes", []).append("composite_signal")
+
         if sales or permits or coos:
             enriched_count += 1
 
@@ -526,6 +741,16 @@ def enrich_pipeline(
     print(f"  Tax liens: {sum(1 for r in pipeline if r.get('has_tax_lien'))} buildings")
     print(f"  Lis pendens: {sum(1 for r in pipeline if r.get('has_lis_pendens'))} buildings")
     print(f"  ACRIS owner data: {sum(1 for r in pipeline if r.get('acris_deed_owner'))} buildings")
+    kw_count = sum(1 for r in pipeline if r.get("permit_transient_strong", 0) > 0)
+    kw_upgraded = sum(1 for r in pipeline if "permit_desc_transient" in r.get("reason_codes", []))
+    print(f"  Permit keyword matches: {kw_count} buildings with strong transient keywords")
+    print(f"    Tier upgrades from keywords: {kw_upgraded} buildings")
+    hl_count = sum(1 for r in pipeline if r.get("has_hotel_license"))
+    hl_upgraded = sum(1 for r in pipeline if "dcwp_hotel_license" in r.get("reason_codes", []))
+    print(f"  DCWP hotel licenses: {hl_count} buildings matched")
+    print(f"    Tier upgrades from licenses: {hl_upgraded} buildings")
+    comp_upgraded = sum(1 for r in pipeline if "composite_signal" in r.get("reason_codes", []))
+    print(f"  Composite signal upgrades: {comp_upgraded} buildings")
     return outpath
 
 

@@ -19,11 +19,9 @@ async function loadAddresses() {
   files.sort().reverse();
   const pipeline = JSON.parse(fs.readFileSync(path.join(processedDir, files[0]), "utf8"));
 
-  // Focus on legal_transient + class_b with H-class (operating hotels)
-  // Also include prior operator buildings
   const targets = pipeline.filter(
     (r) =>
-      (r.tier === "legal_transient" || r.tier === "class_b" || r.prior_operator) &&
+      (r.tier === "legal_transient" || r.tier === "partial" || r.prior_operator) &&
       ((r.bldgclass || "").startsWith("H") || r.prior_operator)
   );
 

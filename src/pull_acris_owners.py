@@ -71,7 +71,7 @@ def pull_acris_owners():
     pipeline = json.loads(pipeline_files[0].read_text())
     target_bbls = set(
         r["bbl"] for r in pipeline
-        if r["tier"] in ("legal_transient", "class_b")
+        if r["tier"] in ("legal_transient", "partial")
     )
     print(f"Looking up ACRIS owners for {len(target_bbls)} BBLs")
 

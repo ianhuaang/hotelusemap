@@ -1,6 +1,43 @@
 @import "tailwindcss";
 @import "maplibre-gl/dist/maplibre-gl.css";
 
+@theme {
+  --color-blue-50: #EAF0F5;
+  --color-blue-100: #D5E1EB;
+  --color-blue-200: #A3BED5;
+  --color-blue-300: #6D9DBF;
+  --color-blue-400: #3D7EA8;
+  --color-blue-500: #195C8C;
+  --color-blue-600: #144A70;
+  --color-blue-700: #0F3754;
+  --color-blue-800: #0A2538;
+  --color-blue-900: #0A1628;
+
+  --color-gray-50: #FAF9F6;
+  --color-gray-100: #EEEDEB;
+  --color-gray-200: #E0DFDC;
+  --color-gray-300: #C4C3C0;
+  --color-gray-400: #9E9D9A;
+  --color-gray-500: #6B6A67;
+  --color-gray-600: #4A4947;
+  --color-gray-700: #363533;
+  --color-gray-800: #252422;
+  --color-gray-900: #1A1918;
+
+  --color-red-50: #FEF0F2;
+  --color-red-100: #FDDDE1;
+  --color-red-200: #F9A8B3;
+  --color-red-400: #F47389;
+  --color-red-500: #F1526B;
+  --color-red-600: #D93A54;
+
+  --color-emerald-50: #EEFAF3;
+  --color-emerald-100: #D5F2E1;
+  --color-emerald-500: #5AB88C;
+  --color-emerald-600: #469A73;
+  --color-emerald-700: #357A5A;
+}
+
 body {
   margin: 0;
 }

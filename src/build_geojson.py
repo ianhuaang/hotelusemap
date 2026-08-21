@@ -46,6 +46,9 @@ def build_geojson(
     pipeline = json.loads(pipeline_path.read_text())
     footprints = json.loads(footprints_path.read_text())
 
+    alt_addr_path = DATA_PROCESSED / f"alt_addresses_{TODAY}.json"
+    alt_addresses = json.loads(alt_addr_path.read_text()) if alt_addr_path.exists() else {}
+
     # Drop unknown-tier buildings — no transient signal, just noise
     # But keep any building with a prior_operator tag
     pipeline = [r for r in pipeline if r["tier"] != "unknown" or r.get("prior_operator")]
@@ -61,10 +64,8 @@ def build_geojson(
             if bbl:
                 fp_by_bbl.setdefault(bbl, []).append(fp)
 
-    # Tier priority for deduplication — higher-signal tiers win
     TIER_PRIORITY = {
-        "legal_transient": 0, "class_b": 1, "partial": 2,
-        "prior_operator": 3, "unknown": 4, "excluded": 5,
+        "legal_transient": 0, "partial": 1, "unknown": 2, "excluded": 3,
     }
 
     # Deduplicate: one feature per footprint (doitt_id), highest-tier record wins
@@ -103,6 +104,7 @@ def build_geojson(
         properties = {
             "bbl": record["bbl"],
             "address": record["address"],
+            "alt_addresses": alt_addresses.get(record["bbl"], []),
             "bldgclass": record["bldgclass"],
             "unitsres": record["unitsres"],
             "unitstotal": record["unitstotal"],
@@ -151,6 +153,18 @@ def build_geojson(
             "hotel_name": record.get("hotel_name", ""),
             "hotel_phone": record.get("hotel_phone", ""),
             "hotel_website": record.get("hotel_website", ""),
+            # DOB occupancy classification
+            "dob_has_r1": record.get("dob_has_r1", False),
+            "dob_has_j1": record.get("dob_has_j1", False),
+            "dob_r1_filing_count": record.get("dob_r1_filing_count", 0),
+            "dob_transient_units": record.get("dob_transient_units", 0),
+            # Permit description transient signals
+            "permit_transient_keywords": record.get("permit_transient_keywords", []),
+            "permit_transient_strong": record.get("permit_transient_strong", 0),
+            # DCWP hotel license
+            "has_hotel_license": record.get("has_hotel_license", False),
+            "hotel_license_name": record.get("hotel_license_name", ""),
+            "hotel_license_status": record.get("hotel_license_status", ""),
         }
 
         # Include top 3 permits (trimmed to save space)
@@ -177,22 +191,27 @@ def build_geojson(
             properties["reversion_window"] = record["reversion_window"]
             properties["has_reversion"] = True
 
+        if record.get("class_b_split"):
+            properties["class_b_split"] = record["class_b_split"]
+
         # Deal sub-scores (each 0-100, combined on frontend with adjustable weights)
         # Legal certainty (max 50 raw pts -> normalized to 0-100)
         legal = 0
         tier = record["tier"]
         if tier == "legal_transient":
             legal += 30
-        elif tier == "class_b":
-            legal += 20
         elif tier == "partial":
             legal += 8
-        elif tier == "prior_operator":
-            legal += 5
         if record.get("coo_has_temporary"):
             legal += 10
         if record.get("hpd_class_b", 0) > 0:
             legal += 10
+        if record.get("dob_has_r1"):
+            legal += 15
+        if record.get("permit_transient_strong", 0) >= 1:
+            legal += 8
+        if record.get("has_hotel_license"):
+            legal += 20
         properties["score_legal"] = round(min(legal / 50, 1.0) * 100)
 
         # Availability (max 45 raw pts -> normalized to 0-100)

@@ -8,14 +8,24 @@ const SIGNAL_TIERS = [
     info: "Multiple sources confirm existing transient/hotel capacity. Hotel building class in PLUTO and HPD Class B rooms, or pure Class B with no residential apartments.",
   },
   {
-    key: "class_b", label: "Class B (split-use)", color: "#2563eb", rank: 1,
-    info: "HPD shows both Class A apartments and Class B transient rooms in the same building. Real transient capacity exists, but mixed with residential. C of O data (v2) would clarify which floors.",
-  },
-  {
-    key: "partial", label: "Partial signal", color: "#f59e0b", rank: 2,
+    key: "partial", label: "Partial signal", color: "#f59e0b", rank: 1,
     info: "Building class suggests mixed use (RM, RC, etc.) but HPD didn't confirm Class B rooms. May have transient capacity, or may just be commercial/residential. Needs manual verification.",
   },
 ];
+
+function estRooms(p) {
+  const classB = p.hpd_class_b || 0;
+  const cooUnits = p.coo_dwelling_units ? parseInt(p.coo_dwelling_units, 10) || 0 : 0;
+  const isHotel = (p.bldgclass || "").startsWith("H");
+  if (classB > 0) return { value: classB, source: "HPD Class B" };
+  if (cooUnits > 0) return { value: cooUnits, source: "C of O" };
+  const floors = p.numfloors || 0;
+  if (isHotel && floors >= 3) return { value: Math.round(floors * 15), source: "Floor est." };
+  const plutoUnits = (p.unitsres || 0) > 0 ? p.unitsres : (p.unitstotal || 0);
+  if (plutoUnits > 0) return { value: plutoUnits, source: "PLUTO" };
+  if (floors >= 3) return { value: Math.round(floors * 15), source: "Floor est." };
+  return { value: 0, source: "Unknown" };
+}
 
 const PRIOR_OP = {
   key: "prior_operator", label: "Prior operator", color: "#a855f7",
@@ -65,7 +75,10 @@ function computeScore(p, weights) {
   return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
 }
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly) {
+function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly, shortlist) {
+  if (shortlist === "reversion") return ["==", ["get", "has_reversion"], true];
+  if (shortlist === "classb") return ["all", ["!=", ["get", "tier"], "legal_transient"], ["any", ["==", ["get", "tier"], "class_b"], [">", ["to-number", ["get", "hpd_class_b"], 0], 0]]];
+
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
@@ -91,8 +104,12 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ["any",
       [">=",
         ["case",
-          [">", ["get", "unitsres"], 0], ["get", "unitsres"],
-          ["get", "unitstotal"],
+          [">", ["to-number", ["get", "hpd_class_b"], 0], 0], ["to-number", ["get", "hpd_class_b"], 0],
+          [">", ["to-number", ["get", "coo_dwelling_units"], 0], 0], ["to-number", ["get", "coo_dwelling_units"], 0],
+          ["all", ["==", ["slice", ["get", "bldgclass"], 0, 1], "H"], [">=", ["to-number", ["get", "numfloors"], 0], 3]],
+            ["*", ["to-number", ["get", "numfloors"], 0], 15],
+          [">", ["to-number", ["get", "unitsres"], 0], 0], ["to-number", ["get", "unitsres"], 0],
+          ["to-number", ["get", "unitstotal"], 0],
         ],
         minUnits,
       ],
@@ -100,29 +117,31 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ],
   ];
 
+  // Refinement filters — but overlay buildings (prior ops, reversion) bypass these
+  const refinements = [];
   if (filters.filterTempCoo) {
-    conditions.push(["==", ["get", "coo_has_temporary"], true]);
+    refinements.push(["==", ["get", "coo_has_temporary"], true]);
   }
   if (filters.filterHasClassB) {
-    conditions.push([">", ["get", "hpd_class_b"], 0]);
+    refinements.push([">", ["get", "hpd_class_b"], 0]);
   }
   if (filters.filterMultiOwner) {
-    conditions.push([">", ["get", "owner_portfolio_size"], 1]);
+    refinements.push([">", ["get", "owner_portfolio_size"], 1]);
   }
   if (filters.filterRecentSale) {
-    conditions.push([">=", ["get", "last_sale_date"], filters._recentSaleCutoff]);
+    refinements.push([">=", ["get", "last_sale_date"], filters._recentSaleCutoff]);
   }
   if (filters.filterCommercialZone) {
-    conditions.push(["any",
+    refinements.push(["any",
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "C"],
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "M"],
     ]);
   }
   if (hideHotels) {
-    conditions.push(["!=", ["slice", ["get", "bldgclass"], 0, 1], "H"]);
+    refinements.push(["!=", ["slice", ["get", "bldgclass"], 0, 1], "H"]);
   }
   if (distressOnly) {
-    conditions.push(["any",
+    refinements.push(["any",
       ["==", ["get", "has_tax_lien"], true],
       ["==", ["get", "has_lis_pendens"], true],
       [">", ["get", "hpd_open_violations"], 0],
@@ -130,7 +149,12 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ]);
   }
   if (noOperatorOnly) {
-    conditions.push(["!", ["has", "hotel_name"]]);
+    refinements.push(["!", ["has", "hotel_name"]]);
+  }
+
+  // Overlay buildings bypass all refinements
+  for (const ref of refinements) {
+    conditions.push(["any", ref, alwaysShowFilter]);
   }
 
   return ["all", ...conditions];
@@ -140,6 +164,8 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
 const CSV_COLUMNS = [
   { key: "address", label: "Address" },
   { key: "neighborhood", label: "Neighborhood" },
+  { key: "est_rooms", label: "Est. Rooms" },
+  { key: "room_source", label: "Room Source" },
   { key: "has_prior_op", label: "Prior Operator" },
   { key: "has_reversion", label: "Reversion Window" },
   { key: "coo_has_temporary", label: "Temp C of O" },
@@ -223,8 +249,11 @@ function exportToCsv(features, scoreWeights) {
     const reversion = parseJsonProp(p.reversion_window);
     const reasons = parseJsonProp(p.reason_codes) || [];
 
+    const rooms = estRooms(p);
     const row = {
       ...p,
+      est_rooms: rooms.value,
+      room_source: rooms.source,
       has_prior_op: p.has_prior_op ? "Yes" : "",
       has_reversion: p.has_reversion ? "Yes" : "",
       numfloors: p.numfloors ? Math.round(p.numfloors) : "",
@@ -392,8 +421,6 @@ function ScoreExplainer({ p }) {
   const legal = [];
   if (p.tier === "legal_transient") legal.push({ label: "Legal transient tier", pts: 30, hit: true });
   else legal.push({ label: "Legal transient tier", pts: 30, hit: false });
-  if (p.tier === "class_b") legal.push({ label: "Class B (split-use) tier", pts: 20, hit: true });
-  else legal.push({ label: "Class B tier", pts: 20, hit: false });
   if (p.tier === "partial") legal.push({ label: "Partial signal tier", pts: 8, hit: true });
   else legal.push({ label: "Partial signal tier", pts: 8, hit: false });
   legal.push({ label: "Temporary C of O", pts: 10, hit: !!p.coo_has_temporary });
@@ -531,16 +558,38 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
-          <Stat label="Residential units" value={p.unitsres} />
-          <Stat label="Total units" value={p.unitstotal} />
-          <Stat label="Floors" value={p.numfloors ? Math.round(p.numfloors) : "—"} />
-          <Stat label="Building class" value={p.bldgclass || "—"} />
-          <Stat label="HPD Class A" value={p.hpd_class_a ?? "—"} />
-          <Stat label="HPD Class B" value={p.hpd_class_b ?? "—"} />
-          <Stat label="Zoning" value={p.zonedist1 || "—"} />
-          <Stat label="Roof height" value={p.height_roof ? `${Math.round(p.height_roof)} ft` : "—"} />
-        </div>
+        {(() => {
+          const rooms = estRooms(p);
+          const sourceExplain = {
+            "HPD Class B": "From HPD registration — the number of transient (Class B) rooms registered with the city. Most reliable source.",
+            "C of O": "From DOB Certificate of Occupancy — the approved dwelling unit count. Reliable but may include residential units.",
+            "Floor est.": `Estimated at ~15 rooms/floor × ${Math.round(p.numfloors || 0)} floors. No HPD registration or C of O on file for this hotel.`,
+            "PLUTO": "From Dept. of Finance tax lot data. Counts residential dwelling units, not hotel rooms — accurate for residential buildings but undercounts hotels.",
+            "Unknown": "No room count data available from any source.",
+          };
+          return (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-[10px] text-gray-400 uppercase tracking-wide flex items-center gap-1">
+                  Est. Rooms
+                  <span className="relative group cursor-help">
+                    <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 text-gray-500 text-[8px] font-bold">i</span>
+                    <span className="absolute bottom-full left-0 mb-1 w-56 bg-gray-900 text-white text-[10px] leading-snug rounded-lg px-3 py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50 shadow-lg">
+                      <span className="font-semibold text-blue-300">Source: {rooms.source}</span><br/>
+                      {sourceExplain[rooms.source]}
+                    </span>
+                  </span>
+                </div>
+                <div className="text-sm font-medium text-gray-900">{rooms.value}</div>
+              </div>
+              <Stat label="Floors" value={p.numfloors ? Math.round(p.numfloors) : "—"} />
+              <StatBldgClass code={p.bldgclass} />
+              <Stat label="HPD Class B" value={p.hpd_class_b ?? "—"} />
+              <Stat label="HPD Class A" value={p.hpd_class_a ?? "—"} />
+              <Stat label="Zoning" value={p.zonedist1 || "—"} />
+            </div>
+          );
+        })()}
 
         {reasonCodes.length > 0 && (
           <div>
@@ -902,7 +951,7 @@ function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights })
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-gray-900 truncate">{p.address}</div>
                 <div className="text-[10px] text-gray-400">
-                  {p.unitsres} units &middot; {p.bldgclass || "—"}
+                  {estRooms(p).value} rooms &middot; {p.bldgclass || "—"}
                   {priorOp ? ` · ${priorOp.name}` : ""}
                   {p.has_reversion ? " · reversion" : ""}
                 </div>
@@ -958,6 +1007,59 @@ function InfoTip({ text }) {
   );
 }
 
+const BLDG_CLASS_LABELS = {
+  H1: "Luxury hotel", H2: "Hotel, 100+ rooms", H3: "Hotel, 20-99 rooms", H4: "Motel",
+  H5: "Private club/hotel", H6: "Apartment hotel", H7: "Apartment hotel, condo",
+  H8: "Dormitory", H9: "Miscellaneous hotel", HB: "Boutique hotel",
+  HH: "Hostel", HR: "SRO", HS: "Hotel, 10-19 rooms", RH: "Condo hotel",
+  RM: "Residential, multi-story walk-up", RR: "Condo, walk-up",
+  RC: "Residential/commercial mixed", RD: "Residential, elevator",
+  RK: "Condo, two-three story", RI: "Condo, elevator",
+  RW: "Condo, residential/commercial", RS: "Single room occupancy (SRO)",
+  RX: "Condo, multi-story", R1: "Condo, detached",
+  R2: "Condo, semi-detached", R3: "Condo, walk-up",
+  R4: "Condo, elevator", R5: "Miscellaneous condo",
+  R6: "Condo, loft", R7: "Condo, two-family",
+  R8: "Condo, three-family", R9: "Condo, co-op conversion",
+  D1: "Elevator co-op, 8-14 stories", D2: "Elevator co-op, fireproof",
+  D3: "Elevator co-op, 8-14 stories alt.", D4: "Elevator co-op, luxury",
+  D5: "Elevator co-op, converted", D6: "Elevator co-op, loft",
+  D7: "Elevator co-op, semi-fireproof", D8: "Elevator co-op, misc.",
+  D9: "Elevator co-op, misc. alt.",
+  C1: "Walk-up, 3+ units, old law", C2: "Walk-up, 3+ units, new law",
+  C3: "Walk-up, 3+ units, fireproof", C4: "Walk-up, condo conversion",
+  C5: "Walk-up, converted dwelling", C6: "Walk-up, co-op",
+  C7: "Walk-up, over 6 stories", C8: "Walk-up, over 6 units",
+  C9: "Walk-up, garden complex",
+  S1: "Primarily residential, mixed use", S2: "Primarily commercial, mixed use",
+  S3: "Mixed use, 3-6 stories", S4: "Mixed use, factory conversion",
+  S5: "Mixed use, semi-fireproof", S9: "Mixed use, misc.",
+  O1: "Office, loft", O2: "Office, 10-25 stories", O3: "Office, 25-50 stories",
+  O4: "Office, tower", O5: "Office, converted", O6: "Office, 6-10 stories",
+  O7: "Office, professional building", O8: "Office, misc.", O9: "Office, misc. alt.",
+};
+
+function StatBldgClass({ code }) {
+  const c = (code || "").trim().toUpperCase();
+  const label = BLDG_CLASS_LABELS[c];
+  return (
+    <div>
+      <div className="text-[10px] text-gray-400 uppercase tracking-wide">Building class</div>
+      <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+        {c || "—"}
+        {label && (
+          <span className="relative group cursor-help">
+            <span className="inline-flex items-center justify-center w-3 h-3 rounded-full bg-gray-200 text-gray-500 text-[8px] font-bold">i</span>
+            <span className="absolute bottom-full left-0 mb-1 w-48 bg-gray-900 text-white text-[10px] leading-snug rounded-lg px-3 py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50 shadow-lg">
+              {label}
+            </span>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function FilterPanel({
   tierThreshold, setTierThreshold,
   showPriorOps, setShowPriorOps,
@@ -965,6 +1067,7 @@ function FilterPanel({
   hideHotels, setHideHotels,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
+  shortlist, setShortlist,
   minUnits, setMinUnits,
   scoreWeights, setScoreWeights,
   featureCount, overlayCounts,
@@ -986,12 +1089,12 @@ function FilterPanel({
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Current legal status</div>
           <div className="space-y-1">
             {SIGNAL_TIERS.map((tier, idx) => {
-              const active = idx <= tierThreshold;
+              const active = !shortlist && idx <= tierThreshold;
               return (
                 <button
                   key={tier.key}
-                  onClick={() => setTierThreshold(idx)}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
+                  onClick={() => { setShortlist(null); setTierThreshold(idx); }}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left ${shortlist ? "opacity-40" : ""}`}
                   style={{
                     backgroundColor: active ? `${tier.color}10` : "transparent",
                     borderLeft: `3px solid ${active ? tier.color : "transparent"}`,
@@ -1005,7 +1108,7 @@ function FilterPanel({
                     {tier.label}
                   </span>
                   <InfoTip text={tier.info} />
-                  {idx === tierThreshold && (
+                  {!shortlist && idx === tierThreshold && (
                     <span className="ml-auto text-[10px] text-gray-400">threshold</span>
                   )}
                 </button>
@@ -1016,7 +1119,7 @@ function FilterPanel({
         </div>
 
         {/* Opportunity context */}
-        <div>
+        <div className={shortlist ? "opacity-40 pointer-events-none" : ""}>
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Opportunity context</div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
             <input
@@ -1073,8 +1176,44 @@ function FilterPanel({
           </label>
         </div>
 
-        {/* Refinements */}
+        {/* Shortlists */}
         <div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Shortlists</div>
+          <div className="flex gap-1.5 px-1">
+            <button
+              onClick={() => setShortlist(shortlist === "reversion" ? null : "reversion")}
+              className={`flex-1 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors cursor-pointer ${
+                shortlist === "reversion"
+                  ? "bg-rose-500 text-white border-rose-500"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
+              }`}
+            >
+              Reversion Window
+              <span className="ml-1 opacity-70">({overlayCounts.reversion})</span>
+            </button>
+            <button
+              onClick={() => setShortlist(shortlist === "classb" ? null : "classb")}
+              className={`flex-1 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors cursor-pointer ${
+                shortlist === "classb"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+              }`}
+            >
+              Class B
+            </button>
+          </div>
+          {shortlist && (
+            <button
+              onClick={() => setShortlist(null)}
+              className="mt-1.5 px-2.5 text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer"
+            >
+              ← Clear shortlist
+            </button>
+          )}
+        </div>
+
+        {/* Refinements */}
+        <div className={shortlist ? "opacity-40 pointer-events-none" : ""}>
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Refinements</div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
             <input
@@ -1225,26 +1364,100 @@ function FilterPanel({
   );
 }
 
-function SearchBar({ mapRef, panelOpen }) {
+const GOOGLE_PLACES_API_KEY = "AIzaSyCKgST4j-ZZ_SqXp09dciVbHTn_4gctzUM";
+
+function SearchBar({ mapRef, panelOpen, onSelectFeature }) {
+  const HISTORY_KEY = "transient-search-history";
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
+  const [geoResults, setGeoResults] = useState([]);
+  const [placesResults, setPlacesResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
   const debounceRef = useRef(null);
+
+  const getHistory = () => {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); } catch { return []; }
+  };
+  const addHistory = (label, coords) => {
+    const hist = getHistory().filter(h => h.label !== label);
+    hist.unshift({ label, coords });
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(hist.slice(0, 20)));
+  };
+
+  const findNearbyBuilding = (map, center) => {
+    // After fly animation, query rendered building features and select the nearest one
+    const point = map.project(center);
+    // Search in a 50px radius around the target point
+    const bbox = [
+      [point.x - 50, point.y - 50],
+      [point.x + 50, point.y + 50],
+    ];
+    const features = map.queryRenderedFeatures(bbox, { layers: ["buildings-fill"] });
+    if (features.length > 0 && onSelectFeature) {
+      // Find the closest feature by distance to center
+      let closest = features[0];
+      let minDist = Infinity;
+      for (const f of features) {
+        const coords = f.geometry?.coordinates;
+        if (!coords) continue;
+        const ring = f.geometry.type === "MultiPolygon" ? coords[0][0] : coords[0];
+        let cx = 0, cy = 0;
+        for (const [x, y] of ring) { cx += x; cy += y; }
+        cx /= ring.length; cy /= ring.length;
+        const dist = Math.hypot(cx - center[0], cy - center[1]);
+        if (dist < minDist) { minDist = dist; closest = f; }
+      }
+      onSelectFeature(closest);
+    }
+  };
 
   const search = useCallback(async (text) => {
     if (text.length < 3) {
-      setResults([]);
+      setGeoResults([]);
+      setPlacesResults([]);
       return;
     }
     setLoading(true);
     try {
-      const resp = await fetch(
-        `https://geosearch.planninglabs.nyc/v2/search?text=${encodeURIComponent(text)}`
-      );
-      const data = await resp.json();
-      setResults((data.features || []).slice(0, 5));
+      const [geoSettled, placesSettled] = await Promise.allSettled([
+        // GeoSearch (existing)
+        fetch(`https://geosearch.planninglabs.nyc/v2/search?text=${encodeURIComponent(text)}`)
+          .then(r => r.json()),
+        // Google Places Text Search (New)
+        fetch("https://places.googleapis.com/v1/places:searchText", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+            "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location",
+          },
+          body: JSON.stringify({
+            textQuery: text,
+            locationBias: {
+              circle: {
+                center: { latitude: 40.7580, longitude: -73.9855 },
+                radius: 15000.0,
+              },
+            },
+          }),
+        }).then(r => r.json()),
+      ]);
+
+      if (geoSettled.status === "fulfilled") {
+        setGeoResults((geoSettled.value.features || []).slice(0, 5));
+      } else {
+        setGeoResults([]);
+      }
+
+      if (placesSettled.status === "fulfilled" && placesSettled.value.places) {
+        setPlacesResults(placesSettled.value.places.slice(0, 5));
+      } else {
+        setPlacesResults([]);
+      }
     } catch {
-      setResults([]);
+      setGeoResults([]);
+      setPlacesResults([]);
     }
     setLoading(false);
   }, []);
@@ -1252,16 +1465,53 @@ function SearchBar({ mapRef, panelOpen }) {
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
+    setShowAllHistory(false);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(val), 300);
   };
 
   const flyTo = (feature) => {
+    const map = mapRef.current;
     const [lng, lat] = feature.geometry.coordinates;
-    mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 1200 });
+    map?.flyTo({ center: [lng, lat], zoom: 17, duration: 1200 });
     setQuery(feature.properties.label);
-    setResults([]);
+    setGeoResults([]);
+    setPlacesResults([]);
+    setFocused(false);
+    addHistory(feature.properties.label, [lng, lat]);
+    // After fly completes, try to find and select a nearby building
+    if (map) {
+      map.once("moveend", () => findNearbyBuilding(map, [lng, lat]));
+    }
   };
+
+  const flyToPlace = (place) => {
+    const map = mapRef.current;
+    const lat = place.location?.latitude;
+    const lng = place.location?.longitude;
+    if (!map || lat == null || lng == null) return;
+    const label = place.displayName?.text || place.formattedAddress || "Place";
+    map.flyTo({ center: [lng, lat], zoom: 17, duration: 1200 });
+    setQuery(label);
+    setGeoResults([]);
+    setPlacesResults([]);
+    setFocused(false);
+    addHistory(label, [lng, lat]);
+    // After fly completes, try to find and select a nearby building
+    map.once("moveend", () => findNearbyBuilding(map, [lng, lat]));
+  };
+
+  const flyToHistory = (item) => {
+    const map = mapRef.current;
+    map?.flyTo({ center: item.coords, zoom: 17, duration: 1200 });
+    setQuery(item.label);
+    setFocused(false);
+  };
+
+  const hasResults = geoResults.length > 0 || placesResults.length > 0;
+  const history = getHistory();
+  const showHistory = focused && query.length < 3 && !hasResults && history.length > 0;
+  const visibleHistory = showAllHistory ? history : history.slice(0, 5);
 
   return (
     <div className="absolute top-4 left-[calc(50%-10rem)] w-80 z-20">
@@ -1270,24 +1520,71 @@ function SearchBar({ mapRef, panelOpen }) {
           type="text"
           value={query}
           onChange={handleInput}
-          placeholder="Search address..."
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 200)}
+          placeholder="Search address or place name..."
           className="w-full px-4 py-2.5 bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 text-sm text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-300"
         />
         {loading && (
           <div className="absolute right-3 top-3 w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
         )}
       </div>
-      {results.length > 0 && (
+      {hasResults && (
+        <div className="mt-1 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden max-h-80 overflow-y-auto">
+          {geoResults.length > 0 && (
+            <>
+              {placesResults.length > 0 && (
+                <div className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50">Addresses</div>
+              )}
+              {geoResults.map((r, i) => (
+                <button
+                  key={`geo-${i}`}
+                  onClick={() => flyTo(r)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer"
+                >
+                  {r.properties.label}
+                </button>
+              ))}
+            </>
+          )}
+          {placesResults.length > 0 && (
+            <>
+              <div className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50">Places</div>
+              {placesResults.map((p, i) => (
+                <button
+                  key={`place-${i}`}
+                  onClick={() => flyToPlace(p)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer"
+                >
+                  <div className="font-medium">{p.displayName?.text}</div>
+                  <div className="text-xs text-gray-400 truncate">{p.formattedAddress}</div>
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+      {showHistory && (
         <div className="mt-1 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
-          {results.map((r, i) => (
+          <div className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Recent</div>
+          {visibleHistory.map((h, i) => (
             <button
               key={i}
-              onClick={() => flyTo(r)}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer"
+              onClick={() => flyToHistory(h)}
+              className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 border-b border-gray-50 last:border-0 cursor-pointer flex items-center gap-2"
             >
-              {r.properties.label}
+              <span className="text-gray-300 text-xs">↩</span>
+              <span className="truncate">{h.label}</span>
             </button>
           ))}
+          {history.length > 5 && !showAllHistory && (
+            <button
+              onClick={() => setShowAllHistory(true)}
+              className="w-full text-center py-2 text-[11px] text-blue-500 hover:bg-gray-50 cursor-pointer"
+            >
+              Show more ({history.length - 5} more)
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -1315,7 +1612,7 @@ const TABLE_COLS = [
   { key: "signals", label: "Signals", sortable: true, numeric: true, width: "min-w-[100px]" },
   { key: "neighborhood", label: "Neighborhood", sortable: true, width: "min-w-[160px]" },
   { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
-  { key: "unitsres", label: "Units", sortable: true, numeric: true, width: "min-w-[70px]" },
+  { key: "est_rooms", label: "Est. Rooms", sortable: true, numeric: true, width: "min-w-[85px]" },
   { key: "numfloors", label: "Floors", sortable: true, numeric: true, width: "min-w-[70px]" },
   { key: "bldgclass", label: "Class", sortable: true, width: "min-w-[65px]" },
   { key: "hpd_class_b", label: "Class B", sortable: true, numeric: true, width: "min-w-[75px]" },
@@ -1329,34 +1626,40 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly) {
+function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly, shortlist) {
   const allowedTiers = SIGNAL_TIERS
     .filter((t) => t.rank <= tierThreshold)
     .map((t) => t.key);
 
   return features.filter((f) => {
     const p = f.properties;
+
+    if (shortlist === "reversion") return !!p.has_reversion;
+    if (shortlist === "classb") return p.tier !== "legal_transient" && (p.tier === "class_b" || (p.hpd_class_b || 0) > 0);
+
     const tierOk = allowedTiers.includes(p.tier);
     const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
     if (!tierOk && !overlayOk) return false;
 
-    const effectiveUnits = (p.unitsres || 0) > 0 ? p.unitsres : (p.unitstotal || 0);
-    if (!overlayOk && effectiveUnits < minUnits) return false;
+    if (!overlayOk && estRooms(p).value < minUnits) return false;
 
-    if (filters.filterTempCoo && !p.coo_has_temporary) return false;
-    if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
-    if (filters.filterMultiOwner && !(p.owner_portfolio_size > 1)) return false;
-    if (filters.filterRecentSale && (!p.last_sale_date || p.last_sale_date < filters._recentSaleCutoff)) return false;
-    if (filters.filterCommercialZone) {
-      const z = (p.zonedist1 || "")[0];
-      if (z !== "C" && z !== "M") return false;
+    // Overlay buildings bypass refinement filters
+    if (!overlayOk) {
+      if (filters.filterTempCoo && !p.coo_has_temporary) return false;
+      if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
+      if (filters.filterMultiOwner && !(p.owner_portfolio_size > 1)) return false;
+      if (filters.filterRecentSale && (!p.last_sale_date || p.last_sale_date < filters._recentSaleCutoff)) return false;
+      if (filters.filterCommercialZone) {
+        const z = (p.zonedist1 || "")[0];
+        if (z !== "C" && z !== "M") return false;
+      }
+      if (hideHotels && (p.bldgclass || "").startsWith("H")) return false;
+      if (distressOnly) {
+        const hasDistress = p.has_tax_lien || p.has_lis_pendens || (p.hpd_open_violations || 0) > 0 || (p.ecb_open_violations || 0) > 0;
+        if (!hasDistress) return false;
+      }
+      if (noOperatorOnly && p.hotel_name) return false;
     }
-    if (hideHotels && (p.bldgclass || "").startsWith("H")) return false;
-    if (distressOnly) {
-      const hasDistress = p.has_tax_lien || p.has_lis_pendens || (p.hpd_open_violations || 0) > 0 || (p.ecb_open_violations || 0) > 0;
-      if (!hasDistress) return false;
-    }
-    if (noOperatorOnly && p.hotel_name) return false;
 
     return true;
   });
@@ -1373,7 +1676,7 @@ function dedupeFeatures(features) {
     } else {
       // Keep the one with the highest-priority tier
       const existing = groups.get(key).properties;
-      const TIER_RANK = { legal_transient: 0, class_b: 1, partial: 2, prior_operator: 3, unknown: 4, excluded: 5 };
+      const TIER_RANK = { legal_transient: 0, partial: 1, unknown: 2, excluded: 3 };
       if ((TIER_RANK[p.tier] ?? 99) < (TIER_RANK[existing.tier] ?? 99)) {
         groups.set(key, f);
       }
@@ -1415,8 +1718,8 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
   const sorted = [...filtered].sort((a, b) => {
     const col = TABLE_COLS.find((c) => c.key === sortKey);
     const sigCount = (p) => [p.has_prior_op, p.has_reversion, p.has_tax_lien, p.has_lis_pendens, p.coo_has_temporary].filter(Boolean).length;
-    let va = sortKey === "signals" ? sigCount(a.properties) : a.properties[sortKey];
-    let vb = sortKey === "signals" ? sigCount(b.properties) : b.properties[sortKey];
+    let va = sortKey === "signals" ? sigCount(a.properties) : sortKey === "est_rooms" ? estRooms(a.properties).value : a.properties[sortKey];
+    let vb = sortKey === "signals" ? sigCount(b.properties) : sortKey === "est_rooms" ? estRooms(b.properties).value : b.properties[sortKey];
     if (col?.numeric) {
       va = Number(va) || 0;
       vb = Number(vb) || 0;
@@ -1688,7 +1991,7 @@ function _removed() { /* buildOwnerGroups + OwnerView removed */
     if (!g.buildings.some((b) => b.properties.address === p.address && b.properties.ownername === p.ownername)) {
       g.buildings.push(f);
     }
-    g.totalUnits += (p.unitsres || 0);
+    g.totalUnits += estRooms(p).value;
     g.totalClassB += (p.hpd_class_b || 0);
     g.tiers.add(p.tier);
     if (p.has_prior_op) g.hasPriorOp = true;
@@ -1879,7 +2182,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
       va = a.totalClassB;
       vb = b.totalClassB;
     } else if (sortKey === "bestTier") {
-      const rank = { legal_transient: 0, class_b: 1, partial: 2, unknown: 3 };
+      const rank = { legal_transient: 0, partial: 1, unknown: 2 };
       va = Math.min(...[...a.tiers].map((t) => rank[t] ?? 99));
       vb = Math.min(...[...b.tiers].map((t) => rank[t] ?? 99));
     }
@@ -1896,13 +2199,13 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   const OWNER_COLS = [
     { key: "name", label: "Owner", width: "min-w-[220px]" },
     { key: "buildings", label: "Buildings", width: "min-w-[85px]" },
-    { key: "totalUnits", label: "Total Units", width: "min-w-[95px]" },
+    { key: "totalUnits", label: "Est. Rooms", width: "min-w-[95px]" },
     { key: "totalClassB", label: "Class B Rooms", width: "min-w-[100px]" },
     { key: "bestTier", label: "Best Tier", width: "min-w-[120px]" },
   ];
 
   const bestTier = (tiers) => {
-    const rank = ["legal_transient", "class_b", "partial", "unknown"];
+    const rank = ["legal_transient", "partial", "unknown"];
     for (const t of rank) if (tiers.has(t)) return t;
     return "unknown";
   };
@@ -2017,7 +2320,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
                             {(p.tier || "").replace(/_/g, " ")}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-[11px] text-gray-600">{p.unitsres || 0}</td>
+                        <td className="px-4 py-2 text-[11px] text-gray-600">{estRooms(p).value}</td>
                         <td className="px-4 py-2 text-[11px] text-gray-600">{p.hpd_class_b > 0 ? p.hpd_class_b : "—"}</td>
                         <td className="px-4 py-2 text-[11px] text-gray-500">{p.bldgclass}</td>
                         <td className="px-4 py-2 text-[11px] text-gray-500">{p.zonedist1}</td>
@@ -2052,6 +2355,7 @@ export default function App() {
   const [hideHotels, setHideHotels] = useState(true);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
+  const [shortlist, setShortlist] = useState(null); // null | "reversion" | "classb"
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -2200,7 +2504,7 @@ export default function App() {
         .then((r) => r.json())
         .then((data) => {
           // Build points from centroids, deduplicating by address (condo lots share an address)
-          const TIER_RANK = { legal_transient: 0, class_b: 1, partial: 2, prior_operator: 3, unknown: 4, excluded: 5 };
+          const TIER_RANK = { legal_transient: 0, partial: 1, unknown: 2, excluded: 3 };
           const pointMap = new Map(); // address → best point
           for (const f of (data.features || [])) {
             const coords = f.geometry?.coordinates;
@@ -2371,7 +2675,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly);
+    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
@@ -2384,12 +2688,12 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly]);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist]);
 
   // Compute filtered features for table view
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, overlayCounts]);
+    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist);
+  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, overlayCounts, shortlist]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -2459,6 +2763,8 @@ export default function App() {
         setDistressOnly={setDistressOnly}
         noOperatorOnly={noOperatorOnly}
         setNoOperatorOnly={setNoOperatorOnly}
+        shortlist={shortlist}
+        setShortlist={setShortlist}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
         scoreWeights={scoreWeights}
@@ -2480,7 +2786,7 @@ export default function App() {
         dataDate={dataDate}
       />}
 
-      {activeView === "map" && <SearchBar mapRef={mapRef} panelOpen={!!inspectedFeature} />}
+      {activeView === "map" && <SearchBar mapRef={mapRef} panelOpen={!!inspectedFeature} onSelectFeature={setInspectedFeature} />}
 
       <DetailPanel
         feature={inspectedFeature}

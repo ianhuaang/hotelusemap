@@ -12,8 +12,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     DATA_RAW, DATA_PROCESSED, MIN_RESIDENTIAL_UNITS,
-    TIER_LEGAL_TRANSIENT, TIER_CLASS_B, TIER_PARTIAL,
-    TIER_UNKNOWN, TIER_EXCLUDED, TIER_PRIOR_OPERATOR,
+    TIER_LEGAL_TRANSIENT, TIER_PARTIAL,
+    TIER_UNKNOWN, TIER_EXCLUDED,
     CONFIDENCE_HIGH, CONFIDENCE_MEDIUM, CONFIDENCE_LOW,
     TARGET_CDS,
 )
@@ -70,14 +70,27 @@ def load_prior_operators(path: Path = None) -> dict[str, dict]:
     return result
 
 
+def _load_dob_occupancy_bbls() -> set[str]:
+    """Load BBLs with R-1/J-1 occupancy from the full DOB pull."""
+    files = sorted(DATA_RAW.glob("dob_occupancy_*.json"), reverse=True)
+    if not files:
+        return set()
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"] for r in raw if r.get("has_r1") or r.get("has_j1")}
+
+
 def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
     pluto = load_pluto(pluto_path)
     hpd = load_hpd(hpd_path)
     prior_ops = load_prior_operators()
+    dob_transient_bbls = _load_dob_occupancy_bbls()
+    if dob_transient_bbls:
+        print(f"DOB transient occupancy: {len(dob_transient_bbls)} BBLs loaded as entry source")
 
     # --- Step 1: PLUTO filter ---
     # Keep lots with buildings that have enough residential units OR are hotel-class
     survivors = []
+    dob_additions = 0
     for row in pluto:
         bbl = _normalize_bbl(row["bbl"])
         bldgclass = (row.get("bldgclass") or "").strip().upper()
@@ -98,19 +111,25 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         if bldgclass in SMALL_RESIDENTIAL:
             continue
 
-        # Keep if: hotel class, mixed class, meets unit minimum, or is a prior operator
+        # Keep if: hotel class, mixed class, meets unit minimum, prior operator,
+        # or DOB transient occupancy (R-1/J-1)
         is_hotel = bldgclass[:2] in {c[:2] for c in HOTEL_CLASSES} or bldgclass in HOTEL_CLASSES
         is_mixed = bldgclass in MIXED_CLASSES
         meets_units = unitsres >= MIN_RESIDENTIAL_UNITS
         is_prior_op = bbl in prior_ops
+        is_dob_transient = bbl in dob_transient_bbls
 
-        if is_hotel or is_mixed or meets_units or is_prior_op:
+        if is_hotel or is_mixed or meets_units or is_prior_op or is_dob_transient:
             row["_bbl"] = bbl
             row["_bldgclass"] = bldgclass
             row["_unitsres"] = unitsres
+            if is_dob_transient and not (is_hotel or is_mixed or meets_units or is_prior_op):
+                dob_additions += 1
             survivors.append(row)
 
     print(f"PLUTO filter: {len(pluto)} -> {len(survivors)} survivors")
+    if dob_additions:
+        print(f"  ({dob_additions} added by DOB R-1/J-1 that would have been filtered out)")
 
     # --- Step 2: HPD join ---
     # Build HPD lookup by BBL (some BBLs have multiple HPD records — take max classB)
@@ -149,33 +168,29 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         reason_codes = []
         blockers = []
 
-        # Determine tier
         is_hotel_class = bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H"
         is_mixed_class = bldgclass in MIXED_CLASSES
+        is_dob_transient = bbl in dob_transient_bbls
 
-        if is_hotel_class and class_b > 0:
+        # --- Tier assignment ---
+        # Three tiers: legal_transient, partial, unknown
+        # Class B split-use is an overlay, not a tier
+
+        if class_b > 0:
+            # HPD confirms transient rooms exist
             tier = TIER_LEGAL_TRANSIENT
-            confidence = CONFIDENCE_HIGH
-            reason_codes.append("bldg_class_hotel")
+            confidence = CONFIDENCE_HIGH if class_a == 0 else CONFIDENCE_MEDIUM
             reason_codes.append("hpd_class_b")
-        elif class_b > 0 and is_hotel_class:
+            if is_hotel_class:
+                reason_codes.append("bldg_class_hotel")
+        elif is_hotel_class and class_a > 0:
+            # Hotel class but HPD shows residential only — reversion candidate
             tier = TIER_LEGAL_TRANSIENT
-            confidence = CONFIDENCE_HIGH
-            reason_codes.append("hpd_class_b")
-            reason_codes.append("bldg_class_hotel")
-        elif class_b > 0 and class_a == 0:
-            # Pure Class B, no residential apartments — strong transient signal
-            tier = TIER_LEGAL_TRANSIENT
-            confidence = CONFIDENCE_HIGH
-            reason_codes.append("hpd_class_b_only")
-        elif class_b > 0 and class_a > 0:
-            # Mixed Class A + B — split-use building
-            tier = TIER_CLASS_B
             confidence = CONFIDENCE_MEDIUM
-            reason_codes.append("hpd_class_b")
-            reason_codes.append("hpd_class_a_mixed")
+            reason_codes.append("bldg_class_hotel")
+            reason_codes.append("reversion_window")
         elif is_hotel_class:
-            # Hotel building class but no HPD Class B data
+            # Hotel class, no HPD data
             tier = TIER_LEGAL_TRANSIENT
             confidence = CONFIDENCE_MEDIUM
             reason_codes.append("bldg_class_hotel")
@@ -183,27 +198,38 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             tier = TIER_PARTIAL
             confidence = CONFIDENCE_LOW
             reason_codes.append(f"bldg_class_{bldgclass}")
+        elif is_dob_transient:
+            tier = TIER_PARTIAL
+            confidence = CONFIDENCE_MEDIUM
+            reason_codes.append("dob_transient_occupancy")
         else:
             tier = TIER_UNKNOWN
             confidence = CONFIDENCE_LOW
             reason_codes.append(f"bldg_class_{bldgclass}")
 
-        # Prior operator overlay (doesn't change eligibility tier)
+        # --- Overlays ---
+
+        # Prior operator (doesn't change tier)
         prior_op_info = prior_ops.get(bbl)
 
-        # Reversion window overlay: hotel building class but currently
-        # residential-only in HPD (Class A > 0, Class B = 0).
-        # These buildings can revert to transient use before Dec 9, 2027
-        # under the Citywide Hotel Text Amendment (adopted Dec 9, 2021).
+        # Class B split-use overlay
+        class_b_split = None
+        if class_b > 0 and class_a > 0:
+            class_b_split = {
+                "class_a": class_a,
+                "class_b": class_b,
+                "pct_transient": round(class_b / (class_a + class_b) * 100),
+            }
+
+        # Reversion window overlay
         reversion_window = None
         if is_hotel_class and class_a > 0 and class_b == 0:
             reversion_window = {
                 "deadline": "2027-12-09",
                 "signal": "hotel_class_residential_only",
                 "class_a_units": class_a,
-                "note": f"Building class {bldgclass} (hotel) but HPD shows {class_a} Class A units and 0 Class B rooms — may have converted to residential. Can revert to hotel use without special permit before Dec 9, 2027.",
+                "note": f"Building class {bldgclass} (hotel) but HPD shows {class_a} Class A units and 0 Class B rooms. Can revert to hotel use without special permit before Dec 9, 2027.",
             }
-            reason_codes.append("reversion_window")
 
         record = {
             "bbl": bbl,
@@ -229,8 +255,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             "hpd_stories": hpd_info.get("legalstories", ""),
             "prior_operator": prior_op_info,
             "reversion_window": reversion_window,
+            "class_b_split": class_b_split,
             "source_pulled_on": TODAY,
-            "coo_evidence": None,  # socket for v2
         }
         results.append(record)
 
@@ -238,6 +264,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
     for bbl, op_info in prior_ops.items():
         if bbl not in seen_bbls:
             hpd_info = hpd_by_bbl.get(bbl, {})
+            class_b = hpd_info.get("legalclassb", 0)
+            class_a = hpd_info.get("legalclassa", 0)
             results.append({
                 "bbl": bbl,
                 "address": op_info["address"],
@@ -252,17 +280,18 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "cd": "",
                 "zonedist1": "",
                 "ownername": "",
-                "tier": TIER_PRIOR_OPERATOR,
+                "tier": TIER_PARTIAL,
                 "confidence": CONFIDENCE_LOW,
                 "reason_codes": ["prior_operator_only"],
                 "blockers": [],
-                "hpd_class_a": hpd_info.get("legalclassa", 0),
-                "hpd_class_b": hpd_info.get("legalclassb", 0),
+                "hpd_class_a": class_a,
+                "hpd_class_b": class_b,
                 "hpd_dob_class": hpd_info.get("dobbuildingclass", ""),
                 "hpd_stories": hpd_info.get("legalstories", ""),
                 "prior_operator": op_info,
+                "reversion_window": None,
+                "class_b_split": None,
                 "source_pulled_on": TODAY,
-                "coo_evidence": None,
             })
 
     # Summary
