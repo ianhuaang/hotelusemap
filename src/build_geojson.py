@@ -34,6 +34,36 @@ CD_TO_NEIGHBORHOOD = {
 }
 
 
+BRANDED_CHAINS = [
+    "marriott", "sheraton", "westin", "w hotel", "st. regis", "ritz-carlton",
+    "courtyard", "residence inn", "springhill", "fairfield", "aloft", "moxy",
+    "ac hotel", "le meridien", "four points",
+    "hilton", "hampton", "doubletree", "embassy suites", "homewood", "home2",
+    "waldorf", "conrad", "canopy", "curio", "tapestry", "tru by hilton",
+    "hyatt", "andaz", "thompson", "grand hyatt", "park hyatt", "hyatt place",
+    "hyatt house", "hyatt centric", "caption by hyatt",
+    "ihg", "intercontinental", "holiday inn", "crowne plaza", "indigo",
+    "even hotel", "staybridge", "candlewood",
+    "wyndham", "ramada", "days inn", "super 8", "howard johnson", "travelodge",
+    "wingate", "baymont", "la quinta", "tryp",
+    "best western",
+    "accor", "novotel", "sofitel", "ibis", "fairmont", "raffles", "swissotel",
+    "choice", "comfort inn", "comfort suites", "quality inn", "clarion",
+    "sleep inn", "econo lodge", "rodeway",
+    "four seasons", "mandarin oriental", "peninsula", "aman",
+    "rosewood", "langham", "lotte", "shangri-la",
+    "radisson", "park inn", "country inn",
+    "citizenm", "pod hotel", "yotel", "moto",
+]
+
+
+def _is_branded(hotel_name: str) -> bool:
+    if not hotel_name:
+        return False
+    name_lower = hotel_name.lower()
+    return any(brand in name_lower for brand in BRANDED_CHAINS)
+
+
 def build_geojson(
     pipeline_path: Path = None,
     footprints_path: Path = None,
@@ -153,6 +183,7 @@ def build_geojson(
             "hotel_name": record.get("hotel_name", ""),
             "hotel_phone": record.get("hotel_phone", ""),
             "hotel_website": record.get("hotel_website", ""),
+            "is_branded": _is_branded(record.get("hotel_name", "")),
             # DOB occupancy classification
             "dob_has_r1": record.get("dob_has_r1", False),
             "dob_has_j1": record.get("dob_has_j1", False),

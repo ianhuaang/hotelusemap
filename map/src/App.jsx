@@ -71,7 +71,7 @@ function computeScore(p, weights) {
   return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
 }
 
-function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly) {
+function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly, hideBranded) {
   const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
   const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
@@ -129,6 +129,9 @@ function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOn
   }
   if (noOperatorOnly) {
     refinements.push(["!", ["has", "hotel_name"]]);
+  }
+  if (hideBranded) {
+    refinements.push(["!=", ["get", "is_branded"], true]);
   }
 
   for (const ref of refinements) {
@@ -1041,6 +1044,7 @@ function FilterPanel({
   showPriorOps, setShowPriorOps,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
+  hideBranded, setHideBranded,
   minUnits, setMinUnits,
   scoreWeights, setScoreWeights,
   featureCount, overlayCounts,
@@ -1172,6 +1176,28 @@ function FilterPanel({
             </span>
             <span className="text-xs text-gray-700">No known operator</span>
             <InfoTip text="Show only buildings where we couldn't find an active hotel operation via Google Places. These have legal transient capacity but no identifiable operator — a potential management opportunity. Based on Google Places coverage, not a verified fact." />
+          </label>
+
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+            <input
+              type="checkbox"
+              checked={hideBranded}
+              onChange={(e) => setHideBranded(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                hideBranded ? "bg-gray-800 border-gray-800" : "border-gray-300"
+              }`}
+            >
+              {hideBranded && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs text-gray-700">Hide branded chains</span>
+            <InfoTip text="Exclude major hotel chains (Marriott, Hilton, Hyatt, IHG, Wyndham, etc.). These are unlikely management targets. Independent hotels with operators still show." />
           </label>
 
           <div className="flex items-center justify-between px-2.5 mt-2">
@@ -1519,7 +1545,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly) {
+function applyFilters(features, activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly, hideBranded) {
   return features.filter((f) => {
     const p = f.properties;
     const segOk = activeSegments[p.segment];
@@ -1542,6 +1568,7 @@ function applyFilters(features, activeSegments, showPriorOps, minUnits, filters,
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
+      if (hideBranded && p.is_branded) return false;
     }
 
     return true;
@@ -2223,6 +2250,7 @@ export default function App() {
   const [showPriorOps, setShowPriorOps] = useState(true);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
+  const [hideBranded, setHideBranded] = useState(true);
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -2442,7 +2470,7 @@ export default function App() {
         true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      }, false, false);
+      }, false, false, true);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -2544,7 +2572,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly);
+    const filter = buildFilter(activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
@@ -2557,11 +2585,11 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly]);
+  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded]);
 
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly);
-  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly]);
+    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded);
+  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -2623,6 +2651,8 @@ export default function App() {
         setDistressOnly={setDistressOnly}
         noOperatorOnly={noOperatorOnly}
         setNoOperatorOnly={setNoOperatorOnly}
+        hideBranded={hideBranded}
+        setHideBranded={setHideBranded}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
         scoreWeights={scoreWeights}
