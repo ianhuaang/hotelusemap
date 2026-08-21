@@ -167,6 +167,10 @@ const CSV_COLUMNS = [
   { key: "acris_deed_address", label: "Deed Owner Address" },
   { key: "acris_borrower", label: "ACRIS Mortgage Borrower" },
   { key: "acris_lender", label: "ACRIS Lender" },
+  { key: "operator_name", label: "Operator" },
+  { key: "operator_source", label: "Operator Source" },
+  { key: "hpd_managing_agent_corp", label: "HPD Managing Agent" },
+  { key: "hpd_head_officer", label: "HPD Head Officer" },
   { key: "hotel_name", label: "Hotel Name" },
   { key: "hotel_phone", label: "Hotel Phone" },
   { key: "hotel_website", label: "Hotel Website" },
@@ -189,6 +193,8 @@ const CSV_COLUMNS = [
   { key: "historic_district", label: "Historic District" },
   { key: "height_roof", label: "Roof Height (ft)" },
   { key: "bin", label: "BIN" },
+  { key: "mortgage_age_years", label: "Mortgage Age (yrs)" },
+  { key: "mortgage_approaching_maturity", label: "Mortgage Maturing" },
   { key: "reason_codes", label: "Reason Codes" },
 ];
 
@@ -245,6 +251,7 @@ function exportToCsv(features, scoreWeights) {
       has_tax_lien: p.has_tax_lien ? "Yes" : "",
       has_lis_pendens: p.has_lis_pendens ? "Yes" : "",
       coo_has_temporary: p.coo_has_temporary ? "Yes" : "",
+      mortgage_approaching_maturity: p.mortgage_approaching_maturity ? "Yes" : "",
       reason_codes: Array.isArray(reasons) ? reasons.join("; ") : reasons,
     };
     return CSV_COLUMNS.map((c) => escCsv(row[c.key])).join(",");
@@ -500,6 +507,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             p.has_tax_lien && { label: "Tax lien", color: "bg-red-600" },
             p.has_lis_pendens && { label: "Lis pendens", color: "bg-red-600" },
             p.coo_has_temporary && { label: "Temp C of O", color: "bg-amber-500" },
+            p.mortgage_approaching_maturity && { label: "Mortgage maturing", color: "bg-orange-500" },
             p.is_landmark && { label: "Landmark", color: "bg-amber-600" },
             p.historic_district && { label: "Historic district", color: "bg-amber-500" },
           ].filter(Boolean).map((sig, i) => (
@@ -599,11 +607,31 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </div>
         )}
 
-        {/* Hotel info */}
-        {p.hotel_name && (
+        {/* Operator identification */}
+        {(p.operator_name || p.hotel_name || p.hpd_managing_agent_corp) && (
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Current hotel</div>
-            <div className="text-sm text-gray-800 font-medium">{p.hotel_name}</div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Operator</div>
+            {p.operator_name && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-800 font-medium">{p.operator_name}</span>
+                <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                  {p.operator_source === "dcwp_license" ? "DCWP license" : p.operator_source === "hpd_managing_agent" ? "HPD agent" : p.operator_source === "google_places" ? "Google" : p.operator_source === "ground_truth" ? "Known" : ""}
+                </span>
+              </div>
+            )}
+            {p.hpd_managing_agent_corp && p.hpd_managing_agent_corp !== p.operator_name && (
+              <div className="mt-1">
+                <span className="text-[10px] text-gray-400">HPD managing agent: </span>
+                <span className="text-[11px] text-gray-600">{p.hpd_managing_agent_corp}</span>
+                {p.hpd_managing_agent && <span className="text-[10px] text-gray-400 ml-1">({p.hpd_managing_agent})</span>}
+              </div>
+            )}
+            {p.hotel_name && p.hotel_name !== p.operator_name && (
+              <div className="mt-1">
+                <span className="text-[10px] text-gray-400">Hotel name: </span>
+                <span className="text-[11px] text-gray-600">{p.hotel_name}</span>
+              </div>
+            )}
             <div className="flex gap-3 mt-1">
               {p.hotel_phone && (
                 <a href={`tel:${p.hotel_phone}`} className="text-[11px] text-blue-600 hover:underline">{p.hotel_phone}</a>
@@ -646,6 +674,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                   <div>
                     <span className="text-[10px] text-gray-400">Lender: </span>
                     <span className="text-[10px] text-gray-500">{p.acris_lender}</span>
+                  </div>
+                )}
+                {p.acris_mtge_date && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400">Mortgage: </span>
+                    <span className="text-[10px] text-gray-500">{p.acris_mtge_date}</span>
+                    {p.mortgage_amount && Number(p.mortgage_amount) > 0 && (
+                      <span className="text-[10px] text-gray-500">(${Number(p.mortgage_amount).toLocaleString()})</span>
+                    )}
+                    {p.mortgage_approaching_maturity && (
+                      <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">
+                        {p.mortgage_age_years}yr — may be maturing
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

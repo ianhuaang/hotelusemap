@@ -460,6 +460,19 @@ def load_hotel_licenses(path: Path = None) -> dict[str, dict]:
     return by_bbl
 
 
+def load_hpd_registrations(path: Path = None) -> dict[str, dict]:
+    """Load HPD registration managing agents per BBL."""
+    if path is None:
+        path = DATA_RAW / f"hpd_registrations_{TODAY}.json"
+    if not path.exists():
+        files = sorted(DATA_RAW.glob("hpd_registrations_*.json"), reverse=True)
+        path = files[0] if files else path
+    if not path.exists():
+        return {}
+    raw = json.loads(path.read_text())
+    return {r["bbl"]: r for r in raw}
+
+
 def load_dob_occupancy(path: Path = None) -> dict[str, dict]:
     """Load DOB transient occupancy signals (R-1, J-1) per BBL."""
     if path is None:
@@ -498,6 +511,7 @@ def enrich_pipeline(
     dob_occ_by_bbl = load_dob_occupancy(dob_occupancy_path)
     permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
     hotel_licenses = load_hotel_licenses()
+    hpd_regs = load_hpd_registrations()
 
     # Owner dedup: normalize names and build groups
     owner_canonical = _build_owner_groups(pipeline)
@@ -616,6 +630,7 @@ def enrich_pipeline(
             record["acris_deed_address"] = grantees[0].get("address", "") if grantees else ""
             record["acris_borrower"] = borrowers[0]["name"] if borrowers else ""
             record["acris_mtge_date"] = acris.get("mtge_date", "")
+            record["acris_mtge_amt"] = acris.get("mtge_amt", "")
             record["acris_lender"] = acris.get("mtge_lender", "")
         else:
             record["acris_deed_owner"] = ""
@@ -623,6 +638,7 @@ def enrich_pipeline(
             record["acris_deed_address"] = ""
             record["acris_borrower"] = ""
             record["acris_mtge_date"] = ""
+            record["acris_mtge_amt"] = ""
             record["acris_lender"] = ""
 
         # Hotel info (OSM)
@@ -708,6 +724,56 @@ def enrich_pipeline(
             record["hotel_license_expiration"] = ""
             record["has_hotel_license"] = False
 
+        # HPD registration (managing agent)
+        hpd_reg = hpd_regs.get(bbl)
+        if hpd_reg:
+            record["hpd_managing_agent"] = hpd_reg.get("managing_agent", "")
+            record["hpd_managing_agent_corp"] = hpd_reg.get("managing_agent_corp", "")
+            record["hpd_owner_corp"] = hpd_reg.get("owner_corp", "")
+            record["hpd_head_officer"] = hpd_reg.get("head_officer", "")
+        else:
+            record["hpd_managing_agent"] = ""
+            record["hpd_managing_agent_corp"] = ""
+            record["hpd_owner_corp"] = ""
+            record["hpd_head_officer"] = ""
+
+        # Consolidated operator name (best available source)
+        operator = ""
+        operator_source = ""
+        if record.get("hotel_license_name"):
+            operator = record["hotel_license_name"]
+            operator_source = "dcwp_license"
+        elif record.get("hpd_managing_agent_corp"):
+            operator = record["hpd_managing_agent_corp"]
+            operator_source = "hpd_managing_agent"
+        elif record.get("hotel_name"):
+            operator = record["hotel_name"]
+            operator_source = "google_places"
+        elif record.get("prior_operator"):
+            operator = record["prior_operator"]["name"]
+            operator_source = "ground_truth"
+        record["operator_name"] = operator
+        record["operator_source"] = operator_source
+
+        # Mortgage maturity estimate
+        mtge_date = record.get("acris_mtge_date", "")
+        if mtge_date and len(mtge_date) >= 4:
+            try:
+                mtge_year = int(mtge_date[:4])
+                current_year = date.today().year
+                mortgage_age = current_year - mtge_year
+                record["mortgage_age_years"] = mortgage_age
+                record["mortgage_amount"] = record.get("acris_mtge_amt", "")
+                record["mortgage_approaching_maturity"] = mortgage_age >= 4
+            except (ValueError, TypeError):
+                record["mortgage_age_years"] = None
+                record["mortgage_amount"] = ""
+                record["mortgage_approaching_maturity"] = False
+        else:
+            record["mortgage_age_years"] = None
+            record["mortgage_amount"] = ""
+            record["mortgage_approaching_maturity"] = False
+
         # --- Composite signal scoring ---
         # Stack weak signals that individually don't trigger upgrades
         # but together indicate transient capacity
@@ -764,6 +830,15 @@ def enrich_pipeline(
     print(f"    Tier upgrades from licenses: {hl_upgraded} buildings")
     comp_upgraded = sum(1 for r in pipeline if "composite_signal" in r.get("reason_codes", []))
     print(f"  Composite signal upgrades: {comp_upgraded} buildings")
+    op_count = sum(1 for r in pipeline if r.get("operator_name"))
+    print(f"  Operator identified: {op_count} buildings")
+    from collections import Counter as C2
+    op_sources = C2(r.get("operator_source") for r in pipeline if r.get("operator_name"))
+    print(f"    Sources: {dict(op_sources)}")
+    ma_count = sum(1 for r in pipeline if r.get("hpd_managing_agent_corp"))
+    print(f"  HPD managing agents: {ma_count} buildings")
+    mtge_approaching = sum(1 for r in pipeline if r.get("mortgage_approaching_maturity"))
+    print(f"  Mortgage approaching maturity (4+ yrs): {mtge_approaching} buildings")
     return outpath
 
 

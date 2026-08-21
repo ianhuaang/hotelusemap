@@ -22,6 +22,8 @@ TAX_LIENS_DATASET_ID = "9rz4-mjek"
 ACRIS_LEGALS_DATASET_ID = "8h5j-fqxa"
 ACRIS_MASTER_DATASET_ID = "bnx9-e6tj"
 DCWP_HOTEL_LICENSES_DATASET_ID = "w7w3-xahh"
+HPD_REGISTRATIONS_DATASET_ID = "tesw-yqqr"
+HPD_CONTACTS_DATASET_ID = "feu5-w2e2"
 
 SOCRATA_BASE_URL = "https://data.cityofnewyork.us/resource"
 

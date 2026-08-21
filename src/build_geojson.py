@@ -198,6 +198,18 @@ def build_geojson(
             "hotel_license_status": record.get("hotel_license_status", ""),
             "coo_temp_only": record.get("coo_temp_only", False),
             "special_permit_required": "special_permit_required" in record.get("reason_codes", []),
+            # Operator identification
+            "operator_name": record.get("operator_name", ""),
+            "operator_source": record.get("operator_source", ""),
+            "hpd_managing_agent": record.get("hpd_managing_agent", ""),
+            "hpd_managing_agent_corp": record.get("hpd_managing_agent_corp", ""),
+            "hpd_owner_corp": record.get("hpd_owner_corp", ""),
+            "hpd_head_officer": record.get("hpd_head_officer", ""),
+            # Mortgage maturity
+            "mortgage_age_years": record.get("mortgage_age_years"),
+            "mortgage_amount": record.get("mortgage_amount", ""),
+            "mortgage_approaching_maturity": record.get("mortgage_approaching_maturity", False),
+            "acris_mtge_date": record.get("acris_mtge_date", ""),
         }
 
         # Include top 3 permits (trimmed to save space)

@@ -38,6 +38,12 @@ jobs:
       - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
         run: python src/pull_distress.py
 
+      - name: Pull DCWP hotel licenses
+        run: python src/pull_hotel_licenses.py
+
+      - name: Pull DOB occupancy
+        run: python src/pull_dob_occupancy.py
+
       # Phase 2: Run pipeline (needs PLUTO + HPD)
       - name: Run pipeline
         run: python src/pipeline.py
@@ -48,6 +54,12 @@ jobs:
 
       - name: Pull ACRIS owners
         run: python src/pull_acris_owners.py
+
+      - name: Pull HPD registrations
+        run: python src/pull_hpd_registrations.py
+
+      - name: Pull alt addresses
+        run: python src/pull_alt_addresses.py
 
       # Phase 4: Enrich and build
       - name: Run enrichment
