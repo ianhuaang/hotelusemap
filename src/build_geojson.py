@@ -194,6 +194,20 @@ def build_geojson(
         if record.get("class_b_split"):
             properties["class_b_split"] = record["class_b_split"]
 
+        # Segment: subdivide legal_transient for prospecting
+        seg_tier = record["tier"]
+        if seg_tier == "legal_transient":
+            if record.get("reversion_window"):
+                properties["segment"] = "reversion"
+            elif record.get("class_b_split"):
+                properties["segment"] = "split_use"
+            else:
+                properties["segment"] = "pure_hotel"
+        elif seg_tier == "partial":
+            properties["segment"] = "partial"
+        else:
+            properties["segment"] = "unknown"
+
         # Deal sub-scores (each 0-100, combined on frontend with adjustable weights)
         # Legal certainty (max 50 raw pts -> normalized to 0-100)
         legal = 0

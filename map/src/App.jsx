@@ -1,15 +1,22 @@
 import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from "react";
 import maplibregl from "maplibre-gl";
 
-// Ordered best → weakest. Prior operator is an overlay, not part of the hierarchy.
-const SIGNAL_TIERS = [
+const SEGMENTS = [
   {
-    key: "legal_transient", label: "Legal transient", color: "#16a34a", rank: 0,
-    info: "Multiple sources confirm existing transient/hotel capacity. Hotel building class in PLUTO and HPD Class B rooms, or pure Class B with no residential apartments.",
+    key: "reversion", label: "Reversion window", color: "#e11d48", defaultOn: true,
+    info: "Hotel-class buildings converted to residential. Can revert to transient use without a special permit before Dec 9, 2027.",
   },
   {
-    key: "partial", label: "Partial signal", color: "#f59e0b", rank: 1,
-    info: "Building class suggests mixed use (RM, RC, etc.) but HPD didn't confirm Class B rooms. May have transient capacity, or may just be commercial/residential. Needs manual verification.",
+    key: "split_use", label: "Split-use", color: "#8b5cf6", defaultOn: true,
+    info: "Buildings with both HPD Class A (residential) and Class B (transient) units. Existing transient capacity alongside residential.",
+  },
+  {
+    key: "pure_hotel", label: "Pure hotel", color: "#16a34a", defaultOn: false,
+    info: "Fully operating hotels — HPD Class B confirmed, no residential apartments. Already transient, likely has an existing operator.",
+  },
+  {
+    key: "partial", label: "Partial signal", color: "#f59e0b", defaultOn: false,
+    info: "Building class suggests mixed use (RM, RC, etc.) but HPD didn't confirm Class B rooms. May have transient capacity — needs manual verification.",
   },
 ];
 
@@ -27,29 +34,18 @@ function estRooms(p) {
   return { value: 0, source: "Unknown" };
 }
 
-const PRIOR_OP = {
-  key: "prior_operator", label: "Prior operator", color: "#a855f7",
-  info: "Buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Shows operational viability but does not confirm legal transient capacity.",
-};
+const SEGMENT_COLORS = Object.fromEntries(SEGMENTS.map((s) => [s.key, s.color]));
 
-const REVERSION = {
-  key: "reversion_window", label: "Reversion window", color: "#e11d48",
-  info: "Hotel-class buildings that converted to residential. Under the Citywide Hotel Text Amendment (Dec 2021), they can revert to transient use without a special permit before December 9, 2027.",
-};
-
-const ALL_TIERS = [...SIGNAL_TIERS, PRIOR_OP, REVERSION];
-const TIER_COLORS = Object.fromEntries(ALL_TIERS.map((t) => [t.key, t.color]));
-
-function tierColor(tier) {
-  return TIER_COLORS[tier] || "#94a3b8";
+function segmentColor(segment) {
+  return SEGMENT_COLORS[segment] || "#94a3b8";
 }
 
 function buildColorExpr() {
   const stops = [];
-  for (const [tier, color] of Object.entries(TIER_COLORS)) {
-    stops.push(tier, color);
+  for (const [seg, color] of Object.entries(SEGMENT_COLORS)) {
+    stops.push(seg, color);
   }
-  return ["match", ["get", "tier"], ...stops, "#94a3b8"];
+  return ["match", ["get", "segment"], ...stops, "#94a3b8"];
 }
 
 function buildOpacityExpr() {
@@ -75,29 +71,16 @@ function computeScore(p, weights) {
   return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
 }
 
-function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly, shortlist) {
-  if (shortlist === "reversion") return ["==", ["get", "has_reversion"], true];
-  if (shortlist === "classb") return ["all", ["!=", ["get", "tier"], "legal_transient"], ["any", ["==", ["get", "tier"], "class_b"], [">", ["to-number", ["get", "hpd_class_b"], 0], 0]]];
-
-  const allowedTiers = SIGNAL_TIERS
-    .filter((t) => t.rank <= tierThreshold)
-    .map((t) => t.key);
-
-  const tierFilter = ["in", ["get", "tier"], ["literal", allowedTiers]];
+function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly) {
+  const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
+  const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
-  const reversionFilter = ["==", ["get", "has_reversion"], true];
 
-  const overlayConditions = [];
-  if (showPriorOps) overlayConditions.push(priorOpFilter);
-  if (showReversion) overlayConditions.push(reversionFilter);
+  const visibilityFilter = showPriorOps
+    ? ["any", segFilter, priorOpFilter]
+    : segFilter;
 
-  const visibilityFilter = overlayConditions.length > 0
-    ? ["any", tierFilter, ...overlayConditions]
-    : tierFilter;
-
-  const alwaysShowFilter = overlayConditions.length > 0
-    ? ["any", ...overlayConditions]
-    : ["literal", false];
+  const alwaysShowFilter = showPriorOps ? priorOpFilter : ["literal", false];
 
   const conditions = [
     visibilityFilter,
@@ -117,7 +100,6 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     ],
   ];
 
-  // Refinement filters — but overlay buildings (prior ops, reversion) bypass these
   const refinements = [];
   if (filters.filterTempCoo) {
     refinements.push(["==", ["get", "coo_has_temporary"], true]);
@@ -137,9 +119,6 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "M"],
     ]);
   }
-  if (hideHotels) {
-    refinements.push(["!=", ["slice", ["get", "bldgclass"], 0, 1], "H"]);
-  }
   if (distressOnly) {
     refinements.push(["any",
       ["==", ["get", "has_tax_lien"], true],
@@ -152,7 +131,6 @@ function buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, filte
     refinements.push(["!", ["has", "hotel_name"]]);
   }
 
-  // Overlay buildings bypass all refinements
   for (const ref of refinements) {
     conditions.push(["any", ref, alwaysShowFilter]);
   }
@@ -510,14 +488,12 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
         <div className="flex items-center gap-2">
           <span
             className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold text-white"
-            style={{ backgroundColor: tierColor(p.tier) }}
+            style={{ backgroundColor: segmentColor(p.segment) }}
           >
-            {p.tier?.replace(/_/g, " ")}
+            {(p.segment || p.tier || "").replace(/_/g, " ")}
           </span>
-          {/* Signal tags instead of numeric score */}
           {[
             p.has_prior_op && { label: "Prior operator", color: "bg-purple-500" },
-            p.has_reversion && { label: "Reversion window", color: "bg-rose-500" },
             p.has_tax_lien && { label: "Tax lien", color: "bg-red-600" },
             p.has_lis_pendens && { label: "Lis pendens", color: "bg-red-600" },
             p.coo_has_temporary && { label: "Temp C of O", color: "bg-amber-500" },
@@ -947,7 +923,7 @@ function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights })
           const priorOp = parseJsonProp(p.prior_operator);
           return (
             <div key={p.bbl} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 group">
-              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: tierColor(p.tier) }} />
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: segmentColor(p.segment) }} />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-gray-900 truncate">{p.address}</div>
                 <div className="text-[10px] text-gray-400">
@@ -1061,13 +1037,10 @@ function StatBldgClass({ code }) {
 }
 
 function FilterPanel({
-  tierThreshold, setTierThreshold,
+  activeSegments, setActiveSegments,
   showPriorOps, setShowPriorOps,
-  showReversion, setShowReversion,
-  hideHotels, setHideHotels,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
-  shortlist, setShortlist,
   minUnits, setMinUnits,
   scoreWeights, setScoreWeights,
   featureCount, overlayCounts,
@@ -1075,6 +1048,7 @@ function FilterPanel({
   dataDate,
 }) {
   const [showScoreConfig, setShowScoreConfig] = useState(false);
+  const toggleSegment = (key) => setActiveSegments((prev) => ({ ...prev, [key]: !prev[key] }));
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
@@ -1084,43 +1058,47 @@ function FilterPanel({
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Current legal status */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Current legal status</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Building segments</div>
           <div className="space-y-1">
-            {SIGNAL_TIERS.map((tier, idx) => {
-              const active = !shortlist && idx <= tierThreshold;
+            {SEGMENTS.map((seg) => {
+              const active = activeSegments[seg.key];
               return (
                 <button
-                  key={tier.key}
-                  onClick={() => { setShortlist(null); setTierThreshold(idx); }}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left ${shortlist ? "opacity-40" : ""}`}
+                  key={seg.key}
+                  onClick={() => toggleSegment(seg.key)}
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
                   style={{
-                    backgroundColor: active ? `${tier.color}10` : "transparent",
-                    borderLeft: `3px solid ${active ? tier.color : "transparent"}`,
+                    backgroundColor: active ? `${seg.color}10` : "transparent",
+                    borderLeft: `3px solid ${active ? seg.color : "transparent"}`,
                   }}
                 >
                   <span
-                    className="w-3 h-3 rounded-sm shrink-0"
-                    style={{ backgroundColor: active ? tier.color : "#d1d5db" }}
-                  />
-                  <span className={`text-xs ${active ? "text-gray-900 font-medium" : "text-gray-400"}`}>
-                    {tier.label}
+                    className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors shrink-0"
+                    style={{
+                      borderColor: seg.color,
+                      backgroundColor: active ? seg.color : "transparent",
+                    }}
+                  >
+                    {active && (
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
                   </span>
-                  <InfoTip text={tier.info} />
-                  {!shortlist && idx === tierThreshold && (
-                    <span className="ml-auto text-[10px] text-gray-400">threshold</span>
-                  )}
+                  <span className={`text-xs ${active ? "text-gray-900 font-medium" : "text-gray-400"}`}>
+                    {seg.label}
+                  </span>
+                  <InfoTip text={seg.info} />
                 </button>
               );
             })}
           </div>
-
         </div>
 
-        {/* Opportunity context */}
-        <div className={shortlist ? "opacity-40 pointer-events-none" : ""}>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Opportunity context</div>
+        {/* Prior operator overlay */}
+        <div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Overlay</div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
             <input
               type="checkbox"
@@ -1131,8 +1109,8 @@ function FilterPanel({
             <span
               className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
               style={{
-                borderColor: PRIOR_OP.color,
-                backgroundColor: showPriorOps ? PRIOR_OP.color : "transparent",
+                borderColor: "#a855f7",
+                backgroundColor: showPriorOps ? "#a855f7" : "transparent",
               }}
             >
               {showPriorOps && (
@@ -1144,99 +1122,14 @@ function FilterPanel({
             <div className="flex items-center">
               <span className="text-xs text-gray-700">Prior operators</span>
               <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.priorOps})</span>
-              <InfoTip text={PRIOR_OP.info} />
+              <InfoTip text="Buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Shows operational viability." />
             </div>
           </label>
-
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
-            <input
-              type="checkbox"
-              checked={showReversion}
-              onChange={(e) => setShowReversion(e.target.checked)}
-              className="sr-only"
-            />
-            <span
-              className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
-              style={{
-                borderColor: REVERSION.color,
-                backgroundColor: showReversion ? REVERSION.color : "transparent",
-              }}
-            >
-              {showReversion && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </span>
-            <div className="flex items-center">
-              <span className="text-xs text-gray-700">Reversion window</span>
-              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.reversion})</span>
-              <InfoTip text={REVERSION.info} />
-            </div>
-          </label>
-        </div>
-
-        {/* Shortlists */}
-        <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Shortlists</div>
-          <div className="flex gap-1.5 px-1">
-            <button
-              onClick={() => setShortlist(shortlist === "reversion" ? null : "reversion")}
-              className={`flex-1 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors cursor-pointer ${
-                shortlist === "reversion"
-                  ? "bg-rose-500 text-white border-rose-500"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-rose-300"
-              }`}
-            >
-              Reversion Window
-              <span className="ml-1 opacity-70">({overlayCounts.reversion})</span>
-            </button>
-            <button
-              onClick={() => setShortlist(shortlist === "classb" ? null : "classb")}
-              className={`flex-1 px-2.5 py-1.5 text-[11px] font-medium rounded-lg border transition-colors cursor-pointer ${
-                shortlist === "classb"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-              }`}
-            >
-              Class B
-            </button>
-          </div>
-          {shortlist && (
-            <button
-              onClick={() => setShortlist(null)}
-              className="mt-1.5 px-2.5 text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer"
-            >
-              ← Clear shortlist
-            </button>
-          )}
         </div>
 
         {/* Refinements */}
-        <div className={shortlist ? "opacity-40 pointer-events-none" : ""}>
+        <div>
           <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Refinements</div>
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
-            <input
-              type="checkbox"
-              checked={hideHotels}
-              onChange={(e) => setHideHotels(e.target.checked)}
-              className="sr-only"
-            />
-            <span
-              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
-                hideHotels ? "bg-gray-800 border-gray-800" : "border-gray-300"
-              }`}
-            >
-              {hideHotels && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </span>
-            <span className="text-xs text-gray-700">Hide existing hotels</span>
-            <InfoTip text="Remove H-class buildings (hotels, SROs, boutique hotels) from the map. These are likely already operating as hotels and not available for new management deals." />
-          </label>
-
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
             <input
               type="checkbox"
@@ -1626,24 +1519,15 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, tierThreshold, showPriorOps, showReversion, minUnits, filters, hideHotels, distressOnly, noOperatorOnly, shortlist) {
-  const allowedTiers = SIGNAL_TIERS
-    .filter((t) => t.rank <= tierThreshold)
-    .map((t) => t.key);
-
+function applyFilters(features, activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly) {
   return features.filter((f) => {
     const p = f.properties;
-
-    if (shortlist === "reversion") return !!p.has_reversion;
-    if (shortlist === "classb") return p.tier !== "legal_transient" && (p.tier === "class_b" || (p.hpd_class_b || 0) > 0);
-
-    const tierOk = allowedTiers.includes(p.tier);
-    const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
-    if (!tierOk && !overlayOk) return false;
+    const segOk = activeSegments[p.segment];
+    const overlayOk = showPriorOps && p.has_prior_op;
+    if (!segOk && !overlayOk) return false;
 
     if (!overlayOk && estRooms(p).value < minUnits) return false;
 
-    // Overlay buildings bypass refinement filters
     if (!overlayOk) {
       if (filters.filterTempCoo && !p.coo_has_temporary) return false;
       if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
@@ -1653,7 +1537,6 @@ function applyFilters(features, tierThreshold, showPriorOps, showReversion, minU
         const z = (p.zonedist1 || "")[0];
         if (z !== "C" && z !== "M") return false;
       }
-      if (hideHotels && (p.bldgclass || "").startsWith("H")) return false;
       if (distressOnly) {
         const hasDistress = p.has_tax_lien || p.has_lis_pendens || (p.hpd_open_violations || 0) > 0 || (p.ecb_open_violations || 0) > 0;
         if (!hasDistress) return false;
@@ -1676,8 +1559,8 @@ function dedupeFeatures(features) {
     } else {
       // Keep the one with the highest-priority tier
       const existing = groups.get(key).properties;
-      const TIER_RANK = { legal_transient: 0, partial: 1, unknown: 2, excluded: 3 };
-      if ((TIER_RANK[p.tier] ?? 99) < (TIER_RANK[existing.tier] ?? 99)) {
+      const SEG_RANK = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
+      if ((SEG_RANK[p.segment] ?? 99) < (SEG_RANK[existing.segment] ?? 99)) {
         groups.set(key, f);
       }
     }
@@ -1686,8 +1569,8 @@ function dedupeFeatures(features) {
 }
 
 function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter, scoreWeights,
-  tierThreshold, setTierThreshold, hideHotels, setHideHotels, distressOnly, setDistressOnly, minUnits, setMinUnits,
-  showPriorOps, setShowPriorOps, showReversion, setShowReversion, notes,
+  activeSegments, setActiveSegments, distressOnly, setDistressOnly, minUnits, setMinUnits,
+  showPriorOps, setShowPriorOps, notes,
 }) {
   const [sortKey, setSortKey] = useState("signals");
   const [sortDir, setSortDir] = useState("desc");
@@ -1765,9 +1648,9 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
       return (
         <span
           className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold text-white"
-          style={{ backgroundColor: tierColor(p.tier) }}
+          style={{ backgroundColor: segmentColor(p.segment) }}
         >
-          {(p.tier || "").replace(/_/g, " ")}
+          {(p.segment || p.tier || "").replace(/_/g, " ")}
         </span>
       );
     }
@@ -1836,44 +1719,29 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
         {/* Core filters */}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-gray-500">Tiers:</span>
-            {SIGNAL_TIERS.map((tier, idx) => (
+            {SEGMENTS.map((seg) => (
               <button
-                key={tier.key}
-                onClick={() => setTierThreshold(idx)}
+                key={seg.key}
+                onClick={() => setActiveSegments((prev) => ({ ...prev, [seg.key]: !prev[seg.key] }))}
                 className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
-                  idx <= tierThreshold
+                  activeSegments[seg.key]
                     ? "text-white border-transparent"
                     : "bg-white text-gray-400 border-gray-200"
                 }`}
-                style={idx <= tierThreshold ? { backgroundColor: tier.color, borderColor: tier.color } : {}}
+                style={activeSegments[seg.key] ? { backgroundColor: seg.color, borderColor: seg.color } : {}}
               >
-                {tier.label}
+                {seg.label}
               </button>
             ))}
           </div>
-          {[
-            { checked: showPriorOps, set: setShowPriorOps, label: "Prior operators", color: PRIOR_OP.color },
-            { checked: showReversion, set: setShowReversion, label: "Reversion", color: REVERSION.color },
-          ].map(({ checked, set, label, color }) => (
-            <button
-              key={label}
-              onClick={() => set(!checked)}
-              className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
-                checked ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-200"
-              }`}
-              style={checked ? { backgroundColor: color, borderColor: color } : {}}
-            >
-              {label}
-            </button>
-          ))}
           <button
-            onClick={() => setHideHotels(!hideHotels)}
+            onClick={() => setShowPriorOps(!showPriorOps)}
             className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
-              hideHotels ? "bg-gray-800 text-white border-gray-800" : "bg-white text-gray-600 border-gray-200"
+              showPriorOps ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-200"
             }`}
+            style={showPriorOps ? { backgroundColor: "#a855f7", borderColor: "#a855f7" } : {}}
           >
-            Hide hotels
+            Prior operators
           </button>
           <button
             onClick={() => setDistressOnly(!distressOnly)}
@@ -1993,7 +1861,7 @@ function _removed() { /* buildOwnerGroups + OwnerView removed */
     }
     g.totalUnits += estRooms(p).value;
     g.totalClassB += (p.hpd_class_b || 0);
-    g.tiers.add(p.tier);
+    g.tiers.add(p.segment || p.tier);
     if (p.has_prior_op) g.hasPriorOp = true;
     if (p.has_reversion) g.hasReversion = true;
     if (p.coo_has_temporary) g.hasTempCoo = true;
@@ -2182,7 +2050,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
       va = a.totalClassB;
       vb = b.totalClassB;
     } else if (sortKey === "bestTier") {
-      const rank = { legal_transient: 0, partial: 1, unknown: 2 };
+      const rank = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
       va = Math.min(...[...a.tiers].map((t) => rank[t] ?? 99));
       vb = Math.min(...[...b.tiers].map((t) => rank[t] ?? 99));
     }
@@ -2205,7 +2073,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   ];
 
   const bestTier = (tiers) => {
-    const rank = ["legal_transient", "partial", "unknown"];
+    const rank = ["reversion", "split_use", "pure_hotel", "partial", "unknown"];
     for (const t of rank) if (tiers.has(t)) return t;
     return "unknown";
   };
@@ -2268,7 +2136,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
                     <td className="px-4 py-3">
                       <span
                         className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold text-white"
-                        style={{ backgroundColor: tierColor(bt) }}
+                        style={{ backgroundColor: segmentColor(bt) }}
                       >
                         {bt.replace(/_/g, " ")}
                       </span>
@@ -2315,7 +2183,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
                         <td className="px-4 py-2">
                           <span
                             className="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-semibold text-white"
-                            style={{ backgroundColor: tierColor(p.tier) }}
+                            style={{ backgroundColor: segmentColor(p.segment) }}
                           >
                             {(p.tier || "").replace(/_/g, " ")}
                           </span>
@@ -2349,13 +2217,12 @@ export default function App() {
   const { statuses: crmStatuses, setStatus: setCrmStatus } = useCrmStatuses();
   const [exportList, setExportList] = useState(new Map()); // bbl -> feature
   const [listExpanded, setListExpanded] = useState(false);
-  const [tierThreshold, setTierThreshold] = useState(1);
+  const [activeSegments, setActiveSegments] = useState(
+    Object.fromEntries(SEGMENTS.map((s) => [s.key, s.defaultOn]))
+  );
   const [showPriorOps, setShowPriorOps] = useState(true);
-  const [showReversion, setShowReversion] = useState(true);
-  const [hideHotels, setHideHotels] = useState(true);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
-  const [shortlist, setShortlist] = useState(null); // null | "reversion" | "classb"
   const [minUnits, setMinUnits] = useState(0);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
@@ -2504,8 +2371,8 @@ export default function App() {
         .then((r) => r.json())
         .then((data) => {
           // Build points from centroids, deduplicating by address (condo lots share an address)
-          const TIER_RANK = { legal_transient: 0, partial: 1, unknown: 2, excluded: 3 };
-          const pointMap = new Map(); // address → best point
+          const SEG_RANK = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
+          const pointMap = new Map();
           for (const f of (data.features || [])) {
             const coords = f.geometry?.coordinates;
             if (!coords) continue;
@@ -2516,7 +2383,7 @@ export default function App() {
             const addr = (f.properties.address || "").trim();
             const key = addr || `${cx.toFixed(4)},${cy.toFixed(4)}`;
             const existing = pointMap.get(key);
-            if (!existing || (TIER_RANK[f.properties.tier] ?? 99) < (TIER_RANK[existing.properties.tier] ?? 99)) {
+            if (!existing || (SEG_RANK[f.properties.segment] ?? 99) < (SEG_RANK[existing.properties.segment] ?? 99)) {
               pointMap.set(key, {
                 type: "Feature",
                 geometry: { type: "Point", coordinates: [cx, cy] },
@@ -2570,10 +2437,12 @@ export default function App() {
 
         });
 
-      const initFilter = buildFilter(1, true, true, 0, {
+      const initFilter = buildFilter(
+        Object.fromEntries(SEGMENTS.map((s) => [s.key, s.defaultOn])),
+        true, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      }, true, false, false);
+      }, false, false);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -2675,12 +2544,12 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist);
+    const filter = buildFilter(activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly);
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
 
-    if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", showReversion ? "visible" : "none");
+    if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", activeSegments.reversion ? "visible" : "none");
     if (map.getLayer("prior-op-outline")) map.setLayoutProperty("prior-op-outline", "visibility", showPriorOps ? "visible" : "none");
 
     setTimeout(() => {
@@ -2688,12 +2557,11 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist]);
+  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly]);
 
-  // Compute filtered features for table view
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, noOperatorOnly, shortlist);
-  }, [tierThreshold, showPriorOps, showReversion, minUnits, extraFilters, hideHotels, distressOnly, overlayCounts, shortlist]);
+    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly);
+  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -2732,18 +2600,14 @@ export default function App() {
               extraFilters={extraFilters}
               setFilter={setFilter}
               scoreWeights={scoreWeights}
-              tierThreshold={tierThreshold}
-              setTierThreshold={setTierThreshold}
-              hideHotels={hideHotels}
-              setHideHotels={setHideHotels}
+              activeSegments={activeSegments}
+              setActiveSegments={setActiveSegments}
               distressOnly={distressOnly}
               setDistressOnly={setDistressOnly}
               minUnits={minUnits}
               setMinUnits={setMinUnits}
               showPriorOps={showPriorOps}
               setShowPriorOps={setShowPriorOps}
-              showReversion={showReversion}
-              setShowReversion={setShowReversion}
               notes={notes}
             />
           </div>
@@ -2751,20 +2615,14 @@ export default function App() {
       )}
 
       {activeView === "map" && <FilterPanel
-        tierThreshold={tierThreshold}
-        setTierThreshold={setTierThreshold}
+        activeSegments={activeSegments}
+        setActiveSegments={setActiveSegments}
         showPriorOps={showPriorOps}
         setShowPriorOps={setShowPriorOps}
-        showReversion={showReversion}
-        setShowReversion={setShowReversion}
-        hideHotels={hideHotels}
-        setHideHotels={setHideHotels}
         distressOnly={distressOnly}
         setDistressOnly={setDistressOnly}
         noOperatorOnly={noOperatorOnly}
         setNoOperatorOnly={setNoOperatorOnly}
-        shortlist={shortlist}
-        setShortlist={setShortlist}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
         scoreWeights={scoreWeights}
