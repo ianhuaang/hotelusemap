@@ -2355,24 +2355,20 @@ function MethodologyView({ features }) {
       const rooms = classB > 0 ? classB : (p.unitsres || 0);
 
       let key;
-      if (classB > 0) {
-        if (isHotelClass) {
-          if (classA > 0) key = "hc_yes__cb_yes__ca_yes";
-          else key = "hc_yes__cb_yes__ca_no";
-        } else {
-          if (classA > 0) key = "hc_no__cb_yes__ca_yes";
-          else key = "hc_no__cb_yes__ca_no";
-        }
+      if (isHotelClass && classB > 0) {
+        key = classA > 0 ? "hc_cb__split" : "hc_cb__full";
       } else if (isHotelClass) {
-        if (hasReversion) key = "hc_yes__cb_no__reversion";
-        else if (hasLicense) key = "hc_yes__cb_no__license";
-        else if (hasPrior) key = "hc_yes__cb_no__prior";
-        else key = "hc_yes__cb_no__other";
+        if (hasReversion) key = "hc_nocb__reversion";
+        else if (hasLicense) key = "hc_nocb__license";
+        else if (hasPrior) key = "hc_nocb__prior";
+        else key = "hc_nocb__other";
+      } else if (classB > 0) {
+        key = classA > 0 ? "nohc_cb__split" : "nohc_cb__full";
       } else {
-        if (hasLicense) key = "hc_no__cb_no__license";
-        else if (hasDob) key = "hc_no__cb_no__dob";
-        else if (hasPrior) key = "hc_no__cb_no__prior";
-        else key = "hc_no__cb_no__partial";
+        if (hasLicense) key = "nohc_nocb__license";
+        else if (hasDob) key = "nohc_nocb__dob";
+        else if (hasPrior) key = "nohc_nocb__prior";
+        else key = "nohc_nocb__partial";
       }
 
       const entry = add(key);
@@ -2383,153 +2379,135 @@ function MethodologyView({ features }) {
   }, [features]);
 
   const g = (key) => counts[key] || { count: 0, rooms: 0 };
+  const sum = (...keys) => keys.reduce((a, k) => ({ count: a.count + g(k).count, rooms: a.rooms + g(k).rooms }), { count: 0, rooms: 0 });
 
-  const totalHcYes = g("hc_yes__cb_yes__ca_yes").count + g("hc_yes__cb_yes__ca_no").count +
-    g("hc_yes__cb_no__reversion").count + g("hc_yes__cb_no__license").count +
-    g("hc_yes__cb_no__prior").count + g("hc_yes__cb_no__other").count;
-  const totalHcNo = features.length - totalHcYes;
+  const cellTotals = {
+    hc_cb: sum("hc_cb__full", "hc_cb__split"),
+    hc_nocb: sum("hc_nocb__reversion", "hc_nocb__license", "hc_nocb__prior", "hc_nocb__other"),
+    nohc_cb: sum("nohc_cb__full", "nohc_cb__split"),
+    nohc_nocb: sum("nohc_nocb__license", "nohc_nocb__dob", "nohc_nocb__prior", "nohc_nocb__partial"),
+  };
 
-  const totalCbYes = g("hc_yes__cb_yes__ca_yes").count + g("hc_yes__cb_yes__ca_no").count +
-    g("hc_no__cb_yes__ca_yes").count + g("hc_no__cb_yes__ca_no").count;
-  const totalCbNo = features.length - totalCbYes;
-
-  const CountBadge = ({ count, rooms }) => (
-    <span className="inline-flex items-center gap-1.5 mt-1.5">
-      <span className="text-[11px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-md">
-        {count.toLocaleString()} properties
-      </span>
-      {rooms > 0 && (
-        <span className="text-[10px] text-gray-500">
-          {rooms.toLocaleString()} rooms
-        </span>
+  const CellCount = ({ data, className = "" }) => (
+    <div className={`flex items-baseline gap-1.5 ${className}`}>
+      <span className="text-lg font-bold text-gray-900">{data.count.toLocaleString()}</span>
+      <span className="text-[11px] text-gray-400">properties</span>
+      {data.rooms > 0 && (
+        <span className="text-[11px] text-gray-400 ml-1">{data.rooms.toLocaleString()} rooms</span>
       )}
-    </span>
-  );
-
-  const DecisionNode = ({ num, question }) => (
-    <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 flex items-start gap-2">
-      <span className="shrink-0 w-5 h-5 rounded bg-slate-600 text-white text-[10px] font-bold flex items-center justify-center">{num}</span>
-      <span className="text-[13px] font-medium text-gray-800" dangerouslySetInnerHTML={{ __html: question }} />
     </div>
   );
 
-  const OutcomeNode = ({ tier, confidence, detail, color, bgColor, borderColor, data }) => (
-    <div className="rounded-lg px-3 py-2.5 border" style={{ background: bgColor, borderColor }}>
-      <div className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />
-        <span className="text-[12px] font-bold" style={{ color }}>{tier}</span>
+  const SubRow = ({ label, data, color }) => {
+    if (data.count === 0) return null;
+    return (
+      <div className="flex items-center justify-between py-1">
+        <div className="flex items-center gap-1.5">
+          {color && <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />}
+          <span className="text-[11px] text-gray-600">{label}</span>
+        </div>
+        <div className="flex items-baseline gap-1 text-right">
+          <span className="text-[12px] font-semibold text-gray-800">{data.count}</span>
+          {data.rooms > 0 && <span className="text-[10px] text-gray-400">{data.rooms.toLocaleString()} rm</span>}
+        </div>
       </div>
-      <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{confidence}</div>
-      <div className="text-[11px] text-gray-600 mt-1 leading-relaxed">{detail}</div>
-      {data && <CountBadge count={data.count} rooms={data.rooms} />}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
-      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Classification Methodology</h1>
-          <p className="text-sm text-gray-500 mt-1 max-w-lg">
-            How each building in the dataset is classified by likelihood of existing legal transient capacity.
-            Counts reflect the current filtered dataset ({features.length.toLocaleString()} buildings).
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Classification Matrix</h1>
+          <p className="text-sm text-gray-500 mt-1 max-w-xl">
+            Every building is classified along two axes: <strong>PLUTO building class</strong> (is it coded as a hotel?)
+            and <strong>HPD Class B registration</strong> (are transient rooms confirmed?). {features.length.toLocaleString()} buildings in the dataset.
           </p>
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {["PLUTO (building class)", "HPD (Class A/B)", "DCWP (hotel license)", "DOB (occupancy filings)"].map(s => (
-              <span key={s} className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-500">{s}</span>
-            ))}
-          </div>
         </div>
 
-        {/* Q1: Hotel building class? */}
-        <DecisionNode num="1" question="Is it a <strong>hotel building class</strong> in PLUTO (H1&ndash;H9, HB, HH, HS, RH)?" />
+        {/* Matrix */}
+        <div className="grid grid-cols-[auto_1fr_1fr] gap-0">
+          {/* Header row */}
+          <div />
+          <div className="text-center pb-2 px-2">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">HPD Class B — Yes</div>
+            <div className="text-[10px] text-gray-400">Transient rooms confirmed</div>
+          </div>
+          <div className="text-center pb-2 px-2">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">HPD Class B — No</div>
+            <div className="text-[10px] text-gray-400">No transient registration</div>
+          </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* YES hotel class */}
-          <div className="space-y-3">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-600">Yes — {totalHcYes.toLocaleString()} buildings</div>
-
-            <DecisionNode num="2" question="Does HPD show <strong>Class B</strong> (transient) rooms?" />
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <div className="text-[10px] font-bold uppercase text-emerald-600">Yes</div>
-                <DecisionNode num="3" question="Also <strong>Class A</strong> (residential)?" />
-                <div className="space-y-2">
-                  <OutcomeNode tier="Split-Use" confidence="Medium" detail="Hotel class + both Class A and B. Transient rooms mixed with residential."
-                    color="#8b5cf6" bgColor="#f5f3ff" borderColor="#ddd6fe"
-                    data={g("hc_yes__cb_yes__ca_yes")} />
-                  <div className="text-[10px] font-bold uppercase text-rose-500 mt-1">No — Class B only</div>
-                  <OutcomeNode tier="Hotel" confidence="High" detail="Hotel class + all transient rooms, no residential mix."
-                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                    data={g("hc_yes__cb_yes__ca_no")} />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-[10px] font-bold uppercase text-rose-500">No — no Class B</div>
-                <OutcomeNode tier="Reversion" confidence="Medium" detail="Hotel class converted to residential. Can revert before Dec 2027."
-                  color="#e11d48" bgColor="#fff1f2" borderColor="#fecdd3"
-                  data={g("hc_yes__cb_no__reversion")} />
-                <OutcomeNode tier="Hotel" confidence="Medium" detail="Hotel class, active license but no HPD data. Likely a data gap."
-                  color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                  data={g("hc_yes__cb_no__license")} />
-                {g("hc_yes__cb_no__prior").count > 0 && (
-                  <OutcomeNode tier="Hotel" confidence="Low" detail="Hotel class, prior operator known."
-                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                    data={g("hc_yes__cb_no__prior")} />
-                )}
-              </div>
+          {/* Row 1: Hotel class YES */}
+          <div className="flex items-start justify-end pr-3 pt-4">
+            <div className="text-right">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Hotel<br/>Class</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">Yes</div>
             </div>
           </div>
 
-          {/* NO hotel class */}
-          <div className="space-y-3">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-rose-500">No — {totalHcNo.toLocaleString()} buildings</div>
+          {/* Cell: Hotel class YES + Class B YES */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 m-1">
+            <CellCount data={cellTotals.hc_cb} />
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600 mt-2 mb-1">Strongest signal</div>
+            <div className="text-[11px] text-gray-600 mb-2">Both PLUTO and HPD confirm hotel/transient use.</div>
+            <div className="border-t border-emerald-100 pt-1.5 space-y-0">
+              <SubRow label="Full hotel (Class B only)" data={g("hc_cb__full")} color="#16a34a" />
+              <SubRow label="Split-use (Class A + B)" data={g("hc_cb__split")} color="#8b5cf6" />
+            </div>
+          </div>
 
-            <DecisionNode num="4" question="Does HPD show <strong>Class B</strong> (transient) rooms?" />
+          {/* Cell: Hotel class YES + Class B NO */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 m-1">
+            <CellCount data={cellTotals.hc_nocb} />
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mt-2 mb-1">Hotel class, unconfirmed</div>
+            <div className="text-[11px] text-gray-600 mb-2">PLUTO says hotel but HPD has no transient rooms registered.</div>
+            <div className="border-t border-amber-100 pt-1.5 space-y-0">
+              <SubRow label="Reversion window (before Dec 2027)" data={g("hc_nocb__reversion")} color="#e11d48" />
+              <SubRow label="Active hotel license (DCWP)" data={g("hc_nocb__license")} color="#16a34a" />
+              <SubRow label="Prior operator known" data={g("hc_nocb__prior")} color="#a855f7" />
+            </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <div className="text-[10px] font-bold uppercase text-emerald-600">Yes</div>
-                <OutcomeNode tier="Hotel / Split-Use" confidence="High" detail="Not hotel class but HPD confirms transient rooms. Strong evidence."
-                  color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                  data={{ count: g("hc_no__cb_yes__ca_yes").count + g("hc_no__cb_yes__ca_no").count,
-                    rooms: g("hc_no__cb_yes__ca_yes").rooms + g("hc_no__cb_yes__ca_no").rooms }} />
-              </div>
+          {/* Row 2: Hotel class NO */}
+          <div className="flex items-start justify-end pr-3 pt-4">
+            <div className="text-right">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Non-<br/>Hotel<br/>Class</div>
+              <div className="text-[10px] text-gray-400 mt-0.5">No</div>
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                <div className="text-[10px] font-bold uppercase text-rose-500">No</div>
-                <DecisionNode num="5" question="Other <strong>transient signals</strong>?" />
-                {g("hc_no__cb_no__license").count > 0 && (
-                  <OutcomeNode tier="Hotel" confidence="Medium" detail="Active DCWP hotel license but no HPD Class B data."
-                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                    data={g("hc_no__cb_no__license")} />
-                )}
-                {g("hc_no__cb_no__dob").count > 0 && (
-                  <OutcomeNode tier="Partial" confidence="Medium" detail="DOB filings show R-1/J-1 transient occupancy."
-                    color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
-                    data={g("hc_no__cb_no__dob")} />
-                )}
-                {g("hc_no__cb_no__prior").count > 0 && (
-                  <OutcomeNode tier="Partial" confidence="Low" detail="Prior flex-stay operator known."
-                    color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
-                    data={g("hc_no__cb_no__prior")} />
-                )}
-                <OutcomeNode tier="Partial" confidence="Low" detail="Mixed-use building class (RM, RC, etc.) suggests possible capacity. Needs manual verification."
-                  color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
-                  data={g("hc_no__cb_no__partial")} />
-              </div>
+          {/* Cell: Hotel class NO + Class B YES */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 m-1">
+            <CellCount data={cellTotals.nohc_cb} />
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-blue-600 mt-2 mb-1">HPD-confirmed transient</div>
+            <div className="text-[11px] text-gray-600 mb-2">Not classified as hotel in PLUTO but HPD confirms transient rooms exist.</div>
+            <div className="border-t border-blue-100 pt-1.5 space-y-0">
+              <SubRow label="Full transient (Class B only)" data={g("nohc_cb__full")} color="#16a34a" />
+              <SubRow label="Split-use (Class A + B)" data={g("nohc_cb__split")} color="#8b5cf6" />
+            </div>
+          </div>
+
+          {/* Cell: Hotel class NO + Class B NO */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 m-1">
+            <CellCount data={cellTotals.nohc_nocb} />
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-2 mb-1">Partial signals only</div>
+            <div className="text-[11px] text-gray-600 mb-2">No hotel class, no Class B. Included based on other transient indicators.</div>
+            <div className="border-t border-gray-100 pt-1.5 space-y-0">
+              <SubRow label="Active hotel license (DCWP)" data={g("nohc_nocb__license")} color="#16a34a" />
+              <SubRow label="DOB transient occupancy (R-1/J-1)" data={g("nohc_nocb__dob")} color="#f59e0b" />
+              <SubRow label="Prior operator known" data={g("nohc_nocb__prior")} color="#a855f7" />
+              <SubRow label="Mixed-use building class" data={g("nohc_nocb__partial")} color="#94a3b8" />
             </div>
           </div>
         </div>
 
-        {/* Filters applied */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Filters Applied Before Classification</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-gray-600">
+        {/* Pre-filters note */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pre-Filters</div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-gray-500">
             <div>Incompatible zoning districts removed</div>
-            <div>Buildings without active hotel operation filtered (CPC special permit required)</div>
+            <div>Non-operating hotel-class buildings removed (would require CPC special permit)</div>
             <div>1-4 family residential excluded</div>
             <div>SRO (HR) and dormitory (H8) excluded from hotel tier</div>
           </div>
@@ -2537,8 +2515,8 @@ function MethodologyView({ features }) {
 
         {/* Data sources */}
         <div className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-200 pt-4">
-          <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning) and HPD registration (Class A/B unit counts) are the primary tier inputs.
-          DCWP hotel licenses, DOB occupancy filings (R-1/J-1), and prior operator records provide additional entry points.
+          <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning), HPD registration (Class A/B unit counts),
+          DCWP hotel licenses, DOB occupancy filings (R-1/J-1), prior operator ground truth.
           Room counts use HPD Class B when available, otherwise PLUTO residential units.
         </div>
       </div>
