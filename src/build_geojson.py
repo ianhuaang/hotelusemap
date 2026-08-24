@@ -54,14 +54,18 @@ BRANDED_CHAINS = [
     "rosewood", "langham", "lotte", "shangri-la",
     "radisson", "park inn", "country inn",
     "citizenm", "pod hotel", "yotel", "moto",
+    "kimpton", "viceroy", "dream hotel", "1 hotel", "1hotel",
+    "standard hotel", "the standard", "ace hotel",
+    "virgin hotel", "hard rock", "riu", "meliá", "melia",
+    "arlo", "dream downtown", "dream midtown",
 ]
 
 
-def _is_branded(hotel_name: str) -> bool:
-    if not hotel_name:
+def _is_branded(hotel_name: str, operator_name: str = "") -> bool:
+    combined = f"{hotel_name} {operator_name}".lower()
+    if not combined.strip():
         return False
-    name_lower = hotel_name.lower()
-    return any(brand in name_lower for brand in BRANDED_CHAINS)
+    return any(brand in combined for brand in BRANDED_CHAINS)
 
 
 def build_geojson(
@@ -223,7 +227,7 @@ def build_geojson(
             "hotel_name": record.get("hotel_name", ""),
             "hotel_phone": record.get("hotel_phone", ""),
             "hotel_website": record.get("hotel_website", ""),
-            "is_branded": _is_branded(record.get("hotel_name", "")),
+            "is_branded": _is_branded(record.get("hotel_name", ""), record.get("operator_name", "")),
             # DOB occupancy classification
             "dob_has_r1": record.get("dob_has_r1", False),
             "dob_has_j1": record.get("dob_has_j1", False),
