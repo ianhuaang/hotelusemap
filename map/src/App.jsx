@@ -2333,6 +2333,219 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   );
 }
 
+function MethodologyView({ features }) {
+  const counts = useMemo(() => {
+    const paths = {};
+    const add = (key) => {
+      if (!paths[key]) paths[key] = { count: 0, rooms: 0 };
+      return paths[key];
+    };
+
+    for (const f of features) {
+      const p = f.properties;
+      const bldg = (p.bldgclass || "").toUpperCase();
+      const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
+      const classB = p.hpd_class_b || 0;
+      const classA = p.hpd_class_a || 0;
+      const hasLicense = !!p.has_hotel_license;
+      const hasReversion = !!p.has_reversion;
+      const rc = (() => { try { return JSON.parse(p.reason_codes || "[]"); } catch { return []; } })();
+      const hasDob = rc.includes("dob_transient_occupancy");
+      const hasPrior = !!p.has_prior_op;
+      const rooms = classB > 0 ? classB : (p.unitsres || 0);
+
+      let key;
+      if (classB > 0) {
+        if (isHotelClass) {
+          if (classA > 0) key = "hc_yes__cb_yes__ca_yes";
+          else key = "hc_yes__cb_yes__ca_no";
+        } else {
+          if (classA > 0) key = "hc_no__cb_yes__ca_yes";
+          else key = "hc_no__cb_yes__ca_no";
+        }
+      } else if (isHotelClass) {
+        if (hasReversion) key = "hc_yes__cb_no__reversion";
+        else if (hasLicense) key = "hc_yes__cb_no__license";
+        else if (hasPrior) key = "hc_yes__cb_no__prior";
+        else key = "hc_yes__cb_no__other";
+      } else {
+        if (hasLicense) key = "hc_no__cb_no__license";
+        else if (hasDob) key = "hc_no__cb_no__dob";
+        else if (hasPrior) key = "hc_no__cb_no__prior";
+        else key = "hc_no__cb_no__partial";
+      }
+
+      const entry = add(key);
+      entry.count++;
+      entry.rooms += rooms;
+    }
+    return paths;
+  }, [features]);
+
+  const g = (key) => counts[key] || { count: 0, rooms: 0 };
+
+  const totalHcYes = g("hc_yes__cb_yes__ca_yes").count + g("hc_yes__cb_yes__ca_no").count +
+    g("hc_yes__cb_no__reversion").count + g("hc_yes__cb_no__license").count +
+    g("hc_yes__cb_no__prior").count + g("hc_yes__cb_no__other").count;
+  const totalHcNo = features.length - totalHcYes;
+
+  const totalCbYes = g("hc_yes__cb_yes__ca_yes").count + g("hc_yes__cb_yes__ca_no").count +
+    g("hc_no__cb_yes__ca_yes").count + g("hc_no__cb_yes__ca_no").count;
+  const totalCbNo = features.length - totalCbYes;
+
+  const CountBadge = ({ count, rooms }) => (
+    <span className="inline-flex items-center gap-1.5 mt-1.5">
+      <span className="text-[11px] font-bold text-gray-800 bg-gray-100 px-2 py-0.5 rounded-md">
+        {count.toLocaleString()} properties
+      </span>
+      {rooms > 0 && (
+        <span className="text-[10px] text-gray-500">
+          {rooms.toLocaleString()} rooms
+        </span>
+      )}
+    </span>
+  );
+
+  const DecisionNode = ({ num, question }) => (
+    <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 flex items-start gap-2">
+      <span className="shrink-0 w-5 h-5 rounded bg-slate-600 text-white text-[10px] font-bold flex items-center justify-center">{num}</span>
+      <span className="text-[13px] font-medium text-gray-800" dangerouslySetInnerHTML={{ __html: question }} />
+    </div>
+  );
+
+  const OutcomeNode = ({ tier, confidence, detail, color, bgColor, borderColor, data }) => (
+    <div className="rounded-lg px-3 py-2.5 border" style={{ background: bgColor, borderColor }}>
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />
+        <span className="text-[12px] font-bold" style={{ color }}>{tier}</span>
+      </div>
+      <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{confidence}</div>
+      <div className="text-[11px] text-gray-600 mt-1 leading-relaxed">{detail}</div>
+      {data && <CountBadge count={data.count} rooms={data.rooms} />}
+    </div>
+  );
+
+  return (
+    <div className="h-full overflow-y-auto bg-gray-50">
+      <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Classification Methodology</h1>
+          <p className="text-sm text-gray-500 mt-1 max-w-lg">
+            How each building in the dataset is classified by likelihood of existing legal transient capacity.
+            Counts reflect the current filtered dataset ({features.length.toLocaleString()} buildings).
+          </p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {["PLUTO (building class)", "HPD (Class A/B)", "DCWP (hotel license)", "DOB (occupancy filings)"].map(s => (
+              <span key={s} className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-500">{s}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Q1: Hotel building class? */}
+        <DecisionNode num="1" question="Is it a <strong>hotel building class</strong> in PLUTO (H1&ndash;H9, HB, HH, HS, RH)?" />
+
+        <div className="grid grid-cols-2 gap-4">
+          {/* YES hotel class */}
+          <div className="space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-600">Yes — {totalHcYes.toLocaleString()} buildings</div>
+
+            <DecisionNode num="2" question="Does HPD show <strong>Class B</strong> (transient) rooms?" />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase text-emerald-600">Yes</div>
+                <DecisionNode num="3" question="Also <strong>Class A</strong> (residential)?" />
+                <div className="space-y-2">
+                  <OutcomeNode tier="Split-Use" confidence="Medium" detail="Hotel class + both Class A and B. Transient rooms mixed with residential."
+                    color="#8b5cf6" bgColor="#f5f3ff" borderColor="#ddd6fe"
+                    data={g("hc_yes__cb_yes__ca_yes")} />
+                  <div className="text-[10px] font-bold uppercase text-rose-500 mt-1">No — Class B only</div>
+                  <OutcomeNode tier="Hotel" confidence="High" detail="Hotel class + all transient rooms, no residential mix."
+                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
+                    data={g("hc_yes__cb_yes__ca_no")} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase text-rose-500">No — no Class B</div>
+                <OutcomeNode tier="Reversion" confidence="Medium" detail="Hotel class converted to residential. Can revert before Dec 2027."
+                  color="#e11d48" bgColor="#fff1f2" borderColor="#fecdd3"
+                  data={g("hc_yes__cb_no__reversion")} />
+                <OutcomeNode tier="Hotel" confidence="Medium" detail="Hotel class, active license but no HPD data. Likely a data gap."
+                  color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
+                  data={g("hc_yes__cb_no__license")} />
+                {g("hc_yes__cb_no__prior").count > 0 && (
+                  <OutcomeNode tier="Hotel" confidence="Low" detail="Hotel class, prior operator known."
+                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
+                    data={g("hc_yes__cb_no__prior")} />
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* NO hotel class */}
+          <div className="space-y-3">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-rose-500">No — {totalHcNo.toLocaleString()} buildings</div>
+
+            <DecisionNode num="4" question="Does HPD show <strong>Class B</strong> (transient) rooms?" />
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase text-emerald-600">Yes</div>
+                <OutcomeNode tier="Hotel / Split-Use" confidence="High" detail="Not hotel class but HPD confirms transient rooms. Strong evidence."
+                  color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
+                  data={{ count: g("hc_no__cb_yes__ca_yes").count + g("hc_no__cb_yes__ca_no").count,
+                    rooms: g("hc_no__cb_yes__ca_yes").rooms + g("hc_no__cb_yes__ca_no").rooms }} />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-[10px] font-bold uppercase text-rose-500">No</div>
+                <DecisionNode num="5" question="Other <strong>transient signals</strong>?" />
+                {g("hc_no__cb_no__license").count > 0 && (
+                  <OutcomeNode tier="Hotel" confidence="Medium" detail="Active DCWP hotel license but no HPD Class B data."
+                    color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
+                    data={g("hc_no__cb_no__license")} />
+                )}
+                {g("hc_no__cb_no__dob").count > 0 && (
+                  <OutcomeNode tier="Partial" confidence="Medium" detail="DOB filings show R-1/J-1 transient occupancy."
+                    color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
+                    data={g("hc_no__cb_no__dob")} />
+                )}
+                {g("hc_no__cb_no__prior").count > 0 && (
+                  <OutcomeNode tier="Partial" confidence="Low" detail="Prior flex-stay operator known."
+                    color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
+                    data={g("hc_no__cb_no__prior")} />
+                )}
+                <OutcomeNode tier="Partial" confidence="Low" detail="Mixed-use building class (RM, RC, etc.) suggests possible capacity. Needs manual verification."
+                  color="#f59e0b" bgColor="#fffbeb" borderColor="#fde68a"
+                  data={g("hc_no__cb_no__partial")} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters applied */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-2">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Filters Applied Before Classification</div>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-gray-600">
+            <div>Incompatible zoning districts removed</div>
+            <div>Buildings without active hotel operation filtered (CPC special permit required)</div>
+            <div>1-4 family residential excluded</div>
+            <div>SRO (HR) and dormitory (H8) excluded from hotel tier</div>
+          </div>
+        </div>
+
+        {/* Data sources */}
+        <div className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-200 pt-4">
+          <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning) and HPD registration (Class A/B unit counts) are the primary tier inputs.
+          DCWP hotel licenses, DOB occupancy filings (R-1/J-1), and prior operator records provide additional entry points.
+          Room counts use HPD Class B when available, otherwise PLUTO residential units.
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -2361,7 +2574,7 @@ export default function App() {
   const setFilter = useCallback((key, val) => {
     setExtraFilters((prev) => ({ ...prev, [key]: val }));
   }, []);
-  const [activeView, setActiveView] = useState("map"); // "map" | "table"
+  const [activeView, setActiveView] = useState("map"); // "map" | "table" | "methodology"
   const [scoreWeights, setScoreWeights] = useState({ legal: 50, avail: 35, quality: 15 });
   const [featureCount, setFeatureCount] = useState(0);
   const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
@@ -2709,6 +2922,14 @@ export default function App() {
         >
           Table
         </button>
+        <button
+          onClick={() => setActiveView("methodology")}
+          className={`w-24 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
+            activeView === "methodology" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
+          }`}
+        >
+          Methodology
+        </button>
       </div>}
 
       {/* Map view */}
@@ -2738,6 +2959,10 @@ export default function App() {
             />
           </div>
         </div>
+      )}
+
+      {activeView === "methodology" && (
+        <MethodologyView features={allFeaturesRef.current} />
       )}
 
       {activeView === "map" && <FilterPanel
