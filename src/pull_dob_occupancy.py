@@ -109,6 +109,8 @@ def _aggregate_by_bbl(rows: list[dict]) -> dict[str, dict]:
                 "latest_date": filing_date,
                 "max_dwelling_units": 0,
                 "sample_description": "",
+                "has_conversion_from_transient": False,
+                "conversion_detail": "",
             }
 
         entry = results[bbl]
@@ -118,6 +120,11 @@ def _aggregate_by_bbl(rows: list[dict]) -> dict[str, dict]:
         elif matched_occ == "J-1":
             entry["has_j1"] = True
             entry["j1_filing_count"] += 1
+
+        # Detect conversion FROM transient: existing is R-1/J-1, proposed is different
+        if ex_occ in TRANSIENT_OCCUPANCY_CODES and pr_occ and pr_occ not in TRANSIENT_OCCUPANCY_CODES:
+            entry["has_conversion_from_transient"] = True
+            entry["conversion_detail"] = f"{ex_occ} -> {pr_occ} ({filing_date})"
 
         if filing_date and (not entry["earliest_date"] or filing_date < entry["earliest_date"]):
             entry["earliest_date"] = filing_date
