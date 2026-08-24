@@ -61,7 +61,7 @@ def load_hpd(path: Path = None) -> list[dict]:
     if path is None:
         path = DATA_RAW / f"hpd_{TODAY}.json"
     if not path.exists():
-        files = sorted(DATA_RAW.glob("hpd_*.json"), reverse=True)
+        files = sorted(DATA_RAW.glob("hpd_[0-9]*.json"), reverse=True)
         if not files:
             raise FileNotFoundError("No HPD data found")
         path = files[0]
