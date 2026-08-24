@@ -793,7 +793,7 @@ def enrich_pipeline(
                 if record.get("reversion_window"):
                     record["reversion_window"] = None
                     record["has_reversion"] = False
-                    record["segment"] = "pure_hotel"
+                    record["segment"] = "hotel"
                     rc = record.get("reason_codes", [])
                     if "reversion_window" in rc:
                         rc.remove("reversion_window")

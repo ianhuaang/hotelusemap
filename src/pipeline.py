@@ -278,19 +278,6 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                     "note": f"Building class {bldgclass} (hotel) converted to residential ({evidence}). Can revert to hotel use without special permit before Dec 9, 2027.",
                 }
 
-        # Special permit blocker (2021 hotel text amendment)
-        # Non-reversion buildings need a CPC special permit to operate as a new hotel
-        # Reversion buildings are exempt until Dec 9, 2027
-        zonedist1 = (row.get("zonedist1") or "").strip()
-        needs_special_permit = (
-            tier == TIER_LEGAL_TRANSIENT
-            and not reversion_window
-            and class_b == 0
-            and not is_excluded_class
-        )
-        if needs_special_permit:
-            blockers.append("May require CPC special permit for new hotel use (2021 text amendment)")
-            reason_codes.append("special_permit_required")
 
         record = {
             "bbl": bbl,

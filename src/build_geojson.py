@@ -95,20 +95,30 @@ def build_geojson(
     # But keep any building with a prior_operator tag
     pipeline = [r for r in pipeline if r["tier"] != "unknown" or r.get("prior_operator")]
 
-    # Drop buildings where hotel use is not permitted or requires special permit,
-    # UNLESS the building is already operating as a hotel (has license, hotel
-    # building class, or legal_transient tier — these are grandfathered)
-    pre_zoning = len(pipeline)
-    def _is_existing_hotel(r):
-        if r.get("tier") == "legal_transient":
+    # A building is "actively operating" if it has evidence of current hotel use.
+    # Buildings without this evidence would need a CPC special permit (2021 text
+    # amendment) — filter those out entirely.
+    def _is_actively_operating(r):
+        if r.get("hpd_class_b", 0) > 0:
+            return True
+        if r.get("reversion_window"):
             return True
         if r.get("has_hotel_license"):
             return True
         if r.get("prior_operator"):
             return True
         return False
-    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or _is_existing_hotel(r)]
+
+    # Drop buildings in incompatible zoning unless actively operating (grandfathered)
+    pre_zoning = len(pipeline)
+    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or _is_actively_operating(r)]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
+
+    # Drop hotel-class buildings that aren't actively operating — they'd need
+    # a CPC special permit to start new hotel use
+    pre_permit = len(pipeline)
+    pipeline = [r for r in pipeline if _is_actively_operating(r) or r.get("tier") != "legal_transient"]
+    print(f"Special permit filter: {pre_permit} -> {len(pipeline)} (removed {pre_permit - len(pipeline)} not actively operating)")
 
     # Index pipeline by BBL
     pipe_by_bbl = {r["bbl"]: r for r in pipeline}
@@ -290,7 +300,7 @@ def build_geojson(
             elif record.get("class_b_split"):
                 properties["segment"] = "split_use"
             else:
-                properties["segment"] = "pure_hotel"
+                properties["segment"] = "hotel"
         elif seg_tier == "partial":
             properties["segment"] = "partial"
         else:

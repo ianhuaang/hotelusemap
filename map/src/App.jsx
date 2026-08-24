@@ -11,7 +11,7 @@ const SEGMENTS = [
     info: "Buildings with both HPD Class A (residential) and Class B (transient) units. Existing transient capacity alongside residential.",
   },
   {
-    key: "pure_hotel", label: "Pure hotel", color: "#16a34a", defaultOn: false,
+    key: "hotel", label: "Hotel", color: "#16a34a", defaultOn: false,
     info: "Fully operating hotels — HPD Class B confirmed, no residential apartments. Already transient, likely has an existing operator.",
   },
   {
@@ -495,7 +495,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
       </div>
 
       <div className="p-4 space-y-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span
             className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold text-white"
             style={{ backgroundColor: segmentColor(p.segment) }}
@@ -504,15 +504,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </span>
           {[
             p.has_prior_op && { label: "Prior operator", color: "bg-purple-500" },
-            p.has_tax_lien && { label: "Tax lien", color: "bg-red-600" },
-            p.has_lis_pendens && { label: "Lis pendens", color: "bg-red-600" },
             p.coo_has_temporary && { label: "Temp C of O", color: "bg-amber-500" },
-            p.mortgage_approaching_maturity && { label: "Mortgage maturing", color: "bg-orange-500" },
-            p.is_landmark && { label: "Landmark", color: "bg-amber-600" },
-            p.historic_district && { label: "Historic district", color: "bg-amber-500" },
-            p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
-            (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
-            p.zoning_hotel_permitted === "not_permitted" && { label: "No hotel zoning", color: "bg-gray-600" },
           ].filter(Boolean).map((sig, i) => (
             <span key={i} className={`${sig.color} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md`}>
               {sig.label}
@@ -548,6 +540,68 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </div>
         )}
 
+        {/* Legal Feasibility */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+          <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Legal Feasibility</div>
+          <div className="space-y-1.5">
+            {(() => {
+              const items = [];
+              const bldg = (p.bldgclass || "").toUpperCase();
+              const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
+              if (isHotelClass) {
+                items.push({ icon: "check", text: `Hotel building class (${bldg})` });
+              } else if (bldg) {
+                items.push({ icon: "info", text: `Building class: ${bldg}` });
+              }
+              if ((p.hpd_class_b || 0) > 0) {
+                items.push({ icon: "check", text: `${p.hpd_class_b} HPD Class B (transient) rooms` });
+              }
+              if ((p.hpd_class_a || 0) > 0) {
+                items.push({ icon: "info", text: `${p.hpd_class_a} HPD Class A (residential) units` });
+              }
+              if (p.hpd_dob_class) {
+                items.push({ icon: "info", text: `HPD DOB: ${p.hpd_dob_class}` });
+              }
+              if (p.has_hotel_license) {
+                items.push({ icon: "check", text: "Active DCWP hotel license" });
+              }
+              if (reasonCodes.includes("dob_transient_occupancy")) {
+                items.push({ icon: "check", text: "DOB transient occupancy (R-1/J-1)" });
+              }
+              if (p.coo_has_temporary) {
+                items.push({ icon: "check", text: "Has temporary Certificate of Occupancy" });
+              }
+              if (p.zonedist1) {
+                const permitted = p.zoning_hotel_permitted === "permitted";
+                items.push({
+                  icon: permitted ? "check" : "warn",
+                  text: `Zoning: ${p.zonedist1}${permitted ? " — hotel use permitted" : p.zoning_hotel_detail ? ` — ${p.zoning_hotel_detail}` : ""}`,
+                });
+              }
+              return items.map((item, i) => (
+                <div key={i} className="flex items-start gap-1.5">
+                  <span className={`mt-0.5 shrink-0 text-[10px] ${
+                    item.icon === "check" ? "text-emerald-600" : item.icon === "warn" ? "text-amber-600" : "text-gray-400"
+                  }`}>
+                    {item.icon === "check" ? "✓" : item.icon === "warn" ? "⚠" : "•"}
+                  </span>
+                  <span className="text-[11px] text-gray-700">{item.text}</span>
+                </div>
+              ));
+            })()}
+          </div>
+          {reasonCodes.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-emerald-100">
+              <div className="flex flex-wrap gap-1">
+                {reasonCodes.map((code) => (
+                  <span key={code} className="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded">{code}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Stats */}
         {(() => {
           const rooms = estRooms(p);
           const sourceExplain = {
@@ -558,7 +612,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             "Unknown": "No room count data available from any source.",
           };
           return (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <div className="text-[10px] text-gray-400 uppercase tracking-wide flex items-center gap-1">
                   Est. Rooms
@@ -573,42 +627,61 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                 <div className="text-sm font-medium text-gray-900">{rooms.value}</div>
               </div>
               <Stat label="Floors" value={p.numfloors ? Math.round(p.numfloors) : "—"} />
-              <StatBldgClass code={p.bldgclass} />
-              <Stat label="HPD Class B" value={p.hpd_class_b ?? "—"} />
-              <Stat label="HPD Class A" value={p.hpd_class_a ?? "—"} />
               <Stat label="Zoning" value={p.zonedist1 || "—"} />
             </div>
           );
         })()}
 
-        {reasonCodes.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Reason codes</div>
-            <div className="flex flex-wrap gap-1">
-              {reasonCodes.map((code) => (
-                <span key={code} className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded">{code}</span>
-              ))}
+        {/* Policy considerations */}
+        {(() => {
+          const considerations = [];
+          if ((p.rent_stabilized_units || 0) > 0) {
+            considerations.push({
+              text: `${p.rent_stabilized_units} rent-stabilized units (${p.rent_stab_data_year} tax bill)`,
+              severity: "high",
+            });
+          }
+          if (p.has_tax_benefit) {
+            const expiresText = p.tax_benefit_expires ? ` (expires ${p.tax_benefit_expires})` : "";
+            considerations.push({
+              text: `${p.tax_benefit_type} tax benefit${p.tax_benefit_active ? " — active" : " — expired"}${expiresText}`,
+              severity: p.tax_benefit_active ? "high" : "low",
+            });
+          }
+          if (p.is_landmark) {
+            considerations.push({
+              text: `LPC Individual Landmark${p.landmark_name ? ` — ${p.landmark_name}` : ""}`,
+              severity: "medium",
+            });
+          }
+          if (p.historic_district) {
+            considerations.push({
+              text: `Historic District — ${p.historic_district}`,
+              severity: "medium",
+            });
+          }
+          if (blockers.length > 0) {
+            blockers.forEach(b => {
+              considerations.push({ text: b, severity: "high" });
+            });
+          }
+          if (considerations.length === 0) return null;
+          return (
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Policy Considerations</div>
+              <div className="space-y-1">
+                {considerations.map((c, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
+                      c.severity === "high" ? "bg-red-500" : c.severity === "medium" ? "bg-amber-500" : "bg-gray-400"
+                    }`} />
+                    <span className={`text-[11px] ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-
-        {blockers.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold text-red-500 uppercase tracking-wide mb-1">Blockers</div>
-            <div className="flex flex-wrap gap-1">
-              {blockers.map((b) => (
-                <span key={b} className="bg-red-50 text-red-700 text-xs px-2 py-0.5 rounded">{b}</span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {p.hpd_dob_class && (
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">HPD DOB classification</div>
-            <div className="text-sm text-gray-700">{p.hpd_dob_class}</div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Operator identification */}
         {(p.operator_name || p.hotel_name || p.hpd_managing_agent_corp) && (
@@ -796,7 +869,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           );
         })()}
 
-        {/* Distress signals */}
+        {/* Financial context */}
         {(() => {
           const hasLien = p.has_tax_lien;
           const hasLp = p.has_lis_pendens;
@@ -804,8 +877,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           const hpdC = p.hpd_class_c_violations || 0;
           const ecbV = p.ecb_open_violations || 0;
           const ecbBal = p.ecb_total_balance || 0;
-          const hasLandmark = p.is_landmark || p.historic_district;
-          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0 && !hasLandmark) return null;
+          const hasMortgage = p.mortgage_approaching_maturity;
+          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0 && !hasMortgage) return null;
 
           const signals = [];
           if (hasLien) signals.push({
@@ -818,58 +891,25 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             detail: "A legal action (lawsuit or judgment) has been filed against this property in the last 5 years. Strong signal of financial or legal distress — owner may be under pressure to generate income or sell.",
             severity: "high",
           });
+          if (hasMortgage) signals.push({
+            label: `Mortgage may be maturing (${p.mortgage_age_years}yr old)`,
+            detail: "The mortgage on this property is approaching typical maturity. The owner may face refinancing pressure, which could create an opening for a management partnership.",
+            severity: "medium",
+          });
           if (hpdV > 0) signals.push({
             label: `${hpdV} open HPD violations` + (hpdC > 0 ? ` (${hpdC} Class C)` : ""),
-            detail: "Open violations from NYC Housing Preservation & Development. Class C = immediately hazardous (structural, lead, fire safety). High counts may indicate deferred maintenance. Very high counts (20+) could mean the building needs significant capital — a risk factor, not just an opportunity signal.",
+            detail: "Open violations from NYC Housing Preservation & Development. Class C = immediately hazardous. High counts may indicate deferred maintenance.",
             severity: hpdC > 5 ? "high" : "medium",
           });
           if (ecbV > 0) signals.push({
             label: `${ecbV} ECB violations` + (ecbBal > 0 ? ` ($${ecbBal.toLocaleString()} balance)` : ""),
-            detail: "Active violations from the Environmental Control Board (OATH). These carry financial penalties. A large unpaid balance signals the owner may be under financial pressure — relevant when combined with legal transient eligibility.",
+            detail: "Active violations from the Environmental Control Board (OATH). These carry financial penalties.",
             severity: ecbBal > 10000 ? "high" : "medium",
           });
 
-          if (p.is_landmark) signals.push({
-            label: `LPC Individual Landmark${p.landmark_name ? ` — ${p.landmark_name}` : ""}`,
-            detail: "This building is individually designated by the Landmarks Preservation Commission. Any exterior alteration requires LPC approval. Renovations to improve the property will face additional cost and timeline.",
-            severity: "medium",
-          });
-          if (p.historic_district) signals.push({
-            label: `Historic District — ${p.historic_district}`,
-            detail: "This building is within an LPC-designated historic district. Exterior changes (windows, facade, signage, rooftop) require LPC review. Interior changes are generally unaffected.",
-            severity: "medium",
-          });
-
-          if (p.has_tax_benefit) {
-            const expiresText = p.tax_benefit_expires ? ` (expires ${p.tax_benefit_expires})` : "";
-            signals.push({
-              label: `${p.tax_benefit_type} tax benefit${p.tax_benefit_active ? " — active" : " — expired"}${expiresText}`,
-              detail: p.tax_benefit_active
-                ? `Active ${p.tax_benefit_type} tax benefit carries rent stabilization obligations. Units receiving this benefit cannot be freely converted to transient use until the benefit expires. This is a significant blocker for hotel conversion.`
-                : `Expired ${p.tax_benefit_type} tax benefit. Rent stabilization obligations from the benefit period may still apply to some units — requires further due diligence.`,
-              severity: p.tax_benefit_active ? "high" : "low",
-            });
-          }
-
-          if ((p.rent_stabilized_units || 0) > 0) {
-            signals.push({
-              label: `${p.rent_stabilized_units} rent-stabilized units (${p.rent_stab_data_year} tax bill)`,
-              detail: "Rent-stabilized units cannot be converted to transient hotel use. The building's residential character is legally protected. Stabilized tenants have strong rights including lease renewal and eviction protections. Any conversion plan must account for these units.",
-              severity: "high",
-            });
-          }
-
-          if (p.zoning_hotel_permitted === "not_permitted") {
-            signals.push({
-              label: `Hotel use not permitted — ${p.zonedist1}`,
-              detail: "This building is in a zoning district that doesn't allow hotel use, but it appears as an existing hotel (grandfathered). Any expansion or change of use would require rezoning.",
-              severity: "medium",
-            });
-          }
-
           return (
             <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Signals</div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Financial Context</div>
               <div className="space-y-1">
                 {signals.map((sig, i) => (
                   <DistressRow key={i} signal={sig} />
@@ -1658,7 +1698,7 @@ function dedupeFeatures(features) {
     } else {
       // Keep the one with the highest-priority tier
       const existing = groups.get(key).properties;
-      const SEG_RANK = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
+      const SEG_RANK = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
       if ((SEG_RANK[p.segment] ?? 99) < (SEG_RANK[existing.segment] ?? 99)) {
         groups.set(key, f);
       }
@@ -2152,7 +2192,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
       va = a.totalClassB;
       vb = b.totalClassB;
     } else if (sortKey === "bestTier") {
-      const rank = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
+      const rank = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
       va = Math.min(...[...a.tiers].map((t) => rank[t] ?? 99));
       vb = Math.min(...[...b.tiers].map((t) => rank[t] ?? 99));
     }
@@ -2175,7 +2215,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   ];
 
   const bestTier = (tiers) => {
-    const rank = ["reversion", "split_use", "pure_hotel", "partial", "unknown"];
+    const rank = ["reversion", "split_use", "hotel", "partial", "unknown"];
     for (const t of rank) if (tiers.has(t)) return t;
     return "unknown";
   };
@@ -2474,7 +2514,7 @@ export default function App() {
         .then((r) => r.json())
         .then((data) => {
           // Build points from centroids, deduplicating by address (condo lots share an address)
-          const SEG_RANK = { reversion: 0, split_use: 1, pure_hotel: 2, partial: 3, unknown: 4 };
+          const SEG_RANK = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
           const pointMap = new Map();
           for (const f of (data.features || [])) {
             const coords = f.geometry?.coordinates;
