@@ -27,6 +27,9 @@ PULL_SCRIPTS = [
     ("HPD registrations", "pull_hpd_registrations.py"),
     ("ACRIS owners", "pull_acris_owners.py"),
     ("Alt addresses", "pull_alt_addresses.py"),
+    ("LPC landmarks", "pull_landmarks.py"),
+    ("Tax benefits", "pull_tax_benefits.py"),
+    ("Rent stabilization", "pull_rent_stabilization.py"),
 ]
 
 PIPELINE_SCRIPTS = [

@@ -510,6 +510,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             p.mortgage_approaching_maturity && { label: "Mortgage maturing", color: "bg-orange-500" },
             p.is_landmark && { label: "Landmark", color: "bg-amber-600" },
             p.historic_district && { label: "Historic district", color: "bg-amber-500" },
+            p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
+            (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
           ].filter(Boolean).map((sig, i) => (
             <span key={i} className={`${sig.color} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md`}>
               {sig.label}
@@ -836,6 +838,25 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             detail: "This building is within an LPC-designated historic district. Exterior changes (windows, facade, signage, rooftop) require LPC review. Interior changes are generally unaffected.",
             severity: "medium",
           });
+
+          if (p.has_tax_benefit) {
+            const expiresText = p.tax_benefit_expires ? ` (expires ${p.tax_benefit_expires})` : "";
+            signals.push({
+              label: `${p.tax_benefit_type} tax benefit${p.tax_benefit_active ? " — active" : " — expired"}${expiresText}`,
+              detail: p.tax_benefit_active
+                ? `Active ${p.tax_benefit_type} tax benefit carries rent stabilization obligations. Units receiving this benefit cannot be freely converted to transient use until the benefit expires. This is a significant blocker for hotel conversion.`
+                : `Expired ${p.tax_benefit_type} tax benefit. Rent stabilization obligations from the benefit period may still apply to some units — requires further due diligence.`,
+              severity: p.tax_benefit_active ? "high" : "low",
+            });
+          }
+
+          if ((p.rent_stabilized_units || 0) > 0) {
+            signals.push({
+              label: `${p.rent_stabilized_units} rent-stabilized units (${p.rent_stab_data_year} tax bill)`,
+              detail: "Rent-stabilized units cannot be converted to transient hotel use. The building's residential character is legally protected. Stabilized tenants have strong rights including lease renewal and eviction protections. Any conversion plan must account for these units.",
+              severity: "high",
+            });
+          }
 
           return (
             <div>
@@ -1708,6 +1729,8 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
         p.coo_has_temporary && { label: "Temp CO", color: "bg-amber-500" },
         p.is_landmark && { label: "LPC", color: "bg-amber-600" },
         p.historic_district && { label: "Hist. dist.", color: "bg-amber-500" },
+        p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
+        (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
       ].filter(Boolean);
       if (sigs.length === 0) return "";
       return <span className="flex gap-0.5 flex-wrap">{sigs.map((s, i) => <span key={i} className={`${s.color} text-white text-[8px] font-bold px-1 py-0.5 rounded`}>{s.label}</span>)}</span>;

@@ -483,6 +483,33 @@ def load_dob_occupancy(path: Path = None) -> dict[str, dict]:
     return {r["bbl"]: r for r in raw}
 
 
+def load_landmarks() -> dict[str, dict]:
+    """Load LPC landmark/historic district data per BBL."""
+    files = sorted(DATA_RAW.glob("landmarks_*.json"), reverse=True)
+    if not files:
+        return {}
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"]: r for r in raw}
+
+
+def load_tax_benefits() -> dict[str, dict]:
+    """Load 421-a/J-51 tax benefit data per BBL."""
+    files = sorted(DATA_RAW.glob("tax_benefits_*.json"), reverse=True)
+    if not files:
+        return {}
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"]: r for r in raw}
+
+
+def load_rent_stabilization() -> dict[str, dict]:
+    """Load rent stabilization unit counts per BBL (from DOF tax bills)."""
+    files = sorted(DATA_RAW.glob("rent_stabilization_*.json"), reverse=True)
+    if not files:
+        return {}
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"]: r for r in raw}
+
+
 def enrich_pipeline(
     pipeline_path: Path = None,
     sales_path: Path = None,
@@ -512,6 +539,9 @@ def enrich_pipeline(
     permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
     hotel_licenses = load_hotel_licenses()
     hpd_regs = load_hpd_registrations()
+    landmarks = load_landmarks()
+    tax_benefits = load_tax_benefits()
+    rent_stab = load_rent_stabilization()
 
     # Owner dedup: normalize names and build groups
     owner_canonical = _build_owner_groups(pipeline)
@@ -713,6 +743,14 @@ def enrich_pipeline(
                     record["tier"] = "legal_transient"
                     record["confidence"] = "high"
                     record.setdefault("reason_codes", []).append("dcwp_hotel_license")
+                # Active license means it's operating as a hotel now — not a reversion candidate
+                if record.get("reversion_window"):
+                    record["reversion_window"] = None
+                    record["has_reversion"] = False
+                    record["segment"] = "pure_hotel"
+                    rc = record.get("reason_codes", [])
+                    if "reversion_window" in rc:
+                        rc.remove("reversion_window")
             elif status in ("Surrendered", "Failed to Renew"):
                 if tier in ("unknown",):
                     record["tier"] = "partial"
@@ -736,6 +774,49 @@ def enrich_pipeline(
             record["hpd_managing_agent_corp"] = ""
             record["hpd_owner_corp"] = ""
             record["hpd_head_officer"] = ""
+
+        # LPC landmarks / historic districts
+        lm = landmarks.get(bbl)
+        if lm:
+            record["is_landmark"] = lm.get("is_individual_landmark", False)
+            record["landmark_name"] = lm.get("landmark_name", "")
+            record["is_historic_district"] = lm.get("is_historic_district", False)
+            record["historic_district"] = lm.get("historic_district", "")
+        else:
+            record["is_landmark"] = False
+            record["landmark_name"] = ""
+            record["is_historic_district"] = False
+            record["historic_district"] = ""
+
+        # Tax benefits (421-a / J-51) — rent stabilization proxy
+        tb = tax_benefits.get(bbl)
+        if tb:
+            record["has_tax_benefit"] = True
+            record["tax_benefit_type"] = tb.get("benefit_type", "")
+            record["tax_benefit_expires"] = tb.get("benefit_expires")
+            record["tax_benefit_active"] = tb.get("is_active", False)
+            if tb.get("is_active"):
+                record.setdefault("blockers", []).append(
+                    f"Active {tb['benefit_type']} tax benefit — rent stabilization obligations restrict use changes"
+                )
+        else:
+            record["has_tax_benefit"] = False
+            record["tax_benefit_type"] = ""
+            record["tax_benefit_expires"] = None
+            record["tax_benefit_active"] = False
+
+        # Rent stabilization (from DOF tax bills)
+        rs = rent_stab.get(bbl)
+        if rs:
+            record["rent_stabilized_units"] = rs["stabilized_units"]
+            record["rent_stab_data_year"] = rs["data_year"]
+            if rs["stabilized_units"] > 0:
+                record.setdefault("blockers", []).append(
+                    f"{rs['stabilized_units']} rent-stabilized units (as of {rs['data_year']} tax bill) — conversion to transient use restricted"
+                )
+        else:
+            record["rent_stabilized_units"] = 0
+            record["rent_stab_data_year"] = None
 
         # Consolidated operator name (best available source)
         operator = ""
@@ -839,6 +920,15 @@ def enrich_pipeline(
     print(f"  HPD managing agents: {ma_count} buildings")
     mtge_approaching = sum(1 for r in pipeline if r.get("mortgage_approaching_maturity"))
     print(f"  Mortgage approaching maturity (4+ yrs): {mtge_approaching} buildings")
+    lm_count = sum(1 for r in pipeline if r.get("is_landmark") or r.get("is_historic_district"))
+    lm_individual = sum(1 for r in pipeline if r.get("is_landmark"))
+    print(f"  LPC designated: {lm_count} buildings ({lm_individual} individual landmarks)")
+    tb_count = sum(1 for r in pipeline if r.get("has_tax_benefit"))
+    tb_active = sum(1 for r in pipeline if r.get("tax_benefit_active"))
+    print(f"  Tax benefits (421-a/J-51): {tb_count} buildings ({tb_active} active)")
+    rs_count = sum(1 for r in pipeline if r.get("rent_stabilized_units", 0) > 0)
+    rs_units = sum(r.get("rent_stabilized_units", 0) for r in pipeline)
+    print(f"  Rent stabilized: {rs_count} buildings ({rs_units:,} units)")
     return outpath
 
 

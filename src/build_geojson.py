@@ -210,6 +210,19 @@ def build_geojson(
             "mortgage_amount": record.get("mortgage_amount", ""),
             "mortgage_approaching_maturity": record.get("mortgage_approaching_maturity", False),
             "acris_mtge_date": record.get("acris_mtge_date", ""),
+            # LPC landmarks / historic districts
+            "is_landmark": record.get("is_landmark", False),
+            "landmark_name": record.get("landmark_name", ""),
+            "is_historic_district": record.get("is_historic_district", False),
+            "historic_district": record.get("historic_district", ""),
+            # Tax benefits (421-a / J-51)
+            "has_tax_benefit": record.get("has_tax_benefit", False),
+            "tax_benefit_type": record.get("tax_benefit_type", ""),
+            "tax_benefit_expires": record.get("tax_benefit_expires"),
+            "tax_benefit_active": record.get("tax_benefit_active", False),
+            # Rent stabilization
+            "rent_stabilized_units": record.get("rent_stabilized_units", 0),
+            "rent_stab_data_year": record.get("rent_stab_data_year"),
         }
 
         # Include top 3 permits (trimmed to save space)

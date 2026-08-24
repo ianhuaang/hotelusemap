@@ -9,6 +9,7 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -20,29 +21,46 @@ jobs:
         run: pip install certifi
 
       # Phase 1: Pull independent data sources (no dependencies)
+      # continue-on-error so one flaky API doesn't kill the whole run
       - name: Pull PLUTO
         run: python src/pull_pluto.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull HPD
         run: python src/pull_hpd.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull building footprints
         run: python src/pull_footprints.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull DOF sales
         run: python src/pull_sales.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull DOB permits
         run: python src/pull_permits.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
         run: python src/pull_distress.py
+        continue-on-error: true
+        timeout-minutes: 15
 
       - name: Pull DCWP hotel licenses
         run: python src/pull_hotel_licenses.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull DOB occupancy
         run: python src/pull_dob_occupancy.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       # Phase 2: Run pipeline (needs PLUTO + HPD)
       - name: Run pipeline
@@ -51,15 +69,38 @@ jobs:
       # Phase 3: Pull data that depends on pipeline output
       - name: Pull C of O records
         run: python src/pull_coo.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull ACRIS owners
         run: python src/pull_acris_owners.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull HPD registrations
         run: python src/pull_hpd_registrations.py
+        continue-on-error: true
+        timeout-minutes: 10
 
       - name: Pull alt addresses
         run: python src/pull_alt_addresses.py
+        continue-on-error: true
+        timeout-minutes: 10
+
+      - name: Pull LPC landmarks
+        run: python src/pull_landmarks.py
+        continue-on-error: true
+        timeout-minutes: 10
+
+      - name: Pull tax benefits (421-a/J-51)
+        run: python src/pull_tax_benefits.py
+        continue-on-error: true
+        timeout-minutes: 30
+
+      - name: Pull rent stabilization
+        run: python src/pull_rent_stabilization.py
+        continue-on-error: true
+        timeout-minutes: 5
 
       # Phase 4: Enrich and build
       - name: Run enrichment

@@ -48,12 +48,24 @@ def _hpd_bbl(row: dict) -> str:
 def load_pluto(path: Path = None) -> list[dict]:
     if path is None:
         path = DATA_RAW / f"pluto_{TODAY}.json"
+    if not path.exists():
+        files = sorted(DATA_RAW.glob("pluto_*.json"), reverse=True)
+        if not files:
+            raise FileNotFoundError("No PLUTO data found")
+        path = files[0]
+        print(f"Using cached PLUTO: {path.name}")
     return json.loads(path.read_text())
 
 
 def load_hpd(path: Path = None) -> list[dict]:
     if path is None:
         path = DATA_RAW / f"hpd_{TODAY}.json"
+    if not path.exists():
+        files = sorted(DATA_RAW.glob("hpd_*.json"), reverse=True)
+        if not files:
+            raise FileNotFoundError("No HPD data found")
+        path = files[0]
+        print(f"Using cached HPD: {path.name}")
     return json.loads(path.read_text())
 
 
@@ -82,6 +94,15 @@ def _load_dob_occupancy_bbls() -> set[str]:
     return {r["bbl"] for r in raw if r.get("has_r1") or r.get("has_j1")}
 
 
+def _load_dob_conversion_bbls() -> dict[str, str]:
+    """Load BBLs with confirmed conversion FROM transient occupancy."""
+    files = sorted(DATA_RAW.glob("dob_occupancy_*.json"), reverse=True)
+    if not files:
+        return {}
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"]: r.get("conversion_detail", "") for r in raw if r.get("has_conversion_from_transient")}
+
+
 def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
     pluto = load_pluto(pluto_path)
     hpd = load_hpd(hpd_path)
@@ -89,6 +110,9 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
     dob_transient_bbls = _load_dob_occupancy_bbls()
     if dob_transient_bbls:
         print(f"DOB transient occupancy: {len(dob_transient_bbls)} BBLs loaded as entry source")
+    dob_conversion_bbls = _load_dob_conversion_bbls()
+    if dob_conversion_bbls:
+        print(f"DOB conversions from transient: {len(dob_conversion_bbls)} BBLs")
 
     # --- Step 1: PLUTO filter ---
     # Keep lots with buildings that have enough residential units OR are hotel-class
@@ -195,11 +219,18 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             if is_hotel_class:
                 reason_codes.append("bldg_class_hotel")
         elif is_hotel_class and class_a > 0:
-            # Hotel class but HPD shows residential only — reversion candidate
+            # Hotel class but HPD shows residential only
             tier = TIER_LEGAL_TRANSIENT
-            confidence = CONFIDENCE_MEDIUM
             reason_codes.append("bldg_class_hotel")
-            reason_codes.append("reversion_window")
+            has_conversion_evidence = (
+                bbl in dob_conversion_bbls  # DOB filing changed occupancy from transient
+                or class_a >= 5            # substantial residential presence, not just a super's apt
+            )
+            if has_conversion_evidence:
+                confidence = CONFIDENCE_MEDIUM
+                reason_codes.append("reversion_window")
+            else:
+                confidence = CONFIDENCE_LOW
         elif is_hotel_class:
             # Hotel class, no HPD data
             tier = TIER_LEGAL_TRANSIENT
@@ -232,15 +263,20 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "pct_transient": round(class_b / (class_a + class_b) * 100),
             }
 
-        # Reversion window overlay
+        # Reversion window overlay — only if there's evidence of actual conversion
         reversion_window = None
+        conversion_detail = dob_conversion_bbls.get(bbl, "")
         if is_hotel_class and class_a > 0 and class_b == 0:
-            reversion_window = {
-                "deadline": "2027-12-09",
-                "signal": "hotel_class_residential_only",
-                "class_a_units": class_a,
-                "note": f"Building class {bldgclass} (hotel) but HPD shows {class_a} Class A units and 0 Class B rooms. Can revert to hotel use without special permit before Dec 9, 2027.",
-            }
+            has_conversion_evidence = bool(conversion_detail) or class_a >= 5
+            if has_conversion_evidence:
+                evidence = conversion_detail or f"{class_a} Class A units registered"
+                reversion_window = {
+                    "deadline": "2027-12-09",
+                    "signal": "hotel_class_residential_only",
+                    "class_a_units": class_a,
+                    "evidence": evidence,
+                    "note": f"Building class {bldgclass} (hotel) converted to residential ({evidence}). Can revert to hotel use without special permit before Dec 9, 2027.",
+                }
 
         # Special permit blocker (2021 hotel text amendment)
         # Non-reversion buildings need a CPC special permit to operate as a new hotel
