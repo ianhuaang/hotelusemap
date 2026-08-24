@@ -70,13 +70,25 @@ def build_geojson(
 ) -> Path:
     if pipeline_path is None:
         pipeline_path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
+        if not pipeline_path.exists():
+            files = sorted(DATA_PROCESSED.glob("pipeline_*.json"), reverse=True)
+            if files:
+                pipeline_path = files[0]
     if footprints_path is None:
         footprints_path = DATA_RAW / f"footprints_{TODAY}.json"
+        if not footprints_path.exists():
+            files = sorted(DATA_RAW.glob("footprints_*.json"), reverse=True)
+            if files:
+                footprints_path = files[0]
 
     pipeline = json.loads(pipeline_path.read_text())
     footprints = json.loads(footprints_path.read_text())
 
     alt_addr_path = DATA_PROCESSED / f"alt_addresses_{TODAY}.json"
+    if not alt_addr_path.exists():
+        files = sorted(DATA_PROCESSED.glob("alt_addresses_*.json"), reverse=True)
+        if files:
+            alt_addr_path = files[0]
     alt_addresses = json.loads(alt_addr_path.read_text()) if alt_addr_path.exists() else {}
 
     # Drop unknown-tier buildings — no transient signal, just noise
@@ -223,6 +235,9 @@ def build_geojson(
             # Rent stabilization
             "rent_stabilized_units": record.get("rent_stabilized_units", 0),
             "rent_stab_data_year": record.get("rent_stab_data_year"),
+            # Zoning compatibility
+            "zoning_hotel_permitted": record.get("zoning_hotel_permitted", "unknown"),
+            "zoning_hotel_detail": record.get("zoning_hotel_detail", ""),
         }
 
         # Include top 3 permits (trimmed to save space)

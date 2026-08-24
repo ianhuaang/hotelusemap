@@ -27,6 +27,70 @@ JOB_TYPE_LABELS = {
 }
 
 
+# Zoning compatibility for hotel use (Use Group 5)
+# Post-2021 amendment: ALL new hotels require CPC special permit.
+# But we care about whether hotel use is fundamentally permitted in the district.
+# Districts where hotels (UG5) are a permitted use (with special permit):
+#   C1 (except C1-1 thru C1-4), C2 (except C2-1 thru C2-4), C4, C5, C6, C8, M1
+# Not permitted: all R districts, M2, M3, C3, C7, PARK, BPC
+_HOTEL_NOT_PERMITTED_LOW_C = {"C1-1", "C1-2", "C1-3", "C1-4", "C2-1", "C2-2", "C2-3", "C2-4"}
+
+def _zoning_hotel_compatibility(zonedist: str) -> tuple[str, str]:
+    """Return (compatibility, detail) for hotel use in this zoning district.
+
+    compatibility: 'permitted', 'not_permitted', or 'unknown'
+    """
+    if not zonedist:
+        return "unknown", ""
+
+    z = zonedist.strip().upper()
+    # Handle paired zones like M1-5/R10 — use the first
+    if "/" in z:
+        z = z.split("/")[0]
+
+    # Base district: C6-4A -> C6, R7-2 -> R7, M1-5 -> M1
+    base = z.split("-")[0] if "-" in z else z
+
+    if base in ("C4", "C5", "C6"):
+        return "permitted", "Hotel use permitted (CPC special permit required for new/enlarged hotels since 2021)"
+    if base == "C8":
+        return "permitted", "Hotel use permitted in C8 (CPC special permit required)"
+    if base == "C1":
+        if z in _HOTEL_NOT_PERMITTED_LOW_C:
+            return "not_permitted", f"Hotel use not permitted in {z} (low-density commercial overlay)"
+        return "permitted", "Hotel use permitted in C1-5+ (CPC special permit required)"
+    if base == "C2":
+        if z in _HOTEL_NOT_PERMITTED_LOW_C:
+            return "not_permitted", f"Hotel use not permitted in {z} (low-density commercial overlay)"
+        return "permitted", "Hotel use permitted in C2-5+ (CPC special permit required)"
+    if base == "M1":
+        return "permitted", "Hotel use permitted in M1 (CPC special permit required)"
+    if base.startswith("R"):
+        return "not_permitted", "Hotel use not permitted in residential zoning districts"
+    if base in ("M2", "M3"):
+        return "not_permitted", f"Hotel use not permitted in {base} (heavy manufacturing)"
+    if base in ("C3", "C7"):
+        return "not_permitted", f"Hotel use not permitted in {base}"
+    if base in ("PARK", "BPC"):
+        return "not_permitted", f"Hotel use not permitted in {base}"
+
+    return "unknown", f"Zoning district {z} — hotel compatibility unclassified"
+
+
+def _resolve_data_file(prefix: str, path: Path = None) -> Path:
+    """Find today's data file or fall back to the most recent one."""
+    if path is not None:
+        if path.exists():
+            return path
+    today_path = DATA_RAW / f"{prefix}_{TODAY}.json"
+    if today_path.exists():
+        return today_path
+    files = sorted(DATA_RAW.glob(f"{prefix}_*.json"), reverse=True)
+    if files:
+        return files[0]
+    return today_path  # will fail with FileNotFoundError, which is correct
+
+
 def _normalize_bbl(raw: str) -> str:
     try:
         return str(int(float(raw)))
@@ -154,8 +218,7 @@ def _build_owner_groups(records: list[dict]) -> dict[str, str]:
 
 
 def load_sales(path: Path = None) -> dict[str, list[dict]]:
-    if path is None:
-        path = DATA_RAW / f"sales_{TODAY}.json"
+    path = _resolve_data_file("sales", path)
     raw = json.loads(path.read_text())
 
     by_bbl: dict[str, list[dict]] = {}
@@ -179,8 +242,7 @@ def load_sales(path: Path = None) -> dict[str, list[dict]]:
 
 
 def load_permits(path: Path = None) -> dict[str, list[dict]]:
-    if path is None:
-        path = DATA_RAW / f"permits_{TODAY}.json"
+    path = _resolve_data_file("permits", path)
     raw = json.loads(path.read_text())
 
     by_bbl: dict[str, list[dict]] = {}
@@ -240,8 +302,7 @@ def scan_permit_descriptions(path: Path = None) -> dict[str, dict]:
     Returns {bbl: {keywords: [...], strong_count: int, moderate_count: int,
                    sample_descriptions: [...]}}
     """
-    if path is None:
-        path = DATA_RAW / f"permits_{TODAY}.json"
+    path = _resolve_data_file("permits", path)
     if not path.exists():
         return {}
 
@@ -289,8 +350,7 @@ def scan_permit_descriptions(path: Path = None) -> dict[str, dict]:
 
 
 def load_coo(path: Path = None) -> dict[str, list[dict]]:
-    if path is None:
-        path = DATA_RAW / f"coo_{TODAY}.json"
+    path = _resolve_data_file("coo", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -317,8 +377,7 @@ def load_coo(path: Path = None) -> dict[str, list[dict]]:
 
 def load_hpd_violations(path: Path = None) -> dict[str, dict]:
     """Load open HPD violations, summarized per BBL."""
-    if path is None:
-        path = DATA_RAW / f"hpd_violations_{TODAY}.json"
+    path = _resolve_data_file("hpd_violations", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -345,8 +404,7 @@ def load_hpd_violations(path: Path = None) -> dict[str, dict]:
 
 def load_ecb_violations(path: Path = None) -> dict[str, dict]:
     """Load active DOB ECB violations, summarized per BBL."""
-    if path is None:
-        path = DATA_RAW / f"ecb_violations_{TODAY}.json"
+    path = _resolve_data_file("ecb_violations", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -369,8 +427,7 @@ def load_ecb_violations(path: Path = None) -> dict[str, dict]:
 
 def load_tax_liens(path: Path = None) -> dict[str, dict]:
     """Load tax lien records, summarized per BBL."""
-    if path is None:
-        path = DATA_RAW / f"tax_liens_{TODAY}.json"
+    path = _resolve_data_file("tax_liens", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -392,8 +449,7 @@ def load_tax_liens(path: Path = None) -> dict[str, dict]:
 
 def load_lis_pendens(path: Path = None) -> dict[str, dict]:
     """Load lis pendens filings, summarized per BBL."""
-    if path is None:
-        path = DATA_RAW / f"lis_pendens_{TODAY}.json"
+    path = _resolve_data_file("lis_pendens", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -424,8 +480,7 @@ def load_hotel_info(path: Path = None) -> dict[str, dict]:
 
 def load_acris_owners(path: Path = None) -> dict[str, dict]:
     """Load ACRIS owner/borrower names per BBL."""
-    if path is None:
-        path = DATA_RAW / f"acris_owners_{TODAY}.json"
+    path = _resolve_data_file("acris_owners", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -434,11 +489,7 @@ def load_acris_owners(path: Path = None) -> dict[str, dict]:
 
 def load_hotel_licenses(path: Path = None) -> dict[str, dict]:
     """Load DCWP hotel license data keyed by BBL."""
-    if path is None:
-        path = DATA_RAW / f"hotel_licenses_{TODAY}.json"
-    if not path.exists():
-        files = sorted(DATA_RAW.glob("hotel_licenses_*.json"), reverse=True)
-        path = files[0] if files else path
+    path = _resolve_data_file("hotel_licenses", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -462,11 +513,7 @@ def load_hotel_licenses(path: Path = None) -> dict[str, dict]:
 
 def load_hpd_registrations(path: Path = None) -> dict[str, dict]:
     """Load HPD registration managing agents per BBL."""
-    if path is None:
-        path = DATA_RAW / f"hpd_registrations_{TODAY}.json"
-    if not path.exists():
-        files = sorted(DATA_RAW.glob("hpd_registrations_*.json"), reverse=True)
-        path = files[0] if files else path
+    path = _resolve_data_file("hpd_registrations", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -475,8 +522,7 @@ def load_hpd_registrations(path: Path = None) -> dict[str, dict]:
 
 def load_dob_occupancy(path: Path = None) -> dict[str, dict]:
     """Load DOB transient occupancy signals (R-1, J-1) per BBL."""
-    if path is None:
-        path = DATA_RAW / f"dob_occupancy_{TODAY}.json"
+    path = _resolve_data_file("dob_occupancy", path)
     if not path.exists():
         return {}
     raw = json.loads(path.read_text())
@@ -818,6 +864,15 @@ def enrich_pipeline(
             record["rent_stabilized_units"] = 0
             record["rent_stab_data_year"] = None
 
+        # Zoning compatibility for hotel use
+        zoning_compat, zoning_detail = _zoning_hotel_compatibility(record.get("zonedist1", ""))
+        record["zoning_hotel_permitted"] = zoning_compat
+        record["zoning_hotel_detail"] = zoning_detail
+        if zoning_compat == "not_permitted":
+            record.setdefault("blockers", []).append(
+                f"Hotel use not permitted in {record.get('zonedist1', '')} zoning district"
+            )
+
         # Consolidated operator name (best available source)
         operator = ""
         operator_source = ""
@@ -929,6 +984,10 @@ def enrich_pipeline(
     rs_count = sum(1 for r in pipeline if r.get("rent_stabilized_units", 0) > 0)
     rs_units = sum(r.get("rent_stabilized_units", 0) for r in pipeline)
     print(f"  Rent stabilized: {rs_count} buildings ({rs_units:,} units)")
+    zp = sum(1 for r in pipeline if r.get("zoning_hotel_permitted") == "permitted")
+    znp = sum(1 for r in pipeline if r.get("zoning_hotel_permitted") == "not_permitted")
+    zu = sum(1 for r in pipeline if r.get("zoning_hotel_permitted") == "unknown")
+    print(f"  Zoning hotel use: {zp} permitted, {znp} not permitted, {zu} unknown")
     return outpath
 
 

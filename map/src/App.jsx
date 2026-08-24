@@ -512,6 +512,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
             p.historic_district && { label: "Historic district", color: "bg-amber-500" },
             p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
             (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
+            p.zoning_hotel_permitted === "not_permitted" && { label: "No hotel zoning", color: "bg-gray-600" },
           ].filter(Boolean).map((sig, i) => (
             <span key={i} className={`${sig.color} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md`}>
               {sig.label}
@@ -855,6 +856,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
               label: `${p.rent_stabilized_units} rent-stabilized units (${p.rent_stab_data_year} tax bill)`,
               detail: "Rent-stabilized units cannot be converted to transient hotel use. The building's residential character is legally protected. Stabilized tenants have strong rights including lease renewal and eviction protections. Any conversion plan must account for these units.",
               severity: "high",
+            });
+          }
+
+          if (p.zoning_hotel_permitted === "not_permitted") {
+            signals.push({
+              label: `Hotel use not permitted — ${p.zonedist1}`,
+              detail: p.zoning_hotel_detail || "This zoning district does not allow transient hotel use (Use Group 5). A rezoning or variance would be required, which is a lengthy and uncertain process.",
+              severity: "high",
+            });
+          } else if (p.zoning_hotel_permitted === "permitted") {
+            signals.push({
+              label: `Hotel use permitted — ${p.zonedist1}`,
+              detail: p.zoning_hotel_detail || "Hotel use (Use Group 5) is a permitted use in this zoning district. Since the 2021 citywide amendment, all new or enlarged hotels require a CPC special permit.",
+              severity: "low",
             });
           }
 
@@ -1731,6 +1746,7 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
         p.historic_district && { label: "Hist. dist.", color: "bg-amber-500" },
         p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
         (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
+        p.zoning_hotel_permitted === "not_permitted" && { label: "No zoning", color: "bg-gray-600" },
       ].filter(Boolean);
       if (sigs.length === 0) return "";
       return <span className="flex gap-0.5 flex-wrap">{sigs.map((s, i) => <span key={i} className={`${s.color} text-white text-[8px] font-bold px-1 py-0.5 rounded`}>{s.label}</span>)}</span>;
