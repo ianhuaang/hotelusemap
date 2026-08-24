@@ -502,14 +502,11 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           >
             {(p.segment || p.tier || "").replace(/_/g, " ")}
           </span>
-          {[
-            p.has_prior_op && { label: "Prior operator", color: "bg-purple-500" },
-            p.coo_has_temporary && { label: "Temp C of O", color: "bg-amber-500" },
-          ].filter(Boolean).map((sig, i) => (
-            <span key={i} className={`${sig.color} text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md`}>
-              {sig.label}
+          {p.has_prior_op && (
+            <span className="bg-purple-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md">
+              Prior operator
             </span>
-          ))}
+          )}
           <button
             onClick={() => onAddToList(feature)}
             className={`ml-auto px-2.5 py-1 text-xs rounded-md cursor-pointer transition-colors ${
@@ -567,9 +564,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
               }
               if (reasonCodes.includes("dob_transient_occupancy")) {
                 items.push({ icon: "check", text: "DOB transient occupancy (R-1/J-1)" });
-              }
-              if (p.coo_has_temporary) {
-                items.push({ icon: "check", text: "Has temporary Certificate of Occupancy" });
               }
               if (p.zonedist1) {
                 const permitted = p.zoning_hotel_permitted === "permitted";
@@ -759,11 +753,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                     {p.mortgage_amount && Number(p.mortgage_amount) > 0 && (
                       <span className="text-[10px] text-gray-500">(${Number(p.mortgage_amount).toLocaleString()})</span>
                     )}
-                    {p.mortgage_approaching_maturity && (
-                      <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">
-                        {p.mortgage_age_years}yr — may be maturing
-                      </span>
-                    )}
                   </div>
                 )}
               </div>
@@ -833,7 +822,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
               {hasTmp && (
                 <div className="mb-1.5 flex items-center gap-1.5">
                   <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-[11px] text-amber-700 font-medium">Has Temporary C of Os — strong transient signal</span>
+                  <span className="text-[11px] text-amber-700 font-medium">Has Temporary C of Os — active construction</span>
                 </div>
               )}
               {p.coo_dwelling_units != null && (
@@ -864,56 +853,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                 {p.coo_count > 3 && (
                   <div className="text-[10px] text-gray-400">+ {p.coo_count - 3} more</div>
                 )}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Financial context */}
-        {(() => {
-          const hasLien = p.has_tax_lien;
-          const hasLp = p.has_lis_pendens;
-          const hpdV = p.hpd_open_violations || 0;
-          const hpdC = p.hpd_class_c_violations || 0;
-          const ecbV = p.ecb_open_violations || 0;
-          const ecbBal = p.ecb_total_balance || 0;
-          const hasMortgage = p.mortgage_approaching_maturity;
-          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0 && !hasMortgage) return null;
-
-          const signals = [];
-          if (hasLien) signals.push({
-            label: "Tax lien on property",
-            detail: "The city has placed a lien on this property for unpaid taxes or charges. Indicates financial distress — the owner may be motivated to find revenue sources like a hotel management partner.",
-            severity: "high",
-          });
-          if (hasLp) signals.push({
-            label: `Lis pendens / judgment (${p.lis_pendens_count})`,
-            detail: "A legal action (lawsuit or judgment) has been filed against this property in the last 5 years. Strong signal of financial or legal distress — owner may be under pressure to generate income or sell.",
-            severity: "high",
-          });
-          if (hasMortgage) signals.push({
-            label: `Mortgage may be maturing (${p.mortgage_age_years}yr old)`,
-            detail: "The mortgage on this property is approaching typical maturity. The owner may face refinancing pressure, which could create an opening for a management partnership.",
-            severity: "medium",
-          });
-          if (hpdV > 0) signals.push({
-            label: `${hpdV} open HPD violations` + (hpdC > 0 ? ` (${hpdC} Class C)` : ""),
-            detail: "Open violations from NYC Housing Preservation & Development. Class C = immediately hazardous. High counts may indicate deferred maintenance.",
-            severity: hpdC > 5 ? "high" : "medium",
-          });
-          if (ecbV > 0) signals.push({
-            label: `${ecbV} ECB violations` + (ecbBal > 0 ? ` ($${ecbBal.toLocaleString()} balance)` : ""),
-            detail: "Active violations from the Environmental Control Board (OATH). These carry financial penalties.",
-            severity: ecbBal > 10000 ? "high" : "medium",
-          });
-
-          return (
-            <div>
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Financial Context</div>
-              <div className="space-y-1">
-                {signals.map((sig, i) => (
-                  <DistressRow key={i} signal={sig} />
-                ))}
               </div>
             </div>
           );
@@ -963,6 +902,50 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                 {noOp > 0 && <span className="text-gray-500">{noOp} no known operator</span>}
                 {withLien > 0 && <span className="text-red-500">{withLien} with liens</span>}
                 {landmark > 0 && <span className="text-amber-500">{landmark} landmark/historic</span>}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Property condition */}
+        {(() => {
+          const hasLien = p.has_tax_lien;
+          const hasLp = p.has_lis_pendens;
+          const hpdV = p.hpd_open_violations || 0;
+          const hpdC = p.hpd_class_c_violations || 0;
+          const ecbV = p.ecb_open_violations || 0;
+          const ecbBal = p.ecb_total_balance || 0;
+          if (!hasLien && !hasLp && hpdV === 0 && ecbV === 0) return null;
+
+          const signals = [];
+          if (hpdV > 0) signals.push({
+            label: `${hpdV} open HPD violations` + (hpdC > 0 ? ` (${hpdC} Class C)` : ""),
+            detail: "Open violations from NYC Housing Preservation & Development. Class C = immediately hazardous. High counts may indicate deferred maintenance.",
+            severity: hpdC > 5 ? "high" : "medium",
+          });
+          if (ecbV > 0) signals.push({
+            label: `${ecbV} ECB violations` + (ecbBal > 0 ? ` ($${ecbBal.toLocaleString()} balance)` : ""),
+            detail: "Active violations from the Environmental Control Board (OATH). These carry financial penalties.",
+            severity: ecbBal > 10000 ? "high" : "medium",
+          });
+          if (hasLien) signals.push({
+            label: "Tax lien on property",
+            detail: "The city has placed a lien on this property for unpaid taxes or charges.",
+            severity: "high",
+          });
+          if (hasLp) signals.push({
+            label: `Lis pendens / judgment (${p.lis_pendens_count})`,
+            detail: "A legal action (lawsuit or judgment) has been filed against this property in the last 5 years.",
+            severity: "high",
+          });
+
+          return (
+            <div>
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Property Condition</div>
+              <div className="space-y-1">
+                {signals.map((sig, i) => (
+                  <DistressRow key={i} signal={sig} />
+                ))}
               </div>
             </div>
           );
