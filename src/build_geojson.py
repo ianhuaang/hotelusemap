@@ -109,9 +109,12 @@ def build_geojson(
             return True
         return False
 
-    # Drop buildings in incompatible zoning unless actively operating (grandfathered)
+    # Drop buildings in incompatible zoning unless they have HPD Class B rooms
+    # (confirmed current transient operation = grandfathered nonconforming use).
+    # License/reversion/prior-op alone isn't enough — without Class B, there's
+    # no active transient use to grandfather.
     pre_zoning = len(pipeline)
-    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or _is_actively_operating(r)]
+    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or r.get("hpd_class_b", 0) > 0]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
 
     # Drop hotel-class buildings that aren't actively operating — they'd need
