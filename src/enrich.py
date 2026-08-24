@@ -868,10 +868,6 @@ def enrich_pipeline(
         zoning_compat, zoning_detail = _zoning_hotel_compatibility(record.get("zonedist1", ""))
         record["zoning_hotel_permitted"] = zoning_compat
         record["zoning_hotel_detail"] = zoning_detail
-        if zoning_compat == "not_permitted":
-            record.setdefault("blockers", []).append(
-                f"Hotel use not permitted in {record.get('zonedist1', '')} zoning district"
-            )
 
         # Consolidated operator name (best available source)
         operator = ""

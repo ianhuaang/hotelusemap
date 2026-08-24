@@ -95,6 +95,21 @@ def build_geojson(
     # But keep any building with a prior_operator tag
     pipeline = [r for r in pipeline if r["tier"] != "unknown" or r.get("prior_operator")]
 
+    # Drop buildings where hotel use is not permitted or requires special permit,
+    # UNLESS the building is already operating as a hotel (has license, hotel
+    # building class, or legal_transient tier — these are grandfathered)
+    pre_zoning = len(pipeline)
+    def _is_existing_hotel(r):
+        if r.get("tier") == "legal_transient":
+            return True
+        if r.get("has_hotel_license"):
+            return True
+        if r.get("prior_operator"):
+            return True
+        return False
+    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or _is_existing_hotel(r)]
+    print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
+
     # Index pipeline by BBL
     pipe_by_bbl = {r["bbl"]: r for r in pipeline}
 

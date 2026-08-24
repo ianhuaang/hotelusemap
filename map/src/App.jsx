@@ -862,14 +862,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           if (p.zoning_hotel_permitted === "not_permitted") {
             signals.push({
               label: `Hotel use not permitted — ${p.zonedist1}`,
-              detail: p.zoning_hotel_detail || "This zoning district does not allow transient hotel use (Use Group 5). A rezoning or variance would be required, which is a lengthy and uncertain process.",
-              severity: "high",
-            });
-          } else if (p.zoning_hotel_permitted === "permitted") {
-            signals.push({
-              label: `Hotel use permitted — ${p.zonedist1}`,
-              detail: p.zoning_hotel_detail || "Hotel use (Use Group 5) is a permitted use in this zoning district. Since the 2021 citywide amendment, all new or enlarged hotels require a CPC special permit.",
-              severity: "low",
+              detail: "This building is in a zoning district that doesn't allow hotel use, but it appears as an existing hotel (grandfathered). Any expansion or change of use would require rezoning.",
+              severity: "medium",
             });
           }
 
