@@ -2384,7 +2384,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   );
 }
 
-function MethodologyView({ features, onDrillDown }) {
+function MethodologyView({ features, onDrillDown, onSelectFeature }) {
   const counts = useMemo(() => {
     const paths = {};
     const add = (key) => {
@@ -2485,6 +2485,33 @@ function MethodologyView({ features, onDrillDown }) {
     if (onDrillDown) onDrillDown(FILTERS[filterKey], label);
   };
 
+  const EXAMPLE_BBLS = {
+    hc_cb: "4003590021",
+    hc_nocb: "1004150067",
+    nohc_cb: "1010487502",
+    nohc_nocb: "1000537502",
+  };
+  const EXAMPLE_LABELS = {
+    hc_cb: "37-02 10th St — 381 Class B rooms, no operator",
+    hc_nocb: "139 Orchard St — The Merchant (ex-Sonder)",
+    nohc_cb: "353 W 57th St — 959 Class B rooms, RC class",
+    nohc_nocb: "123 Washington St — 223 units, DOB R-1, prior op",
+  };
+  const showExample = (key) => {
+    const bbl = EXAMPLE_BBLS[key];
+    const f = features.find((ft) => String(ft.properties.bbl) === bbl);
+    if (f && onSelectFeature) onSelectFeature(f);
+  };
+  const ExampleLink = ({ quadrant }) => (
+    <div
+      className="mt-2 pt-1.5 border-t border-dashed border-gray-200 cursor-pointer hover:opacity-70 transition-opacity"
+      onClick={() => showExample(quadrant)}
+    >
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-500">Example Target</span>
+      <div className="text-[11px] text-gray-500">{EXAMPLE_LABELS[quadrant]}</div>
+    </div>
+  );
+
   const CellCount = ({ data, filterKey, label, className = "" }) => (
     <div
       className={`flex items-baseline gap-1.5 cursor-pointer hover:opacity-70 transition-opacity ${className}`}
@@ -2563,6 +2590,7 @@ function MethodologyView({ features, onDrillDown }) {
               <SubRow label="Active hotel (operator found)" data={g("hc_cb__active")} color="#16a34a" filterKey="hc_cb__active" />
               <SubRow label="Transient capacity (no operator)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
             </div>
+            <ExampleLink quadrant="hc_cb" />
           </div>
 
           {/* Cell: Hotel class YES + Class B NO */}
@@ -2575,6 +2603,7 @@ function MethodologyView({ features, onDrillDown }) {
               <SubRow label="Prior operator known" data={g("hc_nocb__prior")} color="#a855f7" filterKey="hc_nocb__prior" />
               <SubRow label="No license or prior operator" data={g("hc_nocb__other")} color="#94a3b8" filterKey="hc_nocb__other" />
             </div>
+            <ExampleLink quadrant="hc_nocb" />
           </div>
 
           {/* Row 2: Hotel class NO */}
@@ -2599,6 +2628,7 @@ function MethodologyView({ features, onDrillDown }) {
               <SubRow label="Active hotel (operator found)" data={g("nohc_cb__active")} color="#16a34a" filterKey="nohc_cb__active" />
               <SubRow label="Transient capacity (no operator)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
             </div>
+            <ExampleLink quadrant="nohc_cb" />
           </div>
 
           {/* Cell: Hotel class NO + Class B NO */}
@@ -2612,6 +2642,7 @@ function MethodologyView({ features, onDrillDown }) {
               <SubRow label="Prior operator known" data={g("nohc_nocb__prior")} color="#a855f7" filterKey="nohc_nocb__prior" />
               <SubRow label="Mixed-use building class" data={g("nohc_nocb__partial")} color="#94a3b8" filterKey="nohc_nocb__partial" />
             </div>
+            <ExampleLink quadrant="nohc_nocb" />
           </div>
         </div>
 
@@ -3307,7 +3338,7 @@ export default function App() {
         <MethodologyView features={allFeaturesRef.current} onDrillDown={(fn, label) => {
           setMatrixFilter({ fn, label });
           setActiveView("table");
-        }} />
+        }} onSelectFeature={(f) => { setInspectedFeature(f); setActiveView("map"); }} />
       )}
 
       {activeView === "map" && <FilterPanel
