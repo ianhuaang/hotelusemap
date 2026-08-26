@@ -2487,8 +2487,8 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
 
   const EXAMPLES = {
     hc_cb: [
-      { bbl: "1011640047", label: "240 W 73rd St — Split-use, 142B / 76A, no operator" },
-      { bbl: "4003590021", label: "37-02 10th St — Full hotel, 381B rooms, no operator" },
+      { bbl: "1011640047", label: "240 W 73rd St — Split-use, 142B / 76A, no active business" },
+      { bbl: "4003590021", label: "37-02 10th St — Full hotel, 381B rooms, no active business" },
     ],
     hc_nocb: [
       { bbl: "1004150067", label: "139 Orchard St — Prior operator (ex-Sonder)" },
@@ -2593,7 +2593,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
             <div className="border-t border-emerald-100 mt-1.5 pt-1.5 space-y-0">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
               <SubRow label="Active hotel (operator found)" data={g("hc_cb__active")} color="#16a34a" filterKey="hc_cb__active" />
-              <SubRow label="Transient capacity (no operator)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
+              <SubRow label="Transient capacity (no active business)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
             </div>
             <ExampleLink quadrant="hc_cb" />
           </div>
@@ -2631,7 +2631,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
             <div className="border-t border-blue-100 mt-1.5 pt-1.5 space-y-0">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
               <SubRow label="Active hotel (operator found)" data={g("nohc_cb__active")} color="#16a34a" filterKey="nohc_cb__active" />
-              <SubRow label="Transient capacity (no operator)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
+              <SubRow label="Transient capacity (no active business)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
             </div>
             <ExampleLink quadrant="nohc_cb" />
           </div>
