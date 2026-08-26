@@ -2771,102 +2771,12 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
           Reversion buildings tracked via manual research (news, deal records). Room counts use HPD Class B when available, otherwise PLUTO residential units.
         </div>
 
-        {/* === SUBJECT MATTER REFERENCE === */}
-        <div className="border-t-2 border-gray-300 pt-6 mt-2">
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">Subject Matter Reference</h2>
-          <p className="text-sm text-gray-500 mt-1 max-w-xl">Deep context on the regulatory, economic, and competitive forces shaping NYC transient capacity. Not platform mechanics — knowledge that lets us answer any question about the market.</p>
-        </div>
-
-        {/* Local Law 18 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Local Law 18 (Short-Term Rental Regulation)</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">What it is</strong> — Local Law 18 of 2022, enforced since September 5, 2023, requires anyone offering a rental under 30 consecutive days in a Class A dwelling to: (a) register with the Mayor's Office of Special Enforcement (OSE), (b) be physically present during the stay, (c) limit occupancy to two guests, and (d) not rent the entire unit. Booking platforms must verify a valid OSE registration number before processing any transaction.</div>
-            <div><strong className="text-gray-600">Class B exemption</strong> — HPD Class B multiple dwellings (hotels, rooming houses, transient-use buildings) are explicitly exempt from LL18's registration requirements. OSE maintains a published list of Class B buildings. This is why Class B status is so valuable — it is a regulatory carve-out from the city's most restrictive short-term rental law.</div>
-            <div><strong className="text-gray-600">The 30-day boundary</strong> — LL18 defines "short-term rental" as fewer than 30 consecutive days. Stays of exactly 30 days or longer fall entirely outside the law — no registration, no host-presence requirement, no guest cap. This threshold mirrors the Multiple Dwelling Law's permanent-residence standard for Class A buildings.</div>
-            <div><strong className="text-gray-600">Impact</strong> — Short-term rental listings dropped over 90% when enforcement began. Airbnb estimated the regulations cut 95% of its net NYC revenue. This has been structurally bullish for hotel operators: supply that competed with hotels (Airbnb, VRBO) has been largely eliminated, concentrating demand into licensed hotel inventory.</div>
-            <div><strong className="text-gray-600">Enforcement</strong> — Fines range from $100-$5,000 per violation for hosts; platforms face up to $1,500 per unverified transaction. OSE has filed lawsuits against landlords operating illegal short-term rentals, including a multi-million-dollar suit in February 2026 against a landlord using rent-stabilized buildings.</div>
-            <div><strong className="text-gray-600">Legal status</strong> — Airbnb sued to block LL18 before it took effect. In August 2023, NYS Supreme Court Justice Arlene P. Bluth dismissed the lawsuit, ruling the city acted within its authority. No subsequent legal challenge has succeeded. A new City Council proposal (Intro. 1107) has reopened policy debate, but LL18 remains fully in effect.</div>
-            <div><strong className="text-gray-600">Why it matters for this platform</strong> — LL18 makes the Class B vs. Class A distinction operationally critical. Buildings on this map with HPD Class B rooms can legally operate transient stays under 30 days without LL18 registration. Class A buildings cannot. This is the single most important regulatory fact for any operator evaluating a building's transient capacity.</div>
-          </div>
-        </div>
-
-        {/* CPC Special Permit / ULURP */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">CPC Special Permit / ULURP Process</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Trigger</strong> — The 2021 Citywide Hotels Text Amendment requires a CPC special permit for: (a) any new transient hotel use or conversion to hotel, (b) enlargement of an existing hotel by 20% or more of floor area. This applies across all commercial, mixed-use, and manufacturing zoning districts. Hotels went from as-of-right (since 1916) to discretionary approval.</div>
-            <div><strong className="text-gray-600">ULURP timeline</strong> — The formal Uniform Land Use Review Procedure runs 7 steps: DCP certification → Community Board review (60 days) → Borough President review (30 days) → CPC hearing and vote (60 days) → City Council review (50 days) → Mayoral review (5 days). The statutory ULURP stage alone runs 5-9 months.</div>
-            <div><strong className="text-gray-600">Pre-certification</strong> — Before ULURP begins, the applicant must complete City Environmental Quality Review (CEQR), covering shadow studies, traffic, air quality, and transit impact. This adds months. Total end-to-end timeline: 24-30 months.</div>
-            <div><strong className="text-gray-600">Cost</strong> — Land use attorney: $150K-$400K+. Environmental review (CEQR): $75K-$200K+. Planning consultant: $50K-$150K. Community outreach: $50K-$100K. Total realistic range: $300K-$750K+.</div>
-            <div><strong className="text-gray-600">Approval rate</strong> — Effectively near-zero volume. Zero applications were filed in the first year after adoption. The first identified application was 509 Madison Avenue (C 260065 ZSM), filed August 2025. 10 Rockefeller Center (Little Nell, 136-room office conversion) filed in 2023 with borough president recommendation in August 2024. The special permit regime functions primarily as a deterrent.</div>
-            <div><strong className="text-gray-600">Union labor requirement</strong> — The amendment also requires union construction labor and collective bargaining for hourly operational staff at any hotel that obtains a special permit. This adds further cost and complexity.</div>
-            <div><strong className="text-gray-600">Why it matters for this platform</strong> — The CPC special permit requirement is why existing transient capacity is so valuable. Creating new transient capacity from scratch costs $300K-$750K+ in permitting alone, takes 2+ years, requires union commitments, and carries political risk of denial. Buildings already on this map with established Class B status bypass all of this.</div>
-          </div>
-        </div>
-
-        {/* Grandfathering / Nonconforming Use */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Grandfathering and Nonconforming Use</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Legal basis</strong> — Hotels existing as of December 9, 2021 (the amendment adoption date) are conforming uses that may continue, be structurally altered, or enlarged under 20% of floor area without triggering the special permit requirement. This is grandfathering — the 2021 amendment created a before/after line.</div>
-            <div><strong className="text-gray-600">Two-year discontinuance rule (ZR 52-61)</strong> — If a transient hotel use is discontinued for a continuous two-year period, the building loses its grandfathered status and must obtain a CPC special permit to resume hotel operations. This is the key risk for dormant buildings on this map.</div>
-            <div><strong className="text-gray-600">Restoration safe harbor (expires December 9, 2027)</strong> — Hotels that existed on December 9, 2021 may be restored to transient use regardless of how long they've been discontinued, as long as restoration happens before December 9, 2027. After that deadline, the standard two-year clock applies strictly. This creates urgency for any dormant hotel building to reactivate.</div>
-            <div><strong className="text-gray-600">Minor enlargement exception</strong> — Grandfathered hotels can expand by up to 20% of floor area without a special permit, provided there is no zoning lot enlargement. This allows modest renovations and additions.</div>
-            <div><strong className="text-gray-600">Casualty reconstruction</strong> — If a grandfathered hotel is damaged or destroyed, it may be rebuilt without a special permit.</div>
-            <div><strong className="text-gray-600">Why it matters for this platform</strong> — Every building on this map with pre-2021 transient use holds a grandfathered entitlement that cannot be replicated without a $300K-$750K+ special permit process. The December 2027 restoration deadline makes timing critical for dormant properties — any building with transient capacity that has been sitting idle needs to be reactivated within the next 16 months or risk permanent loss of its hotel use rights.</div>
-          </div>
-        </div>
-
-        {/* Market Economics */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">NYC Hotel Market Economics</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">RevPAR</strong> — Citywide RevPAR hit $280.71 in 2025 (+4.5% YoY). Manhattan H1 2025 RevPAR was $255.51 (+7.1% YoY). Downtown Manhattan and Brooklyn/Queens submarkets are forecast to show the strongest demand growth in 2026.</div>
-            <div><strong className="text-gray-600">ADR</strong> — 2025 ADR: $333.71, a record and up 17.2% nominally from 2019's ~$285. Adjusted for inflation, ADR is still slightly below 2019 levels. Q1 2026 ADR rose another 6.5% YoY.</div>
-            <div><strong className="text-gray-600">Occupancy</strong> — 2025 citywide occupancy: 84.1%, highest in the nation for the third consecutive year, but still below 2019's 87.5%. Growth is rate-driven, not occupancy-driven. National average is 62.3%.</div>
-            <div><strong className="text-gray-600">Cap rates</strong> — NYC multifamily (free-market): 4.0-5.0%. Hotels (luxury/upper-upscale, national): ~8.1%. Hotels (upscale/upper-midscale): ~9.5%. The 300-400 bps spread between residential and hotel cap rates is the core tension in conversion analysis: hotel operations command higher yields but carry more operational risk.</div>
-            <div><strong className="text-gray-600">Conversion costs (per key)</strong> — Soft renovation (FF&E/finishes): $8K-$15K (economy) to $100K-$150K+ (luxury). Full gut conversion (office/residential to hotel): $58K-$62K (select-service). Ground-up new build: $167K (limited-service) to $1-2M (luxury). NYC carries a ~28% premium over national averages.</div>
-            <div><strong className="text-gray-600">Apart-hotel economics</strong> — RevPAR comparable to limited-service, but NOI margins diverge: extended-stay models yield 70%+ flow-through vs. 40-60% for select-service due to lower housekeeping and labor costs. During COVID, serviced-apartment RevPAR fell only 17.9% vs. 40.5% for traditional hotels. The advantage is margin and resilience, not topline.</div>
-            <div><strong className="text-gray-600">Supply pipeline</strong> — NYC leads the U.S. with ~4,852 rooms across 14+ openings in 2026. Active pipeline: 24 projects / 5,778 rooms. Total room count remains below 2019 levels. NYC has lost ~6,000 net hotel rooms since 2019 (3,000 in Manhattan alone); at peak, ~16,000 rooms served as migrant shelters. An estimated 65-75% of shelter rooms are returning to hotel use, but some are converting permanently to residential.</div>
-          </div>
-        </div>
-
-        {/* Competitive Landscape */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Competitive Landscape (Flex/Apart-Hotel Operators)</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Segment consolidation</strong> — The flex/apart-hotel segment has consolidated aggressively. Sonder, Selina, Stay Alfred, LuxUrban, and Lyric have all failed. The survivors are operators with institutional backing (Placemakr/Hilton) or disciplined acquirers absorbing distressed assets (Kasa).</div>
-            <div><strong className="text-gray-600">Sonder</strong> — Filed Chapter 7 on November 14, 2025 after Marriott terminated its licensing agreement. Had ~1,000 NYC units out of 7,500 total. Operations ceased immediately. Leasehold interests are being sold in bankruptcy proceedings.</div>
-            <div><strong className="text-gray-600">Mint House</strong> — Acquired by Kasa in January 2026. Had absorbed Locale in February 2025, growing to 22 properties in 13 markets. Flagship: 165-room 70 Pine Street in Lower Manhattan. Now operates under Kasa.</div>
-            <div><strong className="text-gray-600">Placemakr</strong> — Operating Placemakr Wall Street (166 rooms at 110 Wall St.) in NYC. In early 2026, Hilton launched "Apartment Collection by Hilton" in partnership with Placemakr, adding up to 3,000 units. This is the strongest institutional validation of the flex-living model to date.</div>
-            <div><strong className="text-gray-600">Life House</strong> — Merged into Lark Hospitality via joint venture, combining ~100 properties and 33 restaurants. NYC presence includes the Life Hotel (98 rooms, Midtown). Now positioned more as a hotel tech/management platform for independents.</div>
-            <div><strong className="text-gray-600">Failed operators</strong> — Selina: insolvency declared July 2024, delisted from Nasdaq, lost 99.5% of $1.2B SPAC value. Stay Alfred: permanently closed 2020. LuxUrban: Chapter 11 September 2025, converted to Chapter 7 within 37 days amid 85 lawsuits and a $1.2M NYC fine for illegal short-term rentals.</div>
-            <div><strong className="text-gray-600">Kasa's position</strong> — ~2,400 keys with 350 signed, roughly doubled inventory in 2024. Absorbed Mint House and former Sonder properties. Positioned as the leading independent acquirer in the segment.</div>
-            <div><strong className="text-gray-600">Key trend</strong> — The Hilton-Placemakr partnership signals major brands entering the flex space. This could either validate the model (growing the pie) or squeeze independent operators (competing for the same buildings). CPC's own analysis projected NYC will be 47,000 hotel rooms short of demand by 2035.</div>
-          </div>
-        </div>
-
-        {/* Political Durability */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Political Durability of the Hotel Special Permit</div>
-          <div className="space-y-2 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Origin</strong> — The Hotel Trades Council (now Hotel and Gaming Workers Union) was the primary driver. Championed under Mayor de Blasio, who had close ties to HTC. The stated rationale was preventing hotel overdevelopment in residential neighborhoods and ensuring community input. Critics called it a mechanism to give HTC leverage over new hotel projects, effectively requiring unionization as a condition of development.</div>
-            <div><strong className="text-gray-600">Adoption</strong> — City Council voted 46-1 on December 9, 2021. Built on a 2018 amendment that first required special permits in M1 manufacturing districts; the 2021 version expanded to all commercial, mixed-use, and manufacturing zones citywide.</div>
-            <div><strong className="text-gray-600">Legal challenges</strong> — New Yorkers for Tourism Inc. (represented by Kasowitz Benson Torres) sued before the amendment was adopted, calling it "arbitrary, capricious," and an unconstitutional giveaway to HTC. The lawsuit did not succeed. No court has struck down the special permit requirement. The amendment remains legally intact.</div>
-            <div><strong className="text-gray-600">Current political landscape</strong> — No active effort to repeal or modify. Mayor Adams has not proposed rolling it back. His "City of Yes for Housing Opportunity" initiative (approved December 2024) focused on residential density and did not touch the hotel special permit. REBNY has criticized the amendment but has not mounted a focused repeal campaign.</div>
-            <div><strong className="text-gray-600">Why repeal is unlikely</strong> — Reversal requires a City Council vote (majority of 51 members) through the full legislative process. HTC's political influence over Council campaigns makes this a non-starter absent a major political realignment. With 2026 being an election year, no Council member has incentive to champion reversal.</div>
-            <div><strong className="text-gray-600">Durability assessment</strong> — Very durable. The 46-1 adoption vote, failed legal challenges, HTC's continued political influence, and zero repeal efforts in 4+ years all point to this being a permanent feature of NYC zoning. The supply constraint on new hotel development is structural and should be treated as a long-term given in any investment thesis involving existing transient capacity.</div>
-          </div>
-        </div>
-
         {/* Data sources */}
         <div className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-200 pt-4">
           <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning), HPD registration (Class A/B unit counts, managing agents),
           DCWP hotel licenses, DOB occupancy filings (R-1/J-1 groups, conversion records), Google Places API (hotel name enrichment for H-class buildings),
           OSM hotel data, prior operator ground truth. Condo status derived from owner name and building class (R1/R2/R4).
           Reversion buildings tracked via manual research (news, deal records). Room counts use HPD Class B when available, otherwise PLUTO residential units.
-          Subject matter reference sourced from NYC OSE, DCP, NYC Comptroller, HVS, Marcus &amp; Millichap, CBRE, JLL, The Real Deal, Commercial Observer, Bisnow, and public court filings (August 2026).
         </div>
       </div>
     </div>
