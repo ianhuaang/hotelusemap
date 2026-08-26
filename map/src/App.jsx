@@ -2485,30 +2485,35 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
     if (onDrillDown) onDrillDown(FILTERS[filterKey], label);
   };
 
-  const EXAMPLE_BBLS = {
-    hc_cb: "4003590021",
-    hc_nocb: "1004150067",
-    nohc_cb: "1010487502",
-    nohc_nocb: "1000537502",
+  const EXAMPLES = {
+    hc_cb: [
+      { bbl: "1011640047", label: "240 W 73rd St — Split-use, 142B / 76A, no operator" },
+      { bbl: "4003590021", label: "37-02 10th St — Full hotel, 381B rooms, no operator" },
+    ],
+    hc_nocb: [
+      { bbl: "1004150067", label: "139 Orchard St — Prior operator (ex-Sonder)" },
+      { bbl: "1001060017", label: "320 Pearl St — No license or prior op, reversion window" },
+    ],
+    nohc_cb: [
+      { bbl: "1010097502", label: "111 W 56th St — Split-use, 587B / 99A, RM class" },
+      { bbl: "1013037503", label: "525 Lexington Ave — Full transient, 506B, RH class" },
+    ],
+    nohc_nocb: [
+      { bbl: "1000537502", label: "123 Washington St — 223 units, DOB R-1, prior op" },
+    ],
   };
-  const EXAMPLE_LABELS = {
-    hc_cb: "37-02 10th St — 381 Class B rooms, no operator",
-    hc_nocb: "139 Orchard St — The Merchant (ex-Sonder)",
-    nohc_cb: "353 W 57th St — 959 Class B rooms, RC class",
-    nohc_nocb: "123 Washington St — 223 units, DOB R-1, prior op",
-  };
-  const showExample = (key) => {
-    const bbl = EXAMPLE_BBLS[key];
+  const showExample = (bbl) => {
     const f = features.find((ft) => String(ft.properties.bbl) === bbl);
     if (f && onSelectFeature) onSelectFeature(f);
   };
   const ExampleLink = ({ quadrant }) => (
-    <div
-      className="mt-2 pt-1.5 border-t border-dashed border-gray-200 cursor-pointer hover:opacity-70 transition-opacity"
-      onClick={() => showExample(quadrant)}
-    >
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-500">Example Target</span>
-      <div className="text-[11px] text-gray-500">{EXAMPLE_LABELS[quadrant]}</div>
+    <div className="mt-2 pt-1.5 border-t border-dashed border-gray-200">
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-blue-500">Example Targets</span>
+      {EXAMPLES[quadrant].map((ex) => (
+        <div key={ex.bbl} className="text-[11px] text-gray-500 cursor-pointer hover:text-blue-600 transition-colors py-0.5" onClick={() => showExample(ex.bbl)}>
+          {ex.label}
+        </div>
+      ))}
     </div>
   );
 
