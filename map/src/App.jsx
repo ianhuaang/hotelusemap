@@ -3,16 +3,12 @@ import maplibregl from "maplibre-gl";
 
 const SEGMENTS = [
   {
-    key: "reversion", label: "Reversion window", color: "#e11d48", defaultOn: true,
-    info: "Hotel-class buildings converted to residential. Can revert to transient use without a special permit before Dec 9, 2027.",
+    key: "transient", label: "Transient capacity", color: "#8b5cf6", defaultOn: true,
+    info: "Buildings with HPD Class B (transient) rooms but no known active hotel operator. The primary sourcing targets.",
   },
   {
-    key: "split_use", label: "Split-use", color: "#8b5cf6", defaultOn: true,
-    info: "Buildings with both HPD Class A (residential) and Class B (transient) units. Existing transient capacity alongside residential.",
-  },
-  {
-    key: "hotel", label: "Hotel", color: "#16a34a", defaultOn: false,
-    info: "Fully operating hotels — HPD Class B confirmed, no residential apartments. Already transient, likely has an existing operator.",
+    key: "active_hotel", label: "Active hotel", color: "#16a34a", defaultOn: false,
+    info: "Operating hotels with a known operator (brand, license, or listing). Already has a hotel operator in place.",
   },
   {
     key: "partial", label: "Partial signal", color: "#f59e0b", defaultOn: false,
@@ -62,25 +58,38 @@ function buildOpacityExpr() {
 const CLUSTER_ZOOM_THRESHOLD = 14; // below this: clusters; above: footprints
 
 
-function computeScore(p, weights) {
-  const total = weights.legal + weights.avail + weights.quality;
-  if (total === 0) return 0;
-  const wL = weights.legal / total;
-  const wA = weights.avail / total;
-  const wQ = weights.quality / total;
-  return Math.round((p.score_legal || 0) * wL + (p.score_avail || 0) * wA + (p.score_quality || 0) * wQ);
+function computeScore(p) {
+  let score = 0;
+  const hasClassB = (p.hpd_class_b || 0) > 0;
+  const hasH = (p.bldgclass || "").startsWith("H");
+  if (hasClassB) score += 35;
+  if (hasH) score += 25;
+  if (p.dob_has_r1) score += 15;
+  if (p.coo_has_temporary) score += 10;
+  if ((p.permit_transient_strong || 0) >= 1) score += 8;
+  if ((p.dob_r1_filing_count || 0) >= 3) score += 7;
+  // Zoning penalty only for buildings without existing transient rights
+  if (p.zoning_hotel_permitted === "not_permitted" && !hasClassB && !hasH) score = Math.max(0, score - 15);
+  return Math.min(score, 100);
 }
 
-function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly, hideBranded) {
+function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos) {
   const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
   const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
+  const reversionFilter = ["==", ["get", "has_reversion"], true];
 
-  const visibilityFilter = showPriorOps
-    ? ["any", segFilter, priorOpFilter]
+  const overlayParts = [];
+  if (showPriorOps) overlayParts.push(priorOpFilter);
+  if (showReversion) overlayParts.push(reversionFilter);
+
+  const visibilityFilter = overlayParts.length > 0
+    ? ["any", segFilter, ...overlayParts]
     : segFilter;
 
-  const alwaysShowFilter = showPriorOps ? priorOpFilter : ["literal", false];
+  const alwaysShowFilter = overlayParts.length > 0
+    ? ["any", ...overlayParts]
+    : ["literal", false];
 
   const conditions = [
     visibilityFilter,
@@ -99,6 +108,15 @@ function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOn
       alwaysShowFilter,
     ],
   ];
+
+  if (minClassB > 0) {
+    conditions.push(["any",
+      [">=", ["to-number", ["get", "hpd_class_b"], 0], minClassB],
+      ["==", ["get", "segment"], "partial"],
+      ["==", ["get", "segment"], "active_hotel"],
+      alwaysShowFilter,
+    ]);
+  }
 
   const refinements = [];
   if (filters.filterTempCoo) {
@@ -130,8 +148,14 @@ function buildFilter(activeSegments, showPriorOps, minUnits, filters, distressOn
   if (noOperatorOnly) {
     refinements.push(["!", ["has", "hotel_name"]]);
   }
-  if (hideBranded) {
-    refinements.push(["!=", ["get", "is_branded"], true]);
+  if (hideBrandTypes.size > 0) {
+    const hiddenTypes = [...hideBrandTypes];
+    for (const bt of hiddenTypes) {
+      refinements.push(["!=", ["get", "brand_type"], bt]);
+    }
+  }
+  if (hideCondos) {
+    refinements.push(["!=", ["get", "is_condo"], true]);
   }
 
   for (const ref of refinements) {
@@ -148,7 +172,6 @@ const CSV_COLUMNS = [
   { key: "est_rooms", label: "Est. Rooms" },
   { key: "room_source", label: "Room Source" },
   { key: "has_prior_op", label: "Prior Operator" },
-  { key: "has_reversion", label: "Reversion Window" },
   { key: "coo_has_temporary", label: "Temp C of O" },
   { key: "bbl", label: "BBL" },
   { key: "tier", label: "Tier" },
@@ -182,7 +205,6 @@ const CSV_COLUMNS = [
   { key: "hpd_class_c_violations", label: "HPD Class C Violations" },
   { key: "ecb_open_violations", label: "ECB Violations" },
   { key: "ecb_total_balance", label: "ECB Balance ($)" },
-  { key: "reversion_deadline", label: "Reversion Deadline" },
   { key: "last_sale_date", label: "Last Sale Date" },
   { key: "last_sale_price", label: "Last Sale Price" },
   { key: "permit_count", label: "DOB Permits" },
@@ -221,7 +243,7 @@ function buildRecordLinks(bbl, bin) {
   };
 }
 
-function exportToCsv(features, scoreWeights) {
+function exportToCsv(features) {
   const escCsv = (v) => {
     const s = String(v ?? "");
     return s.includes(",") || s.includes('"') || s.includes("\n")
@@ -233,7 +255,6 @@ function exportToCsv(features, scoreWeights) {
   const rows = features.map((f) => {
     const p = f.properties;
     const priorOp = parseJsonProp(p.prior_operator);
-    const reversion = parseJsonProp(p.reversion_window);
     const reasons = parseJsonProp(p.reason_codes) || [];
 
     const rooms = estRooms(p);
@@ -242,12 +263,10 @@ function exportToCsv(features, scoreWeights) {
       est_rooms: rooms.value,
       room_source: rooms.source,
       has_prior_op: p.has_prior_op ? "Yes" : "",
-      has_reversion: p.has_reversion ? "Yes" : "",
       numfloors: p.numfloors ? Math.round(p.numfloors) : "",
       height_roof: p.height_roof ? Math.round(p.height_roof) : "",
       prior_operator_name: priorOp?.name || "",
       prior_operator_notes: priorOp?.notes || "",
-      reversion_deadline: reversion?.deadline || "",
       has_tax_lien: p.has_tax_lien ? "Yes" : "",
       has_lis_pendens: p.has_lis_pendens ? "Yes" : "",
       coo_has_temporary: p.coo_has_temporary ? "Yes" : "",
@@ -406,37 +425,17 @@ function NoteEditor({ bbl, notes, onSave }) {
 function ScoreExplainer({ p }) {
   const [open, setOpen] = useState(false);
 
-  const legal = [];
-  if (p.tier === "legal_transient") legal.push({ label: "Legal transient tier", pts: 30, hit: true });
-  else legal.push({ label: "Legal transient tier", pts: 30, hit: false });
-  if (p.tier === "partial") legal.push({ label: "Partial signal tier", pts: 8, hit: true });
-  else legal.push({ label: "Partial signal tier", pts: 8, hit: false });
-  legal.push({ label: "Temporary C of O", pts: 10, hit: !!p.coo_has_temporary });
-  legal.push({ label: "HPD Class B rooms > 0", pts: 10, hit: (p.hpd_class_b || 0) > 0 });
-
-  const avail = [
-    { label: "Prior operator departed", pts: 15, hit: !!p.has_prior_op },
-    { label: "Tax lien on property", pts: 8, hit: !!p.has_tax_lien },
-    { label: "Lis pendens / judgment", pts: 8, hit: !!p.has_lis_pendens },
-    { label: "Recent sale (last 2 yrs)", pts: 5, hit: !!(p.last_sale_date && p.last_sale_date >= `${new Date().getFullYear() - 2}-01-01`) },
-    { label: "Reversion window", pts: 5, hit: !!p.has_reversion },
-    { label: "ECB balance > $10K", pts: 4, hit: (p.ecb_total_balance || 0) > 10000 },
+  const signals = [
+    { label: "HPD Class B rooms registered", pts: 35, hit: (p.hpd_class_b || 0) > 0 },
+    { label: "Hotel building class (H-series)", pts: 25, hit: (p.bldgclass || "").startsWith("H") },
+    { label: "DOB R-1 transient occupancy", pts: 15, hit: !!p.dob_has_r1 },
+    { label: "Temporary C of O issued", pts: 10, hit: !!p.coo_has_temporary },
+    { label: "DOB transient permit activity", pts: 8, hit: (p.permit_transient_strong || 0) >= 1 },
+    { label: "Multiple R-1 DOB filings", pts: 7, hit: (p.dob_r1_filing_count || 0) >= 3 },
   ];
-
-  const quality = [
-    { label: "Not an existing hotel", pts: 7, hit: !(p.bldgclass || "").startsWith("H") },
-    { label: "Low Class C violations (<10)", pts: 5, hit: (p.hpd_class_c_violations || 0) < 10 },
-    { label: "Multi-building owner", pts: 3, hit: (p.owner_portfolio_size || 0) > 1 },
-  ];
-
-  // Only show tier signals that are relevant (the one that hit, or all if none hit)
-  const legalFiltered = legal.filter((s) => s.hit || !["Legal transient tier", "Class B tier", "Class B (split-use) tier", "Partial signal tier"].includes(s.label) || s.hit);
-  // Simpler: show all, highlight which fired
-  const sections = [
-    { label: "Legal certainty", color: "#16a34a", signals: legal },
-    { label: "Availability", color: "#2563eb", signals: avail },
-    { label: "Building quality", color: "#8b5cf6", signals: quality },
-  ];
+  const hasGrandfathered = (p.hpd_class_b || 0) > 0 || (p.bldgclass || "").startsWith("H");
+  if (p.zoning_hotel_permitted === "not_permitted" && !hasGrandfathered) signals.push({ label: "Residential zoning (penalty)", pts: -15, hit: true, penalty: true });
+  if (p.zoning_hotel_permitted === "not_permitted" && hasGrandfathered) signals.push({ label: "Residential zoning (grandfathered)", pts: 0, hit: true });
 
   return (
     <div>
@@ -448,26 +447,17 @@ function ScoreExplainer({ p }) {
         <span className="text-[10px] text-gray-400 hover:text-gray-600">Why this score</span>
       </button>
       {open && (
-        <div className="mt-2 space-y-3">
-          {sections.map(({ label, color, signals }) => (
-            <div key={label}>
-              <div className="flex items-center gap-1.5 mb-1">
-                <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: color }} />
-                <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
-              </div>
-              <div className="space-y-0.5 pl-3.5">
-                {signals.map((sig) => (
-                  <div key={sig.label} className="flex items-center gap-2">
-                    <span className={`text-[11px] ${sig.hit ? "text-gray-800" : "text-gray-300"}`}>
-                      {sig.hit ? "+" : "\u00A0\u00A0"}{sig.hit ? sig.pts : 0}
-                    </span>
-                    <span className={`text-[11px] ${sig.hit ? "text-gray-700" : "text-gray-300"}`}>
-                      {sig.label}
-                    </span>
-                    {sig.hit && <span className="text-[10px] text-emerald-500">&#10003;</span>}
-                  </div>
-                ))}
-              </div>
+        <div className="mt-2 space-y-0.5">
+          {signals.map((sig) => (
+            <div key={sig.label} className="flex items-center gap-2">
+              <span className={`text-[11px] ${sig.penalty && sig.hit ? "text-red-600" : sig.hit ? "text-gray-800" : "text-gray-300"}`}>
+                {sig.hit ? (sig.pts < 0 ? "" : "+") : "\u00A0\u00A0"}{sig.hit ? sig.pts : 0}
+              </span>
+              <span className={`text-[11px] ${sig.penalty && sig.hit ? "text-red-600" : sig.hit ? "text-gray-700" : "text-gray-300"}`}>
+                {sig.label}
+              </span>
+              {sig.hit && !sig.penalty && <span className="text-[10px] text-emerald-500">&#10003;</span>}
+              {sig.hit && sig.penalty && <span className="text-[10px] text-red-500">&#9888;</span>}
             </div>
           ))}
         </div>
@@ -476,19 +466,19 @@ function ScoreExplainer({ p }) {
   );
 }
 
-function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, notes, onSaveNote, crmStatuses, setCrmStatus, allFeatures }) {
+function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNote, crmStatuses, setCrmStatus, allFeatures }) {
   if (!feature) return null;
   const p = feature.properties;
   const reasonCodes = parseJsonProp(p.reason_codes) || [];
   const blockers = parseJsonProp(p.blockers) || [];
   const priorOp = parseJsonProp(p.prior_operator);
-  const reversion = parseJsonProp(p.reversion_window);
 
   return (
-    <div className="absolute top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
+    <div className="fixed top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900 truncate pr-2">{p.address}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 truncate pr-2">{p.hotel_name || p.address}</h2>
+          {p.hotel_name && <div className="text-xs text-gray-500 mt-0.5">{p.address}</div>}
           {p.neighborhood && <div className="text-xs text-gray-400 mt-0.5">{p.neighborhood}</div>}
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer shrink-0">&times;</button>
@@ -502,6 +492,11 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           >
             {(p.segment || p.tier || "").replace(/_/g, " ")}
           </span>
+          {p.has_reversion && (
+            <span className="bg-red-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md">
+              Reversion
+            </span>
+          )}
           {p.has_prior_op && (
             <span className="bg-purple-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md">
               Prior operator
@@ -519,6 +514,26 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </button>
         </div>
 
+        {/* Composite deal score */}
+        {(() => {
+          const s = computeScore(p);
+          const bg = s >= 60 ? "bg-emerald-600" : s >= 35 ? "bg-amber-500" : "bg-gray-400";
+          return (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Legal Score</div>
+                <span className={`${bg} text-white text-sm font-bold px-2 py-0.5 rounded tabular-nums`}>{s}</span>
+              </div>
+              <div className="mb-2">
+                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${s}%`, backgroundColor: "#16a34a" }} />
+                </div>
+              </div>
+              <ScoreExplainer p={p} />
+            </div>
+          );
+        })()}
+
         {priorOp && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
             <div className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Prior flex operator</div>
@@ -528,14 +543,18 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
           </div>
         )}
 
-        {reversion && (
-          <div className="bg-rose-50 border border-rose-200 rounded-lg p-3">
-            <div className="text-xs font-semibold text-rose-700 uppercase tracking-wide mb-1">Reversion window</div>
-            <div className="text-sm text-rose-900">{reversion.class_a_units} Class A units, 0 Class B rooms</div>
-            <div className="text-xs text-rose-600 mt-0.5">{reversion.note}</div>
-            <div className="text-[10px] text-rose-500 font-semibold mt-1">Deadline: {reversion.deadline}</div>
-          </div>
-        )}
+        {p.has_reversion && (() => {
+          const rev = parseJsonProp(p.reversion);
+          return rev && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Post-2021 Reversion Opportunity</div>
+              <div className="text-sm text-red-900 font-medium">{rev.former_hotel}</div>
+              <div className="text-xs text-red-600 mt-0.5">Closed {rev.closure_year}</div>
+              <div className="text-xs text-red-500 mt-1">{rev.note}</div>
+              <div className="text-[10px] text-red-400 mt-1">Hotel class preserved — can revert without CPC special permit</div>
+            </div>
+          );
+        })()}
 
         {/* Legal Feasibility */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
@@ -551,7 +570,9 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
                 items.push({ icon: "info", text: `Building class: ${bldg}` });
               }
               if ((p.hpd_class_b || 0) > 0) {
-                items.push({ icon: "check", text: `${p.hpd_class_b} HPD Class B (transient) rooms` });
+                const totalHpd = (p.hpd_class_a || 0) + (p.hpd_class_b || 0);
+                const pct = totalHpd > 0 ? Math.round((p.hpd_class_b / totalHpd) * 100) : 0;
+                items.push({ icon: "check", text: `${p.hpd_class_b} HPD Class B (transient) rooms — ${pct}% of units` });
               }
               if ((p.hpd_class_a || 0) > 0) {
                 items.push({ icon: "info", text: `${p.hpd_class_a} HPD Class A (residential) units` });
@@ -599,7 +620,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
         {(() => {
           const rooms = estRooms(p);
           const sourceExplain = {
-            "HPD Class B": "From HPD registration — the number of transient (Class B) rooms registered with the city. Most reliable source.",
+            "HPD Class B": "Transient (Class B) rooms registered with HPD under the Multiple Dwelling Law. Renewed annually by building owners — the most current signal of active transient capacity.",
             "C of O": "From DOB Certificate of Occupancy — the approved dwelling unit count. Reliable but may include residential units.",
             "Floor est.": `Estimated at ~15 rooms/floor × ${Math.round(p.numfloors || 0)} floors. No HPD registration or C of O on file for this hotel.`,
             "PLUTO": "From Dept. of Finance tax lot data. Counts residential dwelling units, not hotel rooms — accurate for residential buildings but undercounts hotels.",
@@ -629,19 +650,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
         {/* Policy considerations */}
         {(() => {
           const considerations = [];
-          if ((p.rent_stabilized_units || 0) > 0) {
-            considerations.push({
-              text: `${p.rent_stabilized_units} rent-stabilized units (${p.rent_stab_data_year} tax bill)`,
-              severity: "high",
-            });
-          }
-          if (p.has_tax_benefit) {
-            const expiresText = p.tax_benefit_expires ? ` (expires ${p.tax_benefit_expires})` : "";
-            considerations.push({
-              text: `${p.tax_benefit_type} tax benefit${p.tax_benefit_active ? " — active" : " — expired"}${expiresText}`,
-              severity: p.tax_benefit_active ? "high" : "low",
-            });
-          }
           if (p.is_landmark) {
             considerations.push({
               text: `LPC Individual Landmark${p.landmark_name ? ` — ${p.landmark_name}` : ""}`,
@@ -654,9 +662,31 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
               severity: "medium",
             });
           }
+          if (p.is_condo) {
+            considerations.push({
+              text: "Condominium — requires board approval or commercial condo owner negotiation",
+              severity: "medium",
+            });
+          }
+          if (p.zoning_hotel_permitted === "not_permitted") {
+            considerations.push({
+              text: `Residential zoning (${p.zonedist1 || "unknown"}) — hotel use not permitted for new operators, but existing Class B rooms are grandfathered`,
+              severity: "medium",
+            });
+          }
           if (blockers.length > 0) {
             blockers.forEach(b => {
-              considerations.push({ text: b, severity: "high" });
+              const isRentStab = b.toLowerCase().includes("rent-stabilized");
+              const is421a = b.includes("421");
+              const isResidentialRestriction = isRentStab || is421a;
+              considerations.push({
+                text: isRentStab
+                  ? b.replace("conversion to transient use restricted", "applies to Class A units only, Class B rooms unaffected")
+                  : is421a
+                  ? b.replace("rent stabilization obligations restrict use changes", "applies to residential units, Class B transient rooms unaffected")
+                  : b,
+                severity: isResidentialRestriction ? "low" : "high",
+              });
             });
           }
           if (considerations.length === 0) return null;
@@ -974,7 +1004,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, scoreWeights, no
   );
 }
 
-function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights }) {
+function ListTray({ list, onRemove, onClear, onExpand, expanded }) {
   const items = Array.from(list.values());
   if (items.length === 0) return null;
 
@@ -1001,7 +1031,7 @@ function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights })
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => exportToCsv(items, scoreWeights)}
+            onClick={() => exportToCsv(items)}
             className="px-3 py-1.5 bg-gray-800 text-white text-xs rounded-md hover:bg-gray-700 cursor-pointer transition-colors font-medium"
           >
             Download CSV
@@ -1023,11 +1053,10 @@ function ListTray({ list, onRemove, onClear, onExpand, expanded, scoreWeights })
             <div key={p.bbl} className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 group">
               <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: segmentColor(p.segment) }} />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-gray-900 truncate">{p.address}</div>
+                <div className="text-xs font-medium text-gray-900 truncate">{p.hotel_name || p.address}</div>
                 <div className="text-[10px] text-gray-400">
-                  {estRooms(p).value} rooms &middot; {p.bldgclass || "—"}
+                  {p.hotel_name ? `${p.address} · ` : ""}{estRooms(p).value} rooms &middot; {p.bldgclass || "—"}
                   {priorOp ? ` · ${priorOp.name}` : ""}
-                  {p.has_reversion ? " · reversion" : ""}
                 </div>
               </div>
               <button
@@ -1137,23 +1166,35 @@ function StatBldgClass({ code }) {
 function FilterPanel({
   activeSegments, setActiveSegments,
   showPriorOps, setShowPriorOps,
+  showReversion, setShowReversion,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
-  hideBranded, setHideBranded,
+  hideBrandTypes, toggleBrandType,
+  hideCondos, setHideCondos,
   minUnits, setMinUnits,
-  scoreWeights, setScoreWeights,
+  minClassB, setMinClassB,
   featureCount, overlayCounts,
   onAddAllVisible, onAddCategory,
   dataDate,
 }) {
-  const [showScoreConfig, setShowScoreConfig] = useState(false);
   const toggleSegment = (key) => setActiveSegments((prev) => ({ ...prev, [key]: !prev[key] }));
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
         <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Capacity</h1>
         <p className="text-[11px] text-gray-500 mt-0.5">Manhattan &middot; Downtown BK &middot; Williamsburg &middot; LIC</p>
-        {dataDate && <p className="text-[10px] text-gray-400 mt-0.5">Data as of {dataDate}</p>}
+        {dataDate && (() => {
+          const days = dataDate.daysAgo;
+          const color = days <= 7 ? "text-emerald-600" : days <= 30 ? "text-amber-600" : "text-red-600";
+          const bg = days <= 7 ? "bg-emerald-50" : days <= 30 ? "bg-amber-50" : "bg-red-50";
+          const label = days === 0 ? "Today" : days === 1 ? "1 day ago" : `${days} days ago`;
+          return (
+            <div className={`${bg} rounded px-1.5 py-0.5 mt-1 inline-flex items-center gap-1.5`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${days <= 7 ? "bg-emerald-500" : days <= 30 ? "bg-amber-500" : "bg-red-500"}`} />
+              <span className={`text-[10px] ${color} font-medium`}>Data: {dataDate.formatted} ({label})</span>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="p-4 space-y-4">
@@ -1188,6 +1229,11 @@ function FilterPanel({
                   <span className={`text-xs ${active ? "text-gray-900 font-medium" : "text-gray-400"}`}>
                     {seg.label}
                   </span>
+                  {overlayCounts.segmentCounts[seg.key] > 0 && (
+                    <span className={`text-[10px] ml-auto ${active ? "text-gray-500" : "text-gray-300"}`}>
+                      {overlayCounts.segmentCounts[seg.key].toLocaleString()}
+                    </span>
+                  )}
                   <InfoTip text={seg.info} />
                 </button>
               );
@@ -1195,35 +1241,63 @@ function FilterPanel({
           </div>
         </div>
 
-        {/* Prior operator overlay */}
+        {/* Overlays */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Overlay</div>
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
-            <input
-              type="checkbox"
-              checked={showPriorOps}
-              onChange={(e) => setShowPriorOps(e.target.checked)}
-              className="sr-only"
-            />
-            <span
-              className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
-              style={{
-                borderColor: "#a855f7",
-                backgroundColor: showPriorOps ? "#a855f7" : "transparent",
-              }}
-            >
-              {showPriorOps && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </span>
-            <div className="flex items-center">
-              <span className="text-xs text-gray-700">Prior operators</span>
-              <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.priorOps})</span>
-              <InfoTip text="Buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Shows operational viability." />
-            </div>
-          </label>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Overlays</div>
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+              <input
+                type="checkbox"
+                checked={showPriorOps}
+                onChange={(e) => setShowPriorOps(e.target.checked)}
+                className="sr-only"
+              />
+              <span
+                className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
+                style={{
+                  borderColor: "#a855f7",
+                  backgroundColor: showPriorOps ? "#a855f7" : "transparent",
+                }}
+              >
+                {showPriorOps && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-700">Prior operators</span>
+                <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.priorOps})</span>
+                <InfoTip text="Highlights buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Adds any not already visible through active segments. Purple outline on map." />
+              </div>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+              <input
+                type="checkbox"
+                checked={showReversion}
+                onChange={(e) => setShowReversion(e.target.checked)}
+                className="sr-only"
+              />
+              <span
+                className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
+                style={{
+                  borderColor: "#dc2626",
+                  backgroundColor: showReversion ? "#dc2626" : "transparent",
+                }}
+              >
+                {showReversion && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-700">Reversion window</span>
+                <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.reversions})</span>
+                <InfoTip text="Hotels that converted to residential post-2021. Can revert to hotel use without CPC special permit before Dec 2027. Red outline on map." />
+              </div>
+            </label>
+          </div>
         </div>
 
         {/* Refinements */}
@@ -1273,26 +1347,50 @@ function FilterPanel({
             <InfoTip text="Show only buildings where we couldn't find an active hotel operation via Google Places. These have legal transient capacity but no identifiable operator — a potential management opportunity. Based on Google Places coverage, not a verified fact." />
           </label>
 
+          <div className="px-2.5 mt-1.5 space-y-1.5">
+            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Hide by brand type</div>
+            {[
+              { bt: "chain", label: "Chains", tip: "Major flag systems (Marriott, Hilton, Hyatt, IHG, etc.). Not management targets." },
+              { bt: "independent", label: "Branded independents", tip: "Recognizable independent brands (Arlo, Dream, Gansevoort). May be open to management changes." },
+              { bt: "club", label: "Private clubs", tip: "Members-only clubs (Soho House, NY Athletic Club). Not hotel targets." },
+            ].map(({ bt, label, tip }) => (
+              <label key={bt} className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={hideBrandTypes.has(bt)} onChange={() => toggleBrandType(bt)} className="sr-only" />
+                <span className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                  hideBrandTypes.has(bt) ? "bg-gray-800 border-gray-800" : "border-gray-300"
+                }`}>
+                  {hideBrandTypes.has(bt) && (
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </span>
+                <span className="text-xs text-gray-700">{label}</span>
+                <InfoTip text={tip} />
+              </label>
+            ))}
+          </div>
+
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
             <input
               type="checkbox"
-              checked={hideBranded}
-              onChange={(e) => setHideBranded(e.target.checked)}
+              checked={hideCondos}
+              onChange={(e) => setHideCondos(e.target.checked)}
               className="sr-only"
             />
             <span
               className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
-                hideBranded ? "bg-gray-800 border-gray-800" : "border-gray-300"
+                hideCondos ? "bg-gray-800 border-gray-800" : "border-gray-300"
               }`}
             >
-              {hideBranded && (
+              {hideCondos && (
                 <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               )}
             </span>
-            <span className="text-xs text-gray-700">Hide branded chains</span>
-            <InfoTip text="Exclude major hotel chains (Marriott, Hilton, Hyatt, IHG, Wyndham, etc.). These are unlikely management targets. Independent hotels with operators still show." />
+            <span className="text-xs text-gray-700">Hide condos</span>
+            <InfoTip text="Exclude condominium buildings. Condos require board approval or commercial condo owner negotiation — a different deal structure than single-owner rentals." />
           </label>
 
           <div className="flex items-center justify-between px-2.5 mt-2">
@@ -1305,48 +1403,19 @@ function FilterPanel({
               className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
+          <div className="flex items-center justify-between px-2.5 mt-1.5">
+            <span className="text-xs text-gray-700">Min Class B</span>
+            <input
+              type="number"
+              min={0}
+              value={minClassB}
+              onChange={(e) => setMinClassB(Math.max(0, Number(e.target.value) || 0))}
+              className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
         </div>
 
-        {/* Deal score weights */}
-        <div>
-          <button
-            onClick={() => setShowScoreConfig(!showScoreConfig)}
-            className="flex items-center gap-1.5 cursor-pointer text-left w-full"
-          >
-            <span className={`text-[10px] text-gray-400 transition-transform ${showScoreConfig ? "rotate-90" : ""}`}>&#9654;</span>
-            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Deal score weights</span>
-          </button>
-          {showScoreConfig && (
-            <div className="mt-2 space-y-2.5 px-1">
-              {[
-                { key: "legal", label: "Legal certainty" },
-                { key: "avail", label: "Availability" },
-                { key: "quality", label: "Building quality" },
-              ].map(({ key, label }) => (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-[11px] text-gray-600">{label}</span>
-                    <span className="text-[11px] font-mono text-gray-500 w-8 text-right">{scoreWeights[key]}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={scoreWeights[key]}
-                    onChange={(e) => setScoreWeights((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
-                    className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-700"
-                  />
-                </div>
-              ))}
-              <button
-                onClick={() => setScoreWeights({ legal: 50, avail: 35, quality: 15 })}
-                className="text-[10px] text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                Reset to defaults
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Score is now purely legal — no weight config needed */}
 
         {/* Add to list actions */}
         <div className="space-y-2 pt-2 border-t border-gray-100">
@@ -1364,12 +1433,6 @@ function FilterPanel({
               className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 cursor-pointer transition-colors"
             >
               + Prior operators
-            </button>
-            <button
-              onClick={() => onAddCategory("has_reversion")}
-              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 cursor-pointer transition-colors"
-            >
-              + Reversion window
             </button>
           </div>
         </div>
@@ -1623,7 +1686,8 @@ function Legend() {
 // --- Table columns ---
 const TABLE_COLS = [
   { key: "address", label: "Address", sortable: true, width: "min-w-[200px]" },
-  { key: "signals", label: "Signals", sortable: true, numeric: true, width: "min-w-[100px]" },
+  { key: "score", label: "Score", sortable: true, numeric: true, width: "min-w-[70px]" },
+  { key: "feasibility", label: "Legal", sortable: true, numeric: true, width: "min-w-[110px]", tooltip: "H = Hotel building class · B = HPD Class B rooms · R = DOB R-1 transient occupancy" },
   { key: "neighborhood", label: "Neighborhood", sortable: true, width: "min-w-[160px]" },
   { key: "tier", label: "Tier", sortable: true, width: "min-w-[120px]" },
   { key: "est_rooms", label: "Est. Rooms", sortable: true, numeric: true, width: "min-w-[85px]" },
@@ -1634,20 +1698,19 @@ const TABLE_COLS = [
   { key: "owner_portfolio_size", label: "Portfolio", sortable: true, numeric: true, width: "min-w-[80px]" },
   { key: "last_sale_price", label: "Last Sale", sortable: true, numeric: true, width: "min-w-[110px]" },
   { key: "last_sale_date", label: "Sale Date", sortable: true, width: "min-w-[95px]" },
-  { key: "permit_count", label: "Permits", sortable: true, numeric: true, width: "min-w-[75px]" },
-  { key: "coo_count", label: "C of Os", sortable: true, numeric: true, width: "min-w-[75px]" },
-  { key: "coo_has_temporary", label: "Temp CO", sortable: true, width: "min-w-[80px]" },
+  { key: "operator_name", label: "Operator", sortable: true, width: "min-w-[160px]" },
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, activeSegments, showPriorOps, minUnits, filters, distressOnly, noOperatorOnly, hideBranded) {
+function applyFilters(features, activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos) {
   return features.filter((f) => {
     const p = f.properties;
     const segOk = activeSegments[p.segment];
-    const overlayOk = showPriorOps && p.has_prior_op;
+    const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
     if (!segOk && !overlayOk) return false;
 
     if (!overlayOk && estRooms(p).value < minUnits) return false;
+    if (!overlayOk && minClassB > 0 && (p.hpd_class_b || 0) < minClassB && p.segment !== "partial" && p.segment !== "active_hotel") return false;
 
     if (!overlayOk) {
       if (filters.filterTempCoo && !p.coo_has_temporary) return false;
@@ -1663,7 +1726,8 @@ function applyFilters(features, activeSegments, showPriorOps, minUnits, filters,
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      if (hideBranded && p.is_branded) return false;
+      if (hideBrandTypes.size > 0 && p.brand_type && hideBrandTypes.has(p.brand_type)) return false;
+      if (hideCondos && p.is_condo) return false;
     }
 
     return true;
@@ -1681,7 +1745,7 @@ function dedupeFeatures(features) {
     } else {
       // Keep the one with the highest-priority tier
       const existing = groups.get(key).properties;
-      const SEG_RANK = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
+      const SEG_RANK = { transient: 0, active_hotel: 1, partial: 2, unknown: 3 };
       if ((SEG_RANK[p.segment] ?? 99) < (SEG_RANK[existing.segment] ?? 99)) {
         groups.set(key, f);
       }
@@ -1690,11 +1754,11 @@ function dedupeFeatures(features) {
   return Array.from(groups.values());
 }
 
-function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter, scoreWeights,
-  activeSegments, setActiveSegments, distressOnly, setDistressOnly, minUnits, setMinUnits,
-  showPriorOps, setShowPriorOps, notes,
+function TableView({ features, onSelectFeature, exportList, onAddToList, extraFilters, setFilter,
+  activeSegments, setActiveSegments, distressOnly, setDistressOnly, minUnits, setMinUnits, minClassB, setMinClassB,
+  showPriorOps, setShowPriorOps, showReversion, setShowReversion, notes, matrixFilter, onClearMatrixFilter,
 }) {
-  const [sortKey, setSortKey] = useState("signals");
+  const [sortKey, setSortKey] = useState("score");
   const [sortDir, setSortDir] = useState("desc");
   const [searchText, setSearchText] = useState("");
 
@@ -1710,21 +1774,29 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
     }
   };
 
+  const matrixFiltered = matrixFilter
+    ? dedupedFeatures.filter((f) => matrixFilter.fn(f.properties))
+    : dedupedFeatures;
+
   const filtered = searchText.length >= 2
-    ? dedupedFeatures.filter((f) => {
+    ? matrixFiltered.filter((f) => {
         const p = f.properties;
         const text = searchText.toLowerCase();
         return (p.address || "").toLowerCase().includes(text)
           || (p.ownername || "").toLowerCase().includes(text)
           || (p.bbl || "").includes(text);
       })
-    : dedupedFeatures;
+    : matrixFiltered;
 
   const sorted = [...filtered].sort((a, b) => {
     const col = TABLE_COLS.find((c) => c.key === sortKey);
-    const sigCount = (p) => [p.has_prior_op, p.has_reversion, p.has_tax_lien, p.has_lis_pendens, p.coo_has_temporary].filter(Boolean).length;
-    let va = sortKey === "signals" ? sigCount(a.properties) : sortKey === "est_rooms" ? estRooms(a.properties).value : a.properties[sortKey];
-    let vb = sortKey === "signals" ? sigCount(b.properties) : sortKey === "est_rooms" ? estRooms(b.properties).value : b.properties[sortKey];
+    const feasScore = (p) => [
+      (p.bldgclass || "").startsWith("H"),
+      p.hpd_class_b > 0,
+      !!p.dob_has_r1,
+    ].filter(Boolean).length;
+    let va = sortKey === "score" ? computeScore(a.properties) : sortKey === "feasibility" ? feasScore(a.properties) : sortKey === "est_rooms" ? estRooms(a.properties).value : a.properties[sortKey];
+    let vb = sortKey === "score" ? computeScore(b.properties) : sortKey === "feasibility" ? feasScore(b.properties) : sortKey === "est_rooms" ? estRooms(b.properties).value : b.properties[sortKey];
     if (col?.numeric) {
       va = Number(va) || 0;
       vb = Number(vb) || 0;
@@ -1747,26 +1819,42 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
       const hasNote = notes && notes[p.bbl];
       return (
         <span className="flex items-center gap-1.5">
-          <span className="truncate">{p.address || "—"}</span>
+          <span className="truncate">{p.hotel_name || p.address || "—"}</span>
           {hasNote && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" title="Has note" />}
         </span>
       );
     }
-    if (col.key === "signals") {
-      const sigs = [
-        p.has_prior_op && { label: "Prior op", color: "bg-purple-500" },
-        p.has_reversion && { label: "Reversion", color: "bg-rose-500" },
-        p.has_tax_lien && { label: "Lien", color: "bg-red-600" },
-        p.has_lis_pendens && { label: "LP", color: "bg-red-600" },
-        p.coo_has_temporary && { label: "Temp CO", color: "bg-amber-500" },
-        p.is_landmark && { label: "LPC", color: "bg-amber-600" },
-        p.historic_district && { label: "Hist. dist.", color: "bg-amber-500" },
-        p.tax_benefit_active && { label: p.tax_benefit_type, color: "bg-rose-600" },
-        (p.rent_stabilized_units > 0) && { label: "Rent stab.", color: "bg-rose-700" },
-        p.zoning_hotel_permitted === "not_permitted" && { label: "No zoning", color: "bg-gray-600" },
-      ].filter(Boolean);
-      if (sigs.length === 0) return "";
-      return <span className="flex gap-0.5 flex-wrap">{sigs.map((s, i) => <span key={i} className={`${s.color} text-white text-[8px] font-bold px-1 py-0.5 rounded`}>{s.label}</span>)}</span>;
+    if (col.key === "score") {
+      const s = computeScore(p);
+      const bg = s >= 60 ? "bg-emerald-600" : s >= 35 ? "bg-amber-500" : "bg-gray-400";
+      return <span className={`${bg} text-white text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums`}>{s}</span>;
+    }
+    if (col.key === "est_rooms") {
+      const rooms = estRooms(p);
+      if (rooms.value === 0) return "—";
+      return <span title={rooms.source}>{rooms.value}</span>;
+    }
+    if (col.key === "feasibility") {
+      const checks = [
+        { key: "H", label: "Hotel class", on: (p.bldgclass || "").startsWith("H") },
+        { key: "B", label: "HPD Class B rooms", on: p.hpd_class_b > 0 },
+        { key: "R", label: "DOB R-1 transient", on: !!p.dob_has_r1 },
+      ];
+      return (
+        <span className="flex gap-1">
+          {checks.map((c) => (
+            <span
+              key={c.key}
+              title={`${c.label}: ${c.on ? "Yes" : "No"}`}
+              className={`w-5 h-5 rounded text-[9px] font-bold flex items-center justify-center ${
+                c.on ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-300"
+              }`}
+            >
+              {c.key}
+            </span>
+          ))}
+        </span>
+      );
     }
     const v = p[col.key];
     if (col.key === "tier") {
@@ -1788,8 +1876,10 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
       return "—";
     }
     if (col.key === "numfloors") return v ? Math.round(v) : "—";
-    if (col.key === "coo_has_temporary") return v ? "Yes" : "";
     if (col.key === "owner_portfolio_size") return v > 1 ? v : "";
+    if (col.key === "operator_name") {
+      return <span className="truncate block max-w-[160px]" title={v}>{v || "—"}</span>;
+    }
     if (col.key === "ownername") {
       return (
         <span className="truncate block max-w-[180px]" title={v}>{v || "—"}</span>
@@ -1819,6 +1909,15 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
           />
           <span className="text-xs text-gray-400 shrink-0">{sorted.length} buildings</span>
         </div>
+        {matrixFilter && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <span className="text-xs font-medium text-indigo-700">Filtered: {matrixFilter.label}</span>
+            <span className="text-xs text-indigo-500">({matrixFiltered.length})</span>
+            <button onClick={onClearMatrixFilter} className="ml-auto text-indigo-400 hover:text-indigo-600 cursor-pointer text-xs font-medium">
+              Clear
+            </button>
+          </div>
+        )}
         <div className="flex flex-wrap gap-1.5">
           {[
             { key: "filterHasClassB", label: "Class B rooms" },
@@ -1869,6 +1968,15 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
             Prior operators
           </button>
           <button
+            onClick={() => setShowReversion(!showReversion)}
+            className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
+              showReversion ? "text-white border-transparent" : "bg-white text-gray-400 border-gray-200"
+            }`}
+            style={showReversion ? { backgroundColor: "#dc2626", borderColor: "#dc2626" } : {}}
+          >
+            Reversion window
+          </button>
+          <button
             onClick={() => setDistressOnly(!distressOnly)}
             className={`px-2 py-0.5 text-[11px] rounded-md border transition-colors cursor-pointer ${
               distressOnly ? "bg-red-600 text-white border-red-600" : "bg-white text-gray-600 border-gray-200"
@@ -1886,13 +1994,23 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
               className="w-14 px-1.5 py-0.5 text-[11px] font-mono text-gray-700 bg-white border border-gray-200 rounded-md text-right outline-none focus:ring-1 focus:ring-gray-300"
             />
           </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-500">Min Class B</span>
+            <input
+              type="number"
+              min={0}
+              value={minClassB}
+              onChange={(e) => setMinClassB(Math.max(0, Number(e.target.value) || 0))}
+              className="w-14 px-1.5 py-0.5 text-[11px] font-mono text-gray-700 bg-white border border-gray-200 rounded-md text-right outline-none focus:ring-1 focus:ring-gray-300"
+            />
+          </div>
         </div>
       </div>
 
       {/* Table */}
       <div className="flex-1 overflow-auto px-8 pb-8">
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <table className="w-full text-left">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+        <table className="min-w-max text-left">
           <thead className="sticky top-0 bg-gray-50 z-10">
             <tr>
               <th className="px-3 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide w-10">
@@ -1902,6 +2020,7 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
                 <th
                   key={col.key}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                  title={col.tooltip || col.label}
                   className={`px-3 py-2.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide ${col.width} ${
                     col.sortable ? "cursor-pointer hover:text-gray-700 select-none" : ""
                   }`}
@@ -1974,7 +2093,6 @@ function _removed() { /* buildOwnerGroups + OwnerView removed */
         totalClassB: 0,
         tiers: new Set(),
         hasPriorOp: false,
-        hasReversion: false,
         hasTempCoo: false,
         latestSaleDate: null,
       });
@@ -1988,7 +2106,6 @@ function _removed() { /* buildOwnerGroups + OwnerView removed */
     g.totalClassB += (p.hpd_class_b || 0);
     g.tiers.add(p.segment || p.tier);
     if (p.has_prior_op) g.hasPriorOp = true;
-    if (p.has_reversion) g.hasReversion = true;
     if (p.coo_has_temporary) g.hasTempCoo = true;
     if (p.last_sale_date && (!g.latestSaleDate || p.last_sale_date > g.latestSaleDate)) {
       g.latestSaleDate = p.last_sale_date;
@@ -1997,119 +2114,66 @@ function _removed() { /* buildOwnerGroups + OwnerView removed */
   return Array.from(groups.values());
 }
 
-const SCORE_SIGNALS = {
-  legal: [
-    { key: "tier_legal", label: "Legal transient tier", pts: 30, max: 50, desc: "Multiple sources confirm existing transient/hotel capacity." },
-    { key: "tier_classb", label: "Class B (split-use) tier", pts: 20, max: 50, desc: "HPD shows both Class A apartments and Class B transient rooms." },
-    { key: "tier_partial", label: "Partial signal tier", pts: 8, max: 50, desc: "Building class suggests mixed use but HPD didn't confirm Class B." },
-    { key: "coo_temp", label: "Temporary C of O", pts: 10, max: 50, desc: "Independent confirmation of transient use via Certificate of Occupancy." },
-    { key: "hpd_classb", label: "HPD Class B rooms", pts: 10, max: 50, desc: "HPD records show Class B (transient) room count > 0." },
-  ],
-  avail: [
-    { key: "prior_op", label: "Prior operator departed", pts: 15, max: 45, desc: "A flex-stay operator previously ran this building. Proven model, gap to fill." },
-    { key: "tax_lien", label: "Tax lien", pts: 8, max: 45, desc: "City lien for unpaid taxes. Owner under financial pressure." },
-    { key: "lis_pendens", label: "Lis pendens / judgment", pts: 8, max: 45, desc: "Legal action filed against the property in last 5 years." },
-    { key: "recent_sale", label: "Recent sale (last 2 yrs)", pts: 5, max: 45, desc: "New owner may be more open to management partnerships." },
-    { key: "reversion", label: "Reversion window", pts: 5, max: 45, desc: "Hotel-converted building can revert to transient before Dec 2027." },
-    { key: "ecb_balance", label: "ECB balance > $10K", pts: 4, max: 45, desc: "Unpaid DOB fines indicate financial pressure on the owner." },
-  ],
-  quality: [
-    { key: "not_hotel", label: "Not already a hotel", pts: 7, max: 15, desc: "Building isn't H-class, so it's not already operating as a branded hotel." },
-    { key: "low_violations", label: "Low Class C violations", pts: 5, max: 15, desc: "Fewer than 10 immediately hazardous violations. Building in decent shape." },
-    { key: "portfolio_owner", label: "Multi-building owner", pts: 3, max: 15, desc: "Owner has multiple buildings in pipeline. Portfolio deal potential." },
-  ],
-};
+const SCORE_SIGNALS = [
+  { key: "hpd_classb", label: "HPD Class B rooms registered", pts: 35, max: 100, desc: "HPD registration shows Class B (transient) rooms. The legal foundation for short-stay operations." },
+  { key: "hotel_class", label: "Hotel building class (H-series)", pts: 25, max: 100, desc: "DOB building classification is hotel. Transient use is inherent to the building." },
+  { key: "dob_r1", label: "DOB R-1 transient occupancy", pts: 15, max: 100, desc: "DOB filings classify this building with R-1 (transient residential) occupancy." },
+  { key: "coo_temp", label: "Temporary C of O issued", pts: 10, max: 100, desc: "A temporary Certificate of Occupancy has been issued, confirming transient use." },
+  { key: "permit_transient", label: "DOB transient permit activity", pts: 8, max: 100, desc: "DOB permits reference transient-related work (hotel, SRO, transient keywords)." },
+  { key: "r1_filings", label: "Multiple R-1 DOB filings", pts: 7, max: 100, desc: "3+ DOB filings with R-1 occupancy code. Sustained transient use history." },
+  { key: "zoning_penalty", label: "Residential zoning (penalty)", pts: -15, max: 100, desc: "Zoning does not permit new hotel use. Only applies to buildings without existing Class B or H-class — those are grandfathered." },
+];
 
-function ScoreConfigPage({ scoreWeights, setScoreWeights, features }) {
+function ScoreConfigPage({ features }) {
   const topBuildings = useMemo(() => {
     const scored = features.map((f) => ({
       feature: f,
-      score: computeScore(f.properties, scoreWeights),
+      score: computeScore(f.properties),
     }));
     scored.sort((a, b) => b.score - a.score);
     return scored.slice(0, 10);
-  }, [features, scoreWeights]);
-
-  const categoryMeta = [
-    { key: "legal", label: "Legal certainty", color: "#16a34a", weight: scoreWeights.legal },
-    { key: "avail", label: "Availability", color: "#2563eb", weight: scoreWeights.avail },
-    { key: "quality", label: "Building quality", color: "#8b5cf6", weight: scoreWeights.quality },
-  ];
+  }, [features]);
 
   return (
     <div className="h-full overflow-y-auto bg-gray-50">
       <div className="max-w-3xl mx-auto py-8 px-6 space-y-8">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Deal score configuration</h2>
+          <h2 className="text-lg font-bold text-gray-900">Legal score breakdown</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Adjust how buildings are ranked. Each category has a weight (percentage of total score)
-            and individual signals that contribute to it.
+            Buildings are scored purely on legal authority for transient use.
+            Higher scores mean stronger evidence that the building is authorized for short-stay operations.
           </p>
         </div>
 
-        {/* Category weight sliders */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-800">Category weights</h3>
-          <p className="text-xs text-gray-400">These control how much each dimension matters in the final score. They don't need to add up to 100 — they're normalized automatically.</p>
-          {categoryMeta.map(({ key, label, color, weight }) => (
-            <div key={key}>
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-                  <span className="text-sm text-gray-700">{label}</span>
-                </div>
-                <span className="text-sm font-mono text-gray-500 tabular-nums">{weight}%</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={weight}
-                onChange={(e) => setScoreWeights((prev) => ({ ...prev, [key]: Number(e.target.value) }))}
-                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: color }}
-              />
-            </div>
-          ))}
-          <button
-            onClick={() => setScoreWeights({ legal: 50, avail: 35, quality: 15 })}
-            className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer"
-          >
-            Reset to defaults (50 / 35 / 15)
-          </button>
-        </div>
-
-        {/* Signal breakdown by category */}
-        {categoryMeta.map(({ key, label, color }) => (
-          <div key={key} className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-              <h3 className="text-sm font-semibold text-gray-800">{label}</h3>
-            </div>
-            <div className="space-y-3">
-              {SCORE_SIGNALS[key].map((sig) => (
-                <div key={sig.key} className="flex items-start gap-3">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <div className="w-14 shrink-0">
-                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${(sig.pts / sig.max) * 100}%`, backgroundColor: color }} />
-                      </div>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-xs text-gray-800 font-medium">{sig.label}</div>
-                      <div className="text-[10px] text-gray-400 leading-snug">{sig.desc}</div>
+        {/* Signal breakdown */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#16a34a" }} />
+            <h3 className="text-sm font-semibold text-gray-800">Legal signals</h3>
+          </div>
+          <div className="space-y-3">
+            {SCORE_SIGNALS.map((sig) => (
+              <div key={sig.key} className="flex items-start gap-3">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="w-14 shrink-0">
+                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${Math.abs(sig.pts / sig.max) * 100}%`, backgroundColor: sig.pts < 0 ? "#e11d48" : "#16a34a" }} />
                     </div>
                   </div>
-                  <span className="text-[11px] font-mono text-gray-400 tabular-nums shrink-0 pt-0.5">+{sig.pts}</span>
+                  <div className="min-w-0">
+                    <div className="text-xs text-gray-800 font-medium">{sig.label}</div>
+                    <div className="text-[10px] text-gray-400 leading-snug">{sig.desc}</div>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <span className={`text-[11px] font-mono tabular-nums shrink-0 pt-0.5 ${sig.pts < 0 ? "text-red-500" : "text-gray-400"}`}>{sig.pts > 0 ? "+" : ""}{sig.pts}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
 
         {/* Live preview: top 10 */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 10 with current weights</h3>
+          <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 10 by legal score</h3>
           <div className="space-y-2">
             {topBuildings.map(({ feature, score }, i) => {
               const p = feature.properties;
@@ -2120,22 +2184,10 @@ function ScoreConfigPage({ scoreWeights, setScoreWeights, features }) {
                   <span className={`${scoreColor} text-white text-[10px] font-bold px-1.5 py-0.5 rounded tabular-nums`}>{score}</span>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs text-gray-800 font-medium truncate">{p.address}</div>
-                    <div className="text-[10px] text-gray-400">
-                      {p.neighborhood || ""}
-                      {p.has_prior_op && <span className="ml-1.5 text-purple-500">Prior op</span>}
-                      {p.has_tax_lien && <span className="ml-1.5 text-red-500">Lien</span>}
-                    </div>
+                    <div className="text-[10px] text-gray-400">{p.neighborhood || ""}</div>
                   </div>
-                  <div className="flex gap-1 shrink-0">
-                    {[
-                      { val: p.score_legal, color: "#16a34a" },
-                      { val: p.score_avail, color: "#2563eb" },
-                      { val: p.score_quality, color: "#8b5cf6" },
-                    ].map(({ val, color }, j) => (
-                      <div key={j} className="w-8 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${val}%`, backgroundColor: color }} />
-                      </div>
-                    ))}
+                  <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden shrink-0">
+                    <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: "#16a34a" }} />
                   </div>
                 </div>
               );
@@ -2175,7 +2227,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
       va = a.totalClassB;
       vb = b.totalClassB;
     } else if (sortKey === "bestTier") {
-      const rank = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
+      const rank = { transient: 0, active_hotel: 1, partial: 2, unknown: 3 };
       va = Math.min(...[...a.tiers].map((t) => rank[t] ?? 99));
       vb = Math.min(...[...b.tiers].map((t) => rank[t] ?? 99));
     }
@@ -2198,7 +2250,7 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   ];
 
   const bestTier = (tiers) => {
-    const rank = ["reversion", "split_use", "hotel", "partial", "unknown"];
+    const rank = ["transient", "active_hotel", "partial", "unknown"];
     for (const t of rank) if (tiers.has(t)) return t;
     return "unknown";
   };
@@ -2269,7 +2321,6 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         {owner.hasPriorOp && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-purple-100 text-purple-700">Prior op</span>}
-                        {owner.hasReversion && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-rose-100 text-rose-700">Reversion</span>}
                         {owner.hasTempCoo && <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-100 text-amber-700">Temp CO</span>}
                         {owner.latestSaleDate && <span className="px-1.5 py-0.5 text-[9px] rounded bg-gray-100 text-gray-500">Sale {owner.latestSaleDate.slice(0,4)}</span>}
                       </div>
@@ -2333,33 +2384,37 @@ function OwnerView({ features, onSelectFeature, exportList, onAddToList }) {
   );
 }
 
-function MethodologyView({ features }) {
+function MethodologyView({ features, onDrillDown }) {
   const counts = useMemo(() => {
     const paths = {};
     const add = (key) => {
       if (!paths[key]) paths[key] = { count: 0, rooms: 0 };
       return paths[key];
     };
+    const seen = new Set();
 
     for (const f of features) {
       const p = f.properties;
+      const bbl = p.bbl;
+      if (seen.has(bbl)) continue;
+      seen.add(bbl);
+
       const bldg = (p.bldgclass || "").toUpperCase();
       const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
       const classB = p.hpd_class_b || 0;
       const classA = p.hpd_class_a || 0;
       const hasLicense = !!p.has_hotel_license;
-      const hasReversion = !!p.has_reversion;
       const rc = (() => { try { return JSON.parse(p.reason_codes || "[]"); } catch { return []; } })();
       const hasDob = rc.includes("dob_transient_occupancy");
       const hasPrior = !!p.has_prior_op;
       const rooms = classB > 0 ? classB : (p.unitsres || 0);
 
+      const seg = p.segment || "unknown";
       let key;
       if (isHotelClass && classB > 0) {
         key = classA > 0 ? "hc_cb__split" : "hc_cb__full";
       } else if (isHotelClass) {
-        if (hasReversion) key = "hc_nocb__reversion";
-        else if (hasLicense) key = "hc_nocb__license";
+        if (hasLicense) key = "hc_nocb__license";
         else if (hasPrior) key = "hc_nocb__prior";
         else key = "hc_nocb__other";
       } else if (classB > 0) {
@@ -2374,6 +2429,14 @@ function MethodologyView({ features }) {
       const entry = add(key);
       entry.count++;
       entry.rooms += rooms;
+
+      if (classB > 0) {
+        const cell = isHotelClass ? "hc_cb" : "nohc_cb";
+        const segKey = seg === "active_hotel" ? `${cell}__active` : `${cell}__transient`;
+        const segEntry = add(segKey);
+        segEntry.count++;
+        segEntry.rooms += rooms;
+      }
     }
     return paths;
   }, [features]);
@@ -2383,13 +2446,50 @@ function MethodologyView({ features }) {
 
   const cellTotals = {
     hc_cb: sum("hc_cb__full", "hc_cb__split"),
-    hc_nocb: sum("hc_nocb__reversion", "hc_nocb__license", "hc_nocb__prior", "hc_nocb__other"),
+    hc_nocb: sum("hc_nocb__license", "hc_nocb__prior", "hc_nocb__other"),
     nohc_cb: sum("nohc_cb__full", "nohc_cb__split"),
     nohc_nocb: sum("nohc_nocb__license", "nohc_nocb__dob", "nohc_nocb__prior", "nohc_nocb__partial"),
   };
 
-  const CellCount = ({ data, className = "" }) => (
-    <div className={`flex items-baseline gap-1.5 ${className}`}>
+  const isHC = (p) => { const b = (p.bldgclass || "").toUpperCase(); return b.startsWith("H") && b !== "HR" && b !== "H8"; };
+  const hasCB = (p) => (p.hpd_class_b || 0) > 0;
+  const hasCA = (p) => (p.hpd_class_a || 0) > 0;
+  const hasLic = (p) => !!p.has_hotel_license;
+  const hasPO = (p) => !!p.has_prior_op;
+  const hasDOB = (p) => { try { return JSON.parse(p.reason_codes || "[]").includes("dob_transient_occupancy"); } catch { return false; } };
+
+  const isSeg = (p, s) => (p.segment || "unknown") === s;
+  const FILTERS = {
+    hc_cb: (p) => isHC(p) && hasCB(p),
+    hc_cb__full: (p) => isHC(p) && hasCB(p) && !hasCA(p),
+    hc_cb__split: (p) => isHC(p) && hasCB(p) && hasCA(p),
+    hc_cb__active: (p) => isHC(p) && hasCB(p) && isSeg(p, "active_hotel"),
+    hc_cb__transient: (p) => isHC(p) && hasCB(p) && !isSeg(p, "active_hotel"),
+    hc_nocb: (p) => isHC(p) && !hasCB(p),
+    hc_nocb__license: (p) => isHC(p) && !hasCB(p) && hasLic(p),
+    hc_nocb__prior: (p) => isHC(p) && !hasCB(p) && !hasLic(p) && hasPO(p),
+    hc_nocb__other: (p) => isHC(p) && !hasCB(p) && !hasLic(p) && !hasPO(p),
+    nohc_cb: (p) => !isHC(p) && hasCB(p),
+    nohc_cb__full: (p) => !isHC(p) && hasCB(p) && !hasCA(p),
+    nohc_cb__split: (p) => !isHC(p) && hasCB(p) && hasCA(p),
+    nohc_cb__active: (p) => !isHC(p) && hasCB(p) && isSeg(p, "active_hotel"),
+    nohc_cb__transient: (p) => !isHC(p) && hasCB(p) && !isSeg(p, "active_hotel"),
+    nohc_nocb: (p) => !isHC(p) && !hasCB(p),
+    nohc_nocb__license: (p) => !isHC(p) && !hasCB(p) && hasLic(p),
+    nohc_nocb__dob: (p) => !isHC(p) && !hasCB(p) && !hasLic(p) && hasDOB(p),
+    nohc_nocb__prior: (p) => !isHC(p) && !hasCB(p) && !hasLic(p) && !hasDOB(p) && hasPO(p),
+    nohc_nocb__partial: (p) => !isHC(p) && !hasCB(p) && !hasLic(p) && !hasDOB(p) && !hasPO(p),
+  };
+
+  const drill = (filterKey, label) => {
+    if (onDrillDown) onDrillDown(FILTERS[filterKey], label);
+  };
+
+  const CellCount = ({ data, filterKey, label, className = "" }) => (
+    <div
+      className={`flex items-baseline gap-1.5 cursor-pointer hover:opacity-70 transition-opacity ${className}`}
+      onClick={() => drill(filterKey, label)}
+    >
       <span className="text-lg font-bold text-gray-900">{data.count.toLocaleString()}</span>
       <span className="text-[11px] text-gray-400">properties</span>
       {data.rooms > 0 && (
@@ -2398,10 +2498,10 @@ function MethodologyView({ features }) {
     </div>
   );
 
-  const SubRow = ({ label, data, color }) => {
+  const SubRow = ({ label, data, color, filterKey }) => {
     if (data.count === 0) return null;
     return (
-      <div className="flex items-center justify-between py-1">
+      <div className="flex items-center justify-between py-1 cursor-pointer hover:bg-black/5 rounded px-1 -mx-1 transition-colors" onClick={() => drill(filterKey, label)}>
         <div className="flex items-center gap-1.5">
           {color && <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: color }} />}
           <span className="text-[11px] text-gray-600">{label}</span>
@@ -2421,7 +2521,10 @@ function MethodologyView({ features }) {
           <h1 className="text-xl font-bold text-gray-900 tracking-tight">Classification Matrix</h1>
           <p className="text-sm text-gray-500 mt-1 max-w-xl">
             Every building is classified along two axes: <strong>PLUTO building class</strong> (is it coded as a hotel?)
-            and <strong>HPD Class B registration</strong> (are transient rooms confirmed?). {features.length.toLocaleString()} buildings in the dataset.
+            and <strong>HPD Class B registration</strong> (are transient rooms confirmed?). {(cellTotals.hc_cb.count + cellTotals.hc_nocb.count + cellTotals.nohc_cb.count + cellTotals.nohc_nocb.count).toLocaleString()} buildings after pipeline filters.
+          </p>
+          <p className="text-[11px] text-gray-400 mt-1 max-w-xl">
+            Already excluded: incompatible zoning, universities, shelters, HDFCs, hospitals, YMCAs, warehouses, garages, vacant land, SROs, dormitories, 1-4 family homes, apartment hotels (R5), and buildings with negligible Class B.
           </p>
         </div>
 
@@ -2448,24 +2551,29 @@ function MethodologyView({ features }) {
 
           {/* Cell: Hotel class YES + Class B YES */}
           <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 m-1">
-            <CellCount data={cellTotals.hc_cb} />
+            <CellCount data={cellTotals.hc_cb} filterKey="hc_cb" label="Hotel Class + Class B" />
             <div className="text-[10px] font-semibold uppercase tracking-wide text-emerald-600 mt-2 mb-1">Strongest signal</div>
             <div className="text-[11px] text-gray-600 mb-2">Both PLUTO and HPD confirm hotel/transient use.</div>
             <div className="border-t border-emerald-100 pt-1.5 space-y-0">
-              <SubRow label="Full hotel (Class B only)" data={g("hc_cb__full")} color="#16a34a" />
-              <SubRow label="Split-use (Class A + B)" data={g("hc_cb__split")} color="#8b5cf6" />
+              <SubRow label="Full hotel (Class B only)" data={g("hc_cb__full")} color="#16a34a" filterKey="hc_cb__full" />
+              <SubRow label="Split-use (Class A + B)" data={g("hc_cb__split")} color="#8b5cf6" filterKey="hc_cb__split" />
+            </div>
+            <div className="border-t border-emerald-100 mt-1.5 pt-1.5 space-y-0">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
+              <SubRow label="Active hotel (operator found)" data={g("hc_cb__active")} color="#16a34a" filterKey="hc_cb__active" />
+              <SubRow label="Transient capacity (no operator)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
             </div>
           </div>
 
           {/* Cell: Hotel class YES + Class B NO */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 m-1">
-            <CellCount data={cellTotals.hc_nocb} />
+            <CellCount data={cellTotals.hc_nocb} filterKey="hc_nocb" label="Hotel Class, no Class B" />
             <div className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 mt-2 mb-1">Hotel class, unconfirmed</div>
             <div className="text-[11px] text-gray-600 mb-2">PLUTO says hotel but HPD has no transient rooms registered.</div>
             <div className="border-t border-amber-100 pt-1.5 space-y-0">
-              <SubRow label="Reversion window (before Dec 2027)" data={g("hc_nocb__reversion")} color="#e11d48" />
-              <SubRow label="Active hotel license (DCWP)" data={g("hc_nocb__license")} color="#16a34a" />
-              <SubRow label="Prior operator known" data={g("hc_nocb__prior")} color="#a855f7" />
+              <SubRow label="Active hotel license (DCWP)" data={g("hc_nocb__license")} color="#16a34a" filterKey="hc_nocb__license" />
+              <SubRow label="Prior operator known" data={g("hc_nocb__prior")} color="#a855f7" filterKey="hc_nocb__prior" />
+              <SubRow label="No license or prior operator" data={g("hc_nocb__other")} color="#94a3b8" filterKey="hc_nocb__other" />
             </div>
           </div>
 
@@ -2479,45 +2587,152 @@ function MethodologyView({ features }) {
 
           {/* Cell: Hotel class NO + Class B YES */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 m-1">
-            <CellCount data={cellTotals.nohc_cb} />
+            <CellCount data={cellTotals.nohc_cb} filterKey="nohc_cb" label="Non-hotel Class + Class B" />
             <div className="text-[10px] font-semibold uppercase tracking-wide text-blue-600 mt-2 mb-1">HPD-confirmed transient</div>
             <div className="text-[11px] text-gray-600 mb-2">Not classified as hotel in PLUTO but HPD confirms transient rooms exist.</div>
             <div className="border-t border-blue-100 pt-1.5 space-y-0">
-              <SubRow label="Full transient (Class B only)" data={g("nohc_cb__full")} color="#16a34a" />
-              <SubRow label="Split-use (Class A + B)" data={g("nohc_cb__split")} color="#8b5cf6" />
+              <SubRow label="Full transient (Class B only)" data={g("nohc_cb__full")} color="#16a34a" filterKey="nohc_cb__full" />
+              <SubRow label="Split-use (Class A + B)" data={g("nohc_cb__split")} color="#8b5cf6" filterKey="nohc_cb__split" />
+            </div>
+            <div className="border-t border-blue-100 mt-1.5 pt-1.5 space-y-0">
+              <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
+              <SubRow label="Active hotel (operator found)" data={g("nohc_cb__active")} color="#16a34a" filterKey="nohc_cb__active" />
+              <SubRow label="Transient capacity (no operator)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
             </div>
           </div>
 
           {/* Cell: Hotel class NO + Class B NO */}
           <div className="bg-white border border-gray-200 rounded-xl p-4 m-1">
-            <CellCount data={cellTotals.nohc_nocb} />
+            <CellCount data={cellTotals.nohc_nocb} filterKey="nohc_nocb" label="Non-hotel Class, no Class B" />
             <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mt-2 mb-1">Partial signals only</div>
             <div className="text-[11px] text-gray-600 mb-2">No hotel class, no Class B. Included based on other transient indicators.</div>
             <div className="border-t border-gray-100 pt-1.5 space-y-0">
-              <SubRow label="Active hotel license (DCWP)" data={g("nohc_nocb__license")} color="#16a34a" />
-              <SubRow label="DOB transient occupancy (R-1/J-1)" data={g("nohc_nocb__dob")} color="#f59e0b" />
-              <SubRow label="Prior operator known" data={g("nohc_nocb__prior")} color="#a855f7" />
-              <SubRow label="Mixed-use building class" data={g("nohc_nocb__partial")} color="#94a3b8" />
+              <SubRow label="Active hotel license (DCWP)" data={g("nohc_nocb__license")} color="#16a34a" filterKey="nohc_nocb__license" />
+              <SubRow label="DOB transient occupancy (R-1/J-1)" data={g("nohc_nocb__dob")} color="#f59e0b" filterKey="nohc_nocb__dob" />
+              <SubRow label="Prior operator known" data={g("nohc_nocb__prior")} color="#a855f7" filterKey="nohc_nocb__prior" />
+              <SubRow label="Mixed-use building class" data={g("nohc_nocb__partial")} color="#94a3b8" filterKey="nohc_nocb__partial" />
             </div>
           </div>
         </div>
 
-        {/* Pre-filters note */}
+        {/* Segments */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pre-Filters</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11px] text-gray-500">
-            <div>Incompatible zoning districts removed</div>
-            <div>Non-operating hotel-class buildings removed (would require CPC special permit)</div>
-            <div>1-4 family residential excluded</div>
-            <div>SRO (HR) and dormitory (H8) excluded from hotel tier</div>
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Segments</div>
+          <div className="space-y-2 text-[11px] text-gray-600">
+            <div className="flex items-start gap-2">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#8b5cf6" }} />
+              <div><strong className="text-gray-800">Transient capacity</strong> — Buildings with legally established transient use (HPD Class B rooms, DOB R-1 occupancy, or hotel building class) but no known active hotel operator. The primary sourcing targets.</div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#16a34a" }} />
+              <div><strong className="text-gray-800">Active hotel</strong> — Buildings with an identified hotel operator via DCWP license, Google Places, or operator name keywords. Already has a hotel operator in place.</div>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#f59e0b" }} />
+              <div><strong className="text-gray-800">Partial signal</strong> — Building class suggests mixed use (RM, RC, etc.) but no confirmed transient rooms from HPD or DOB. May have transient capacity — needs manual verification.</div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-gray-100 text-[11px] text-gray-500">
+            <div className="flex items-start gap-1.5">
+              <span className="bg-red-500 text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md shrink-0 mt-0.5">Reversion</span>
+              <span>Overlay — hotels that closed or converted to residential post-2021 (6 tracked). Can revert to hotel use without CPC special permit because their hotel use predates the 2021 text amendment. Identified through manual research; data sources lag behind real-world closures.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Transient signals */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Transient Use Signals</div>
+          <div className="text-[11px] text-gray-500 mb-2">A building qualifies as having legally established transient capacity through any of these signals:</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">HPD Class B rooms</strong> — Transient rooms registered with the city under the Multiple Dwelling Law. Renewed annually by building owners, making it the most current and reliable signal of active transient capacity.</div>
+            <div><strong className="text-gray-600">Hotel building class (H*)</strong> — PLUTO classifies the building as a hotel. Updated annually by DCP, but can lag behind real-world changes. A building may retain its H-class even after ceasing hotel operations.</div>
+            <div><strong className="text-gray-600">DOB R-1 occupancy</strong> — Department of Buildings filings for R-1 (transient residential) occupancy group. Direct evidence of legally established transient use.</div>
+            <div><strong className="text-gray-600">DCWP hotel license</strong> — Active or lapsed city license to operate a hotel at the address. An operating signal, not a zoning signal.</div>
+            <div><strong className="text-gray-600">Composite signals</strong> — Weaker signals (DOB J-1 filings, temporary certificates of occupancy, transient keywords in permit descriptions, prior operator records) that individually don't qualify but together indicate transient capacity when 3+ are present.</div>
+          </div>
+        </div>
+
+        {/* Pipeline filters */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Pipeline Filters</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">Zoning</strong> — Incompatible zoning districts removed (unless building has HPD Class B rooms or is a post-2021 reversion)</div>
+            <div><strong className="text-gray-600">Special permit</strong> — Non-operating hotel-class buildings removed (would require CPC special permit under 2021 text amendment)</div>
+            <div><strong className="text-gray-600">Non-target</strong> — Universities, shelters, HDFCs/supportive housing, YMCAs, Salvation Army, hospitals, nursing homes, religious facilities excluded. Also excludes non-residential building classes: warehouses, factories, garages, vacant land, transportation, parks, apartment hotels (R5).</div>
+            <div><strong className="text-gray-600">Empty non-hotel</strong> — Buildings with 0 residential units, 0 Class B rooms, and no hotel signals (non-hotel/non-residential building classes like offices and stores)</div>
+            <div><strong className="text-gray-600">Negligible Class B</strong> — Non-hotel-class buildings with {"<"}=3 Class B rooms in 20+ unit residential buildings (likely super's unit or data noise)</div>
+            <div><strong className="text-gray-600">Other</strong> — 1-4 family residential excluded. SRO (HR) and dormitory (H8) excluded from hotel tier.</div>
+          </div>
+        </div>
+
+        {/* Operator detection */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Operator Detection</div>
+          <div className="text-[11px] text-gray-500 mb-2">A building is tagged as "active hotel" if any of these identify an operator:</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">Google Places</strong> — API enrichment for all H-class buildings. Returns hotel name if Google recognizes a hotel at the address. Results filtered for false positives (same name matching 4+ BBLs = proximity artifact).</div>
+            <div><strong className="text-gray-600">DCWP license</strong> — Active hotel license from the city.</div>
+            <div><strong className="text-gray-600">Operator name keywords</strong> — HPD managing agent or operator name contains "hotel", "inn", "suites", "hostel", or "motel".</div>
+          </div>
+          <div className="text-[11px] text-gray-400 mt-2 italic">Caveat: Google Places and DCWP data can be stale. Some buildings flagged as active hotels have actually closed (e.g., migrant shelter hotels). Reversion overlay tracks known closures.</div>
+        </div>
+
+        {/* Regulatory context */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Regulatory Context</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">2021 Citywide Hotel Text Amendment</strong> — All new hotels in NYC require a CPC special permit. Existing hotels are grandfathered. Converting Class A (residential) to Class B (transient) = new hotel use = requires special permit.</div>
+            <div><strong className="text-gray-600">Usable capacity</strong> — Only existing HPD Class B rooms represent immediately usable transient capacity. Class A units cannot be converted without triggering the special permit requirement.</div>
+            <div><strong className="text-gray-600">Post-2021 reversions</strong> — Hotels that converted to residential after the amendment can revert without special permit because their hotel use predates the amendment. Currently tracked via manual research — DOB conversion filings and data sources lag behind real-world closures by months to years.</div>
+          </div>
+        </div>
+
+        {/* Client-side filters */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Client-Side Filters</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">Hide condos</strong> — Condominiums identified by "CONDO" in owner name or building class R1/R2/R4. Condos require board approval or commercial condo owner negotiation — different deal structure than rentals.</div>
+            <div><strong className="text-gray-600">Distress signals only</strong> — Tax liens, lis pendens/judgments, high ECB fines, or significant HPD violations.</div>
+            <div><strong className="text-gray-600">No known operator</strong> — Buildings where Google Places, DCWP, and operator name keywords found no active hotel operation.</div>
+            <div><strong className="text-gray-600">Hide by brand type</strong> — Three toggles: <em>Chains</em> (Marriott, Hilton, etc.), <em>Branded independents</em> (Arlo, Dream — potential targets), and <em>Private clubs</em> (Soho House, NY Athletic Club). Chains and clubs hidden by default; branded independents shown.</div>
+            <div><strong className="text-gray-600">Min Class B</strong> — Minimum HPD Class B room count (default: 10). Exempts partial signal and active hotel segments to avoid filtering out buildings with zero Class B by definition.</div>
+            <div><strong className="text-gray-600">Min rooms</strong> — Minimum room count threshold (estimated from Class B, C of O, PLUTO, or floor count).</div>
+          </div>
+        </div>
+
+        {/* Scoring framework */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Scoring Framework</div>
+          <div className="text-[11px] text-gray-500 mb-2">Each building receives a score (0-100) based on the strength of its transient capacity signals:</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">HPD Class B rooms (+35)</strong> — Strongest signal. Annual registration confirms active transient capacity.</div>
+            <div><strong className="text-gray-600">Hotel building class (+25)</strong> — H-series PLUTO classification. Strong but can be stale.</div>
+            <div><strong className="text-gray-600">DOB R-1 transient occupancy (+15)</strong> — Filings establishing R-1 occupancy group.</div>
+            <div><strong className="text-gray-600">Temporary C of O (+10)</strong> — Temporary certificate of occupancy issued.</div>
+            <div><strong className="text-gray-600">DOB transient permit activity (+8)</strong> — Permits with transient-related work descriptions.</div>
+            <div><strong className="text-gray-600">Multiple R-1 filings (+7)</strong> — 3+ DOB filings for R-1 occupancy.</div>
+            <div><strong className="text-gray-600">Residential zoning penalty (-15)</strong> — Applied only to buildings <em>without</em> existing transient rights (no Class B and no H-class). Buildings with Class B or H-class are grandfathered and exempt from this penalty.</div>
+          </div>
+        </div>
+
+        {/* Brand classification */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Brand Classification</div>
+          <div className="text-[11px] text-gray-500 mb-2">Buildings with recognized hotel brands are classified into three types:</div>
+          <div className="space-y-1 text-[11px] text-gray-500">
+            <div><strong className="text-gray-600">Chain</strong> — Major flag systems (Marriott, Hilton, Hyatt, IHG, Wyndham, etc.). Detected by operator name or Google Places hotel name matching. Hidden by default — not management targets.</div>
+            <div><strong className="text-gray-600">Independent</strong> — Recognizable independent brands (Arlo, Dream, Gansevoort, Pod, etc.). May be open to management changes. Shown by default.</div>
+            <div><strong className="text-gray-600">Club</strong> — Private members' clubs (Soho House, NY Athletic Club, Harvard Club, etc.). Not hotel targets. Hidden by default.</div>
           </div>
         </div>
 
         {/* Data sources */}
         <div className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-200 pt-4">
-          <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning), HPD registration (Class A/B unit counts),
-          DCWP hotel licenses, DOB occupancy filings (R-1/J-1), prior operator ground truth.
-          Room counts use HPD Class B when available, otherwise PLUTO residential units.
+          <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning), HPD registration (Class A/B unit counts, managing agents),
+          DCWP hotel licenses, DOB occupancy filings (R-1/J-1 groups, conversion records), Google Places API (hotel name enrichment for H-class buildings),
+          OSM hotel data, prior operator ground truth. Condo status derived from owner name and building class (R1/R2/R4).
+          Reversion buildings tracked via manual research (news, deal records). Room counts use HPD Class B when available, otherwise PLUTO residential units.
         </div>
       </div>
     </div>
@@ -2528,6 +2743,7 @@ export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const allFeaturesRef = useRef([]);
+  const currentFilterRef = useRef(null);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
   const { notes, save: saveNote } = useNotes();
   const { statuses: crmStatuses, setStatus: setCrmStatus } = useCrmStatuses();
@@ -2537,10 +2753,18 @@ export default function App() {
     Object.fromEntries(SEGMENTS.map((s) => [s.key, s.defaultOn]))
   );
   const [showPriorOps, setShowPriorOps] = useState(true);
+  const [showReversion, setShowReversion] = useState(true);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
-  const [hideBranded, setHideBranded] = useState(true);
+  const [hideBrandTypes, setHideBrandTypes] = useState(new Set(["chain", "club"]));
+  const toggleBrandType = useCallback((bt) => setHideBrandTypes(prev => {
+    const next = new Set(prev);
+    next.has(bt) ? next.delete(bt) : next.add(bt);
+    return next;
+  }), []);
+  const [hideCondos, setHideCondos] = useState(false);
   const [minUnits, setMinUnits] = useState(0);
+  const [minClassB, setMinClassB] = useState(10);
   const [extraFilters, setExtraFilters] = useState({
     filterTempCoo: false,
     filterHasClassB: false,
@@ -2553,9 +2777,10 @@ export default function App() {
     setExtraFilters((prev) => ({ ...prev, [key]: val }));
   }, []);
   const [activeView, setActiveView] = useState("map"); // "map" | "table" | "methodology"
-  const [scoreWeights, setScoreWeights] = useState({ legal: 50, avail: 35, quality: 15 });
+  const [matrixFilter, setMatrixFilter] = useState(null); // { fn, label } from methodology drill-down
+  // Score is now purely legal — no configurable weights
   const [featureCount, setFeatureCount] = useState(0);
-  const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, reversion: 0, tempCoo: 0 });
+  const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, priorOpsExtra: 0, reversions: 0, reversionsExtra: 0, tempCoo: 0, segmentCounts: {} });
   const [dataDate, setDataDate] = useState(null);
 
   // Load GeoJSON for overlay counts + bulk select
@@ -2565,16 +2790,38 @@ export default function App() {
       .then((data) => {
         const feats = data.features || [];
         allFeaturesRef.current = feats;
+        const segCounts = {};
+        const seenBBLs = {};
+        for (const f of feats) {
+          const seg = f.properties.segment || "unknown";
+          const bbl = f.properties.bbl;
+          if (!seenBBLs[seg]) seenBBLs[seg] = new Set();
+          if (!seenBBLs[seg].has(bbl)) {
+            seenBBLs[seg].add(bbl);
+            segCounts[seg] = (segCounts[seg] || 0) + 1;
+          }
+        }
+        const priorOpsAll = feats.filter((f) => f.properties.has_prior_op);
+        const priorOpsExtra = priorOpsAll.filter((f) => f.properties.segment !== "transient");
+        const revAll = feats.filter((f) => f.properties.has_reversion);
+        const revExtra = revAll.filter((f) => f.properties.segment !== "transient" && f.properties.segment !== "active_hotel");
         setOverlayCounts({
-          priorOps: feats.filter((f) => f.properties.has_prior_op).length,
-          reversion: feats.filter((f) => f.properties.has_reversion).length,
+          priorOps: priorOpsAll.length,
+          priorOpsExtra: priorOpsExtra.length,
+          reversions: revAll.length,
+          reversionsExtra: revExtra.length,
           tempCoo: feats.filter((f) => f.properties.coo_has_temporary).length,
+          segmentCounts: segCounts,
         });
         // Extract data date from first feature's source_pulled_on (YYYYMMDD)
         const raw = feats[0]?.properties?.source_pulled_on || "";
         if (raw.length === 8) {
           const d = new Date(`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`);
-          setDataDate(d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }));
+          const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
+          setDataDate({
+            formatted: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+            daysAgo,
+          });
         }
       })
       .catch(() => {});
@@ -2688,7 +2935,7 @@ export default function App() {
         .then((r) => r.json())
         .then((data) => {
           // Build points from centroids, deduplicating by address (condo lots share an address)
-          const SEG_RANK = { reversion: 0, split_use: 1, hotel: 2, partial: 3, unknown: 4 };
+          const SEG_RANK = { transient: 0, active_hotel: 1, partial: 2, unknown: 3 };
           const pointMap = new Map();
           for (const f of (data.features || [])) {
             const coords = f.geometry?.coordinates;
@@ -2720,7 +2967,7 @@ export default function App() {
             id: "buildings-dots",
             type: "circle",
             source: "buildings-points",
-            filter: initFilter,
+            filter: currentFilterRef.current || initFilter,
             maxzoom: CLUSTER_ZOOM_THRESHOLD + 0.5,
             paint: {
               "circle-color": buildColorExpr(),
@@ -2756,10 +3003,10 @@ export default function App() {
 
       const initFilter = buildFilter(
         Object.fromEntries(SEGMENTS.map((s) => [s.key, s.defaultOn])),
-        true, 0, {
+        true, true, 0, 0, {
         filterTempCoo: false, filterHasClassB: false, filterMultiOwner: false,
         filterRecentSale: false, filterCommercialZone: false,
-      }, false, false, true);
+      }, false, false, true, false);
 
       // Building footprint layers — only visible when zoomed in
       map.addLayer({
@@ -2800,20 +3047,6 @@ export default function App() {
         },
       });
 
-      // Reversion window outline — dark warm tone that pairs with green/blue/amber fills
-      map.addLayer({
-        id: "reversion-outline",
-        type: "line",
-        source: "buildings",
-        filter: ["==", ["get", "has_reversion"], true],
-        minzoom: CLUSTER_ZOOM_THRESHOLD,
-        paint: {
-          "line-color": "#b91c1c",
-          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.8, 16, 1.5, 18, 2],
-          "line-opacity": 0.6,
-        },
-      });
-
       // Prior operator outline — dark cool tone
       map.addLayer({
         id: "prior-op-outline",
@@ -2825,6 +3058,20 @@ export default function App() {
           "line-color": "#6b21a8",
           "line-width": ["interpolate", ["linear"], ["zoom"], 14, 0.8, 16, 1.5, 18, 2],
           "line-opacity": 0.6,
+        },
+      });
+
+      // Reversion outline — red
+      map.addLayer({
+        id: "reversion-outline",
+        type: "line",
+        source: "buildings",
+        filter: ["==", ["get", "has_reversion"], true],
+        minzoom: CLUSTER_ZOOM_THRESHOLD,
+        paint: {
+          "line-color": "#dc2626",
+          "line-width": ["interpolate", ["linear"], ["zoom"], 14, 1, 16, 2, 18, 2.5],
+          "line-opacity": 0.7,
         },
       });
 
@@ -2843,7 +3090,11 @@ export default function App() {
       });
 
       const updateCount = () => {
-        const features = map.queryRenderedFeatures({ layers: ["buildings-fill"] });
+        const layers = [];
+        if (map.getLayer("buildings-fill")) layers.push("buildings-fill");
+        if (map.getLayer("buildings-dots")) layers.push("buildings-dots");
+        if (layers.length === 0) return;
+        const features = map.queryRenderedFeatures({ layers });
         const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
         setFeatureCount(uniqueBBLs.size);
       };
@@ -2861,24 +3112,29 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded);
+    const filter = buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos);
+    currentFilterRef.current = filter;
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
     if (map.getLayer("buildings-dots")) map.setFilter("buildings-dots", filter);
 
-    if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", activeSegments.reversion ? "visible" : "none");
     if (map.getLayer("prior-op-outline")) map.setLayoutProperty("prior-op-outline", "visibility", showPriorOps ? "visible" : "none");
+    if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", showReversion ? "visible" : "none");
 
     setTimeout(() => {
-      const features = map.queryRenderedFeatures({ layers: ["buildings-fill"] });
+      const layers = [];
+      if (map.getLayer("buildings-fill")) layers.push("buildings-fill");
+      if (map.getLayer("buildings-dots")) layers.push("buildings-dots");
+      if (layers.length === 0) return;
+      const features = map.queryRenderedFeatures({ layers });
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded]);
+  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos]);
 
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded);
-  }, [activeSegments, showPriorOps, minUnits, extraFilters, distressOnly, noOperatorOnly, hideBranded]);
+    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos);
+  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -2893,7 +3149,7 @@ export default function App() {
           Map
         </button>
         <button
-          onClick={() => setActiveView("table")}
+          onClick={() => { setMatrixFilter(null); setActiveView("table"); }}
           className={`w-20 py-2 text-xs font-medium transition-colors cursor-pointer text-center ${
             activeView === "table" ? "bg-gray-800 text-white" : "text-gray-600 hover:bg-gray-50"
           }`}
@@ -2912,6 +3168,11 @@ export default function App() {
 
       {/* Map view */}
       <div ref={mapContainer} className="w-full h-full" style={{ display: activeView === "map" ? "block" : "none" }} />
+      {activeView === "map" && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md border border-gray-200 text-xs font-medium text-gray-700 pointer-events-none z-10">
+          {featureCount.toLocaleString()} {featureCount === 1 ? "property" : "properties"} in view
+        </div>
+      )}
 
       {/* Table view */}
       {activeView === "table" && (
@@ -2924,23 +3185,31 @@ export default function App() {
               onAddToList={handleAddToList}
               extraFilters={extraFilters}
               setFilter={setFilter}
-              scoreWeights={scoreWeights}
               activeSegments={activeSegments}
               setActiveSegments={setActiveSegments}
               distressOnly={distressOnly}
               setDistressOnly={setDistressOnly}
               minUnits={minUnits}
               setMinUnits={setMinUnits}
+              minClassB={minClassB}
+              setMinClassB={setMinClassB}
               showPriorOps={showPriorOps}
               setShowPriorOps={setShowPriorOps}
+              showReversion={showReversion}
+              setShowReversion={setShowReversion}
               notes={notes}
+              matrixFilter={matrixFilter}
+              onClearMatrixFilter={() => setMatrixFilter(null)}
             />
           </div>
         </div>
       )}
 
       {activeView === "methodology" && (
-        <MethodologyView features={allFeaturesRef.current} />
+        <MethodologyView features={allFeaturesRef.current} onDrillDown={(fn, label) => {
+          setMatrixFilter({ fn, label });
+          setActiveView("table");
+        }} />
       )}
 
       {activeView === "map" && <FilterPanel
@@ -2948,16 +3217,20 @@ export default function App() {
         setActiveSegments={setActiveSegments}
         showPriorOps={showPriorOps}
         setShowPriorOps={setShowPriorOps}
+        showReversion={showReversion}
+        setShowReversion={setShowReversion}
         distressOnly={distressOnly}
         setDistressOnly={setDistressOnly}
         noOperatorOnly={noOperatorOnly}
         setNoOperatorOnly={setNoOperatorOnly}
-        hideBranded={hideBranded}
-        setHideBranded={setHideBranded}
+        hideBrandTypes={hideBrandTypes}
+        toggleBrandType={toggleBrandType}
+        hideCondos={hideCondos}
+        setHideCondos={setHideCondos}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
-        scoreWeights={scoreWeights}
-        setScoreWeights={setScoreWeights}
+        minClassB={minClassB}
+        setMinClassB={setMinClassB}
         featureCount={activeView !== "map" ? tableFeatures.length : featureCount}
         overlayCounts={overlayCounts}
         onAddAllVisible={activeView !== "map"
@@ -2982,7 +3255,6 @@ export default function App() {
         onClose={() => setInspectedFeature(null)}
         onAddToList={handleAddToList}
         isInList={inspectedFeature ? exportList.has(inspectedFeature.properties.bbl) : false}
-        scoreWeights={scoreWeights}
         notes={notes}
         onSaveNote={saveNote}
         crmStatuses={crmStatuses}
@@ -2996,7 +3268,6 @@ export default function App() {
         onClear={handleClearList}
         onExpand={() => setListExpanded(!listExpanded)}
         expanded={listExpanded}
-        scoreWeights={scoreWeights}
       />
 
       {/* Legend removed — tier colors are in the filter panel */}

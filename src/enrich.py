@@ -478,6 +478,19 @@ def load_hotel_info(path: Path = None) -> dict[str, dict]:
     return {r["bbl"]: r for r in raw if r.get("hotel_name")}
 
 
+def load_google_hotel_names() -> dict[str, str]:
+    """Load Google Places hotel names keyed by BBL."""
+    result = {}
+    for pattern in ("google_hotel_names_[0-9]*.json", "google_hclass_hotels_clean_[0-9]*.json"):
+        files = sorted(DATA_RAW.glob(pattern), reverse=True)
+        if files:
+            raw = json.loads(files[0].read_text())
+            for r in raw:
+                if r.get("google_name") and r["bbl"] not in result:
+                    result[r["bbl"]] = r["google_name"]
+    return result
+
+
 def load_acris_owners(path: Path = None) -> dict[str, dict]:
     """Load ACRIS owner/borrower names per BBL."""
     path = _resolve_data_file("acris_owners", path)
@@ -581,6 +594,7 @@ def enrich_pipeline(
     lp_by_bbl = load_lis_pendens(lis_pendens_path)
     acris_owners = load_acris_owners(acris_owners_path)
     hotel_info = load_hotel_info()
+    google_names = load_google_hotel_names()
     dob_occ_by_bbl = load_dob_occupancy(dob_occupancy_path)
     permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
     hotel_licenses = load_hotel_licenses()
@@ -717,12 +731,17 @@ def enrich_pipeline(
             record["acris_mtge_amt"] = ""
             record["acris_lender"] = ""
 
-        # Hotel info (OSM)
+        # Hotel info (OSM, then Google Places fallback)
         hi = hotel_info.get(bbl)
+        gname = google_names.get(bbl, "")
         if hi:
-            record["hotel_name"] = hi.get("hotel_name", "")
+            record["hotel_name"] = hi.get("hotel_name", "") or gname
             record["hotel_phone"] = hi.get("phone", "")
             record["hotel_website"] = hi.get("website", "")
+        elif gname:
+            record["hotel_name"] = gname
+            record["hotel_phone"] = ""
+            record["hotel_website"] = ""
         else:
             record["hotel_name"] = ""
             record["hotel_phone"] = ""
@@ -735,16 +754,11 @@ def enrich_pipeline(
             record["dob_has_j1"] = dob_occ.get("has_j1", False)
             record["dob_r1_filing_count"] = dob_occ.get("r1_filing_count", 0)
             record["dob_transient_units"] = dob_occ.get("max_dwelling_units", 0)
-            # Tier upgrade: R-1 in DOB with no HPD Class B → partial medium
-            # (evidence of transient use, but needs current C of O verification)
+            # Tier upgrade: R-1 in DOB = legally established transient use
             tier = record.get("tier", "")
             class_b = record.get("hpd_class_b", 0) or 0
-            if dob_occ["has_r1"] and class_b == 0 and tier == "unknown":
-                record["tier"] = "partial"
-                record["confidence"] = "medium"
-                if "dob_r1_occupancy" not in record.get("reason_codes", []):
-                    record.setdefault("reason_codes", []).append("dob_r1_occupancy")
-            elif dob_occ["has_r1"] and class_b == 0 and tier == "partial" and record.get("confidence") == "low":
+            if dob_occ["has_r1"] and class_b == 0 and tier in ("unknown", "partial"):
+                record["tier"] = "legal_transient"
                 record["confidence"] = "medium"
                 if "dob_r1_occupancy" not in record.get("reason_codes", []):
                     record.setdefault("reason_codes", []).append("dob_r1_occupancy")
@@ -870,17 +884,18 @@ def enrich_pipeline(
         record["zoning_hotel_detail"] = zoning_detail
 
         # Consolidated operator name (best available source)
+        # Prefer hotel_name (from OSM/Google Places) over license LLC name
         operator = ""
         operator_source = ""
-        if record.get("hotel_license_name"):
+        if record.get("hotel_name"):
+            operator = record["hotel_name"]
+            operator_source = "google_places" if gname else "osm"
+        elif record.get("hotel_license_name"):
             operator = record["hotel_license_name"]
             operator_source = "dcwp_license"
         elif record.get("hpd_managing_agent_corp"):
             operator = record["hpd_managing_agent_corp"]
             operator_source = "hpd_managing_agent"
-        elif record.get("hotel_name"):
-            operator = record["hotel_name"]
-            operator_source = "google_places"
         elif record.get("prior_operator"):
             operator = record["prior_operator"]["name"]
             operator_source = "ground_truth"
@@ -962,6 +977,8 @@ def enrich_pipeline(
     print(f"    Tier upgrades from licenses: {hl_upgraded} buildings")
     comp_upgraded = sum(1 for r in pipeline if "composite_signal" in r.get("reason_codes", []))
     print(f"  Composite signal upgrades: {comp_upgraded} buildings")
+    gn_count = sum(1 for r in pipeline if r.get("hotel_name") and r["bbl"] in google_names)
+    print(f"  Google Places hotel names: {len(google_names)} loaded, {gn_count} matched to pipeline")
     op_count = sum(1 for r in pipeline if r.get("operator_name"))
     print(f"  Operator identified: {op_count} buildings")
     from collections import Counter as C2

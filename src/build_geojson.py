@@ -35,9 +35,11 @@ CD_TO_NEIGHBORHOOD = {
 
 
 BRANDED_CHAINS = [
-    "marriott", "sheraton", "westin", "w hotel", "st. regis", "ritz-carlton",
+    "marriott", "sheraton", "westin", "w hotel", "w new york",
+    "st. regis", "st regis", "ritz-carlton",
     "courtyard", "residence inn", "springhill", "fairfield", "aloft", "moxy",
-    "ac hotel", "le meridien", "four points",
+    "ac hotel", "le meridien", "four points", "autograph collection",
+    "tribute portfolio", "renaissance", "delta hotels",
     "hilton", "hampton", "doubletree", "embassy suites", "homewood", "home2",
     "waldorf", "conrad", "canopy", "curio", "tapestry", "tru by hilton",
     "hyatt", "andaz", "thompson", "grand hyatt", "park hyatt", "hyatt place",
@@ -49,7 +51,7 @@ BRANDED_CHAINS = [
     "best western",
     "accor", "novotel", "sofitel", "ibis", "fairmont", "raffles", "swissotel",
     "choice", "comfort inn", "comfort suites", "quality inn", "clarion",
-    "sleep inn", "econo lodge", "rodeway",
+    "sleep inn", "econo lodge", "rodeway", "cambria",
     "four seasons", "mandarin oriental", "peninsula", "aman",
     "rosewood", "langham", "lotte", "shangri-la",
     "radisson", "park inn", "country inn",
@@ -58,10 +60,127 @@ BRANDED_CHAINS = [
     "standard hotel", "the standard", "ace hotel",
     "virgin hotel", "hard rock", "riu", "meliá", "melia",
     "arlo", "dream downtown", "dream midtown",
+    "baccarat", "taj hotel", "the pierre", "pendry", "equinox hotel",
+    "the hoxton", "the quin", "the dominick", "mondrian",
+    "plaza athénée", "plaza athenee", "the mark", "the lowell", "the surrey",
+    "park lane hotel", "aka hotel", "aka central", "aka times",
+    "the new yorker hotel", "the london", "the muse",
+    "the benjamin", "millennium", "m social", "omni",
+    "warwick", "sonesta", "westgate", "club quarters",
+    "eurostars", "citadines", "ascend collection",
+    "nh collection", "nh hotel", "executive hotel", "staypineapple",
+    "pod 39", "pod 51", "pod times", "pod brooklyn",
+    "park central", "generator", "luma hotel",
+    # Private members' clubs
+    "soho house", "athletic club", "yacht club", "harvard club",
+    "yale club", "knickerbocker club", "lotos club", "cosmopolitan club",
+    "hilton club", "club wyndham", "marriott vacation club",
 ]
 
+MANUAL_BRANDED_BBLS = {
+    "1012747504",  # 768 5 Ave — The Plaza (Fairmont/Accor), operator shows condo mgmt
+}
 
-def _is_branded(hotel_name: str, operator_name: str = "") -> bool:
+
+POST_2021_REVERSIONS = {
+    "1001060017": {
+        "former_hotel": "Hampton Inn Manhattan-Seaport",
+        "closure_year": 2023,
+        "note": "Sold Dec 2023 to Slate Property Group for $24.1M. Hotel closed prior to sale.",
+    },
+    "1008940071": {
+        "former_hotel": "W New York - The Court (St. Giles)",
+        "closure_year": 2020,
+        "note": "Closed during pandemic ~2020. Sold Jan 2023 for $50M. Currently migrant shelter.",
+    },
+    "1013190034": {
+        "former_hotel": "AKA United Nations",
+        "closure_year": 2024,
+        "note": "Converted to The Perrie condominiums (~95 units). Post-2021 conversion.",
+    },
+    "1008060076": {
+        "former_hotel": "Stewart Hotel",
+        "closure_year": 2022,
+        "note": "Closed 2022, used as migrant shelter. Acquired by Slate + Breaking Ground Dec 2025 for $255M. Converting to 579 affordable apartments.",
+    },
+    "1010167501": {
+        "former_hotel": "Row NYC",
+        "closure_year": 2025,
+        "note": "Last NYC migrant hotel, closed Aug 2025. 1,332 rooms. Conversion status TBD — may reopen as hotel or convert to residential.",
+    },
+    "1010487502": {
+        "former_hotel": "Hudson Hotel",
+        "closure_year": 2020,
+        "note": "Closed Nov 2020 during COVID. 959 rooms. Slated for conversion to 438 below-market apartments.",
+    },
+}
+
+
+EXCLUDED_BLDG_CLASSES = {
+    "E1", "E9",  # warehouse
+    "F2",        # factory
+    "G1", "G2", "G6", "G7",  # garage
+    "V1",        # vacant land
+    "T9",        # transportation
+    "Q1",        # outdoor recreation
+    "J4",        # market
+    "U0",        # utility
+    "Z9",        # miscellaneous
+    "R5",        # apartment hotel (residential co-ops, not hotel targets)
+}
+
+NON_TARGET_KEYWORDS = [
+    # Educational
+    "university", "college", "school", "academy", "seminary", "institute",
+    "yeshiva", "dormitor",
+    "nyu ", "nyu hospitals", "cuny", "suny", "f i t ",
+    # Shelters / homeless
+    "homeless", "shelter",
+    # HDFC / supportive housing
+    "housing development fund", "hdfc", "supportive housing",
+    "common ground", "breaking ground",
+    # Religious / charitable
+    "salvation army", "bowery mission", "ymca", "ywca",
+    # Medical
+    "hospital", "nursing home",
+]
+
+NON_TARGET_SAFE_WORDS = ["hospitality"]
+
+
+INSTITUTIONAL_BLDG_CLASSES = {"I4", "I7", "I9", "N2", "N4", "N9", "M2", "M4", "M9", "P3", "P5", "W5", "W6", "W7"}
+
+
+def _is_non_target(record: dict) -> bool:
+    bldg_class = record.get("bldgclass", "")
+    if bldg_class in EXCLUDED_BLDG_CLASSES:
+        return True
+
+    is_institutional_class = bldg_class in INSTITUTIONAL_BLDG_CLASSES
+
+    combined = " ".join([
+        record.get("ownername", ""),
+        record.get("operator_name", ""),
+        record.get("managing_agent", ""),
+    ]).lower()
+    if any(safe in combined for safe in NON_TARGET_SAFE_WORDS):
+        combined = combined.replace("hospitality", "")
+    has_keyword = any(kw in combined for kw in NON_TARGET_KEYWORDS)
+
+    if not is_institutional_class and not has_keyword:
+        return False
+
+    if record.get("has_hotel_license"):
+        return False
+    hotel = (record.get("hotel_name") or "").lower()
+    if hotel and not any(kw in hotel for kw in NON_TARGET_KEYWORDS):
+        return False
+    return True
+
+
+def _is_branded(hotel_name: str, operator_name: str = "", bbl: str = "") -> bool:
+    if bbl in MANUAL_BRANDED_BBLS:
+        return True
     combined = f"{hotel_name} {operator_name}".lower()
     if not combined.strip():
         return False
@@ -105,11 +224,11 @@ def build_geojson(
     def _is_actively_operating(r):
         if r.get("hpd_class_b", 0) > 0:
             return True
-        if r.get("reversion_window"):
-            return True
         if r.get("has_hotel_license"):
             return True
         if r.get("prior_operator"):
+            return True
+        if r["bbl"] in POST_2021_REVERSIONS:
             return True
         return False
 
@@ -118,7 +237,7 @@ def build_geojson(
     # License/reversion/prior-op alone isn't enough — without Class B, there's
     # no active transient use to grandfather.
     pre_zoning = len(pipeline)
-    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or r.get("hpd_class_b", 0) > 0]
+    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or r.get("hpd_class_b", 0) > 0 or r["bbl"] in POST_2021_REVERSIONS]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
 
     # Drop hotel-class buildings that aren't actively operating — they'd need
@@ -126,6 +245,41 @@ def build_geojson(
     pre_permit = len(pipeline)
     pipeline = [r for r in pipeline if _is_actively_operating(r) or r.get("tier") != "legal_transient"]
     print(f"Special permit filter: {pre_permit} -> {len(pipeline)} (removed {pre_permit - len(pipeline)} not actively operating)")
+
+    # Drop non-target buildings (dorms, shelters, HDFCs, garages, vacant land, etc.)
+    pre_inst = len(pipeline)
+    pipeline = [r for r in pipeline if not _is_non_target(r)]
+    print(f"Non-target filter: {pre_inst} -> {len(pipeline)} (removed {pre_inst - len(pipeline)} non-target buildings)")
+
+    # Drop non-residential buildings with no units and no hotel signals
+    MIXED_RES_CLASSES = {"RC", "RD", "RM", "RH", "RK", "RI", "RR", "RX", "RW", "RB", "RZ", "R1", "R4"}
+    def _is_empty_non_hotel(r):
+        cls = r.get("bldgclass", "")
+        if cls.startswith("H") or cls in MIXED_RES_CLASSES:
+            return False
+        if r.get("unitsres", 0) > 0 or r.get("hpd_class_b", 0) > 0:
+            return False
+        if r.get("has_hotel_license") or r.get("hotel_name"):
+            return False
+        return True
+    pre_empty = len(pipeline)
+    pipeline = [r for r in pipeline if not _is_empty_non_hotel(r)]
+    print(f"Empty non-hotel filter: {pre_empty} -> {len(pipeline)} (removed {pre_empty - len(pipeline)} buildings with no units/hotel signals)")
+
+    # Drop non-H buildings where Class B is negligible relative to Class A
+    def _negligible_class_b(r):
+        if r.get("bldgclass", "").startswith("H"):
+            return False
+        if r.get("has_hotel_license") or r.get("hotel_name"):
+            return False
+        class_b = r.get("hpd_class_b", 0) or 0
+        class_a = r.get("hpd_class_a", 0) or 0
+        if class_b == 0 or class_a < 20:
+            return False
+        return class_b <= 3 and class_b / (class_a + class_b) < 0.05
+    pre_neg = len(pipeline)
+    pipeline = [r for r in pipeline if not _negligible_class_b(r)]
+    print(f"Negligible Class B filter: {pre_neg} -> {len(pipeline)} (removed {pre_neg - len(pipeline)} residential buildings with <=3 Class B rooms)")
 
     # Index pipeline by BBL
     pipe_by_bbl = {r["bbl"]: r for r in pipeline}
@@ -227,7 +381,7 @@ def build_geojson(
             "hotel_name": record.get("hotel_name", ""),
             "hotel_phone": record.get("hotel_phone", ""),
             "hotel_website": record.get("hotel_website", ""),
-            "is_branded": _is_branded(record.get("hotel_name", ""), record.get("operator_name", "")),
+            "is_branded": _is_branded(record.get("hotel_name", ""), record.get("operator_name", ""), bbl),
             # DOB occupancy classification
             "dob_has_r1": record.get("dob_has_r1", False),
             "dob_has_j1": record.get("dob_has_j1", False),
@@ -259,17 +413,12 @@ def build_geojson(
             "landmark_name": record.get("landmark_name", ""),
             "is_historic_district": record.get("is_historic_district", False),
             "historic_district": record.get("historic_district", ""),
-            # Tax benefits (421-a / J-51)
-            "has_tax_benefit": record.get("has_tax_benefit", False),
-            "tax_benefit_type": record.get("tax_benefit_type", ""),
-            "tax_benefit_expires": record.get("tax_benefit_expires"),
-            "tax_benefit_active": record.get("tax_benefit_active", False),
-            # Rent stabilization
-            "rent_stabilized_units": record.get("rent_stabilized_units", 0),
-            "rent_stab_data_year": record.get("rent_stab_data_year"),
+
             # Zoning compatibility
             "zoning_hotel_permitted": record.get("zoning_hotel_permitted", "unknown"),
             "zoning_hotel_detail": record.get("zoning_hotel_detail", ""),
+            # Ownership structure
+            "is_condo": "CONDO" in (record.get("ownername") or "").upper() or record.get("bldgclass", "") in ("R1", "R2", "R4"),
         }
 
         # Include top 3 permits (trimmed to save space)
@@ -292,22 +441,24 @@ def build_geojson(
             properties["prior_operator"] = record["prior_operator"]
             properties["has_prior_op"] = True
 
-        if record.get("reversion_window"):
-            properties["reversion_window"] = record["reversion_window"]
+        reversion_info = POST_2021_REVERSIONS.get(record["bbl"])
+        if reversion_info:
+            properties["reversion"] = reversion_info
             properties["has_reversion"] = True
 
         if record.get("class_b_split"):
             properties["class_b_split"] = record["class_b_split"]
 
         # Segment: subdivide legal_transient for prospecting
+        # Reversion is an overlay, not a segment — building keeps its real segment
         seg_tier = record["tier"]
-        if seg_tier == "legal_transient":
-            if record.get("reversion_window"):
-                properties["segment"] = "reversion"
-            elif record.get("class_b_split"):
-                properties["segment"] = "split_use"
-            else:
-                properties["segment"] = "hotel"
+        op_name = (record.get("operator_name") or "").lower()
+        op_looks_like_hotel = any(w in op_name for w in ("hotel", "inn ", "suites", "hostel", "motel"))
+        has_active_operator = bool(record.get("hotel_name") or record.get("has_hotel_license") or op_looks_like_hotel)
+        if seg_tier == "legal_transient" and has_active_operator:
+            properties["segment"] = "active_hotel"
+        elif seg_tier == "legal_transient":
+            properties["segment"] = "transient"
         elif seg_tier == "partial":
             properties["segment"] = "partial"
         else:
@@ -343,8 +494,6 @@ def build_geojson(
             avail += 8
         sale_date = record.get("last_sale_date") or ""
         if sale_date >= f"{date.today().year - 2}-01-01":
-            avail += 5
-        if record.get("reversion_window"):
             avail += 5
         if (record.get("ecb_total_balance") or 0) > 10000:
             avail += 4
