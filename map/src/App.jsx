@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from "react";
 import maplibregl from "maplibre-gl";
 
+// Browser-exposed by design (Vite inlines it). Restrict by HTTP referrer + API in
+// the Google Cloud console — that, not secrecy, is the control for a client-side key.
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
+
 const SEGMENTS = [
   {
     key: "transient", label: "Transient capacity", color: "#8b5cf6", defaultOn: true,
@@ -15,6 +19,20 @@ const SEGMENTS = [
     info: "Building class suggests mixed use (RM, RC, etc.) but HPD didn't confirm Class B rooms. May have transient capacity — needs manual verification.",
   },
 ];
+
+// buildings.geojson features are MultiPolygon footprints, but the clustered dot
+// layer and search results hand back Points. Callers get a [lng, lat] either way.
+// Vertex mean of the outer ring — an approximation, but consistent with the dots.
+function featureCentroid(f) {
+  const coords = f?.geometry?.coordinates;
+  if (!coords) return null;
+  if (f.geometry.type === "Point") return coords;
+  const ring = f.geometry.type === "MultiPolygon" ? coords[0][0] : coords[0];
+  if (!ring || !ring.length) return null;
+  let cx = 0, cy = 0;
+  for (const [x, y] of ring) { cx += x; cy += y; }
+  return [cx / ring.length, cy / ring.length];
+}
 
 function estRooms(p) {
   const classB = p.hpd_class_b || 0;
@@ -466,12 +484,113 @@ function ScoreExplainer({ p }) {
   );
 }
 
+const M_PER_DEG_LAT = 111320;
+const mPerDegLng = (lat) => M_PER_DEG_LAT * Math.cos((lat * Math.PI) / 180);
+
+// Probe radii in metres out from the footprint centroid. Querying the centroid
+// itself returns whatever panorama is nearest to a point *inside* the building —
+// in practice a shop, lobby or hotel-room interior about two thirds of the time.
+// The street-level capture we want sits 20-50m away out on the roadway.
+const PROBE_RINGS = [30, 48];
+const panoCache = new Map();
+
+async function findStreetPano(lng, lat) {
+  const pts = [];
+  for (const r of PROBE_RINGS) {
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+    }
+  }
+  const mLng = mPerDegLng(lat);
+  const found = new Map();
+  let denied = false;
+  // Metadata is the unlimited-free SKU, so 16 parallel probes cost nothing but
+  // one round trip. Only the single chosen image below is billable.
+  await Promise.all(pts.map(async ([dx, dy]) => {
+    const qlat = lat + dy / M_PER_DEG_LAT;
+    const qlng = lng + dx / mLng;
+    try {
+      const r = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${qlat},${qlng}&source=outdoor&key=${GOOGLE_MAPS_API_KEY}`);
+      const d = await r.json();
+      if (d.status === "REQUEST_DENIED") { denied = true; return; }
+      if (d.status !== "OK" || !d.pano_id || !d.location) return;
+      const dist = Math.hypot((d.location.lat - lat) * M_PER_DEG_LAT, (d.location.lng - lng) * mLng);
+      found.set(d.pano_id, { id: d.pano_id, loc: d.location, dist, official: /Google/.test(d.copyright || "") });
+    } catch { /* a single failed probe is not fatal */ }
+  }));
+  if (denied && !found.size) return { denied: true, pano: null };
+  if (!found.size) return { denied: false, pano: null };
+  // Official Google capture beats a user photo sphere (spheres are often indoors);
+  // ~36m frames a whole facade without a neighbouring building intruding; anything
+  // closer than 15m is probably still inside the building.
+  const score = (c) => (c.official ? 0 : 100) + (c.dist < 15 ? 300 : 0) + Math.abs(c.dist - 36);
+  return { denied: false, pano: [...found.values()].sort((a, b) => score(a) - score(b))[0] };
+}
+
+function StreetViewThumb({ lng, lat, label }) {
+  const coordKey = lat == null || lng == null ? null : `${lat.toFixed(6)},${lng.toFixed(6)}`;
+  // State is keyed to the coordinates so switching buildings reads as "loading" in
+  // the same render, rather than briefly showing the previous building's photo.
+  const [res, setRes] = useState({ key: null });
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY || !coordKey) return;
+    if (panoCache.has(coordKey)) { setRes({ key: coordKey, ...panoCache.get(coordKey) }); return; }
+    let cancelled = false;
+    findStreetPano(lng, lat).then((r) => {
+      panoCache.set(coordKey, r);
+      if (!cancelled) setRes({ key: coordKey, ...r });
+    });
+    return () => { cancelled = true; };
+  }, [coordKey, lng, lat]);
+
+  if (!GOOGLE_MAPS_API_KEY || !coordKey) return null;
+
+  const ready = res.key === coordKey;
+  if (!ready || !res.pano) {
+    const msg = !ready ? "Loading Street View\u2026"
+      : res.denied ? "Street View unavailable \u2014 key not authorized for this domain"
+      : "No Street View coverage at this address";
+    return <div className="px-4 py-2 border-b border-gray-100 text-[11px] text-gray-400">{msg}</div>;
+  }
+
+  // Aim the camera from the chosen street panorama back at the building centroid.
+  const { id, loc } = res.pano;
+  const heading = ((Math.atan2((lng - loc.lng) * mPerDegLng(lat), (lat - loc.lat) * M_PER_DEG_LAT) * 180) / Math.PI + 360) % 360;
+  const h = heading.toFixed(1);
+  // Requested at 640w and displayed at 384w so it stays crisp on retina.
+  const img = `https://maps.googleapis.com/maps/api/streetview?size=640x280&pano=${id}&heading=${h}&fov=95&pitch=8&key=${GOOGLE_MAPS_API_KEY}`;
+  const link = `https://www.google.com/maps/@?api=1&map_action=pano&pano=${id}&heading=${h}&pitch=8`;
+
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative block border-b border-gray-100 overflow-hidden"
+    >
+      <img
+        src={img}
+        alt={`Street View of ${label || "this building"}`}
+        loading="lazy"
+        className="w-full h-40 object-cover"
+      />
+      <div className="absolute inset-0 group-hover:bg-black/25 transition-colors" />
+      <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-white/90 text-[10px] font-medium text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity">
+        Open in Street View &rarr;
+      </span>
+    </a>
+  );
+}
+
 function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNote, crmStatuses, setCrmStatus, allFeatures }) {
   if (!feature) return null;
   const p = feature.properties;
   const reasonCodes = parseJsonProp(p.reason_codes) || [];
   const blockers = parseJsonProp(p.blockers) || [];
   const priorOp = parseJsonProp(p.prior_operator);
+  const [lng, lat] = featureCentroid(feature) || [];
 
   return (
     <div className="fixed top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
@@ -483,6 +602,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none cursor-pointer shrink-0">&times;</button>
       </div>
+
+      <StreetViewThumb lng={lng} lat={lat} label={p.hotel_name || p.address} />
 
       <div className="p-4 space-y-4">
         <div className="flex items-center gap-2 flex-wrap">
@@ -1441,8 +1562,6 @@ function FilterPanel({
   );
 }
 
-const GOOGLE_PLACES_API_KEY = "AIzaSyCKgST4j-ZZ_SqXp09dciVbHTn_4gctzUM";
-
 function SearchBar({ mapRef, panelOpen, onSelectFeature }) {
   const HISTORY_KEY = "transient-search-history";
   const [query, setQuery] = useState("");
@@ -1476,13 +1595,9 @@ function SearchBar({ mapRef, panelOpen, onSelectFeature }) {
       let closest = features[0];
       let minDist = Infinity;
       for (const f of features) {
-        const coords = f.geometry?.coordinates;
-        if (!coords) continue;
-        const ring = f.geometry.type === "MultiPolygon" ? coords[0][0] : coords[0];
-        let cx = 0, cy = 0;
-        for (const [x, y] of ring) { cx += x; cy += y; }
-        cx /= ring.length; cy /= ring.length;
-        const dist = Math.hypot(cx - center[0], cy - center[1]);
+        const c = featureCentroid(f);
+        if (!c) continue;
+        const dist = Math.hypot(c[0] - center[0], c[1] - center[1]);
         if (dist < minDist) { minDist = dist; closest = f; }
       }
       onSelectFeature(closest);
@@ -1501,12 +1616,12 @@ function SearchBar({ mapRef, panelOpen, onSelectFeature }) {
         // GeoSearch (existing)
         fetch(`https://geosearch.planninglabs.nyc/v2/search?text=${encodeURIComponent(text)}`)
           .then(r => r.json()),
-        // Google Places Text Search (New)
-        fetch("https://places.googleapis.com/v1/places:searchText", {
+        // Google Places Text Search (New) — skipped when no key is configured
+        !GOOGLE_MAPS_API_KEY ? Promise.resolve({}) : fetch("https://places.googleapis.com/v1/places:searchText", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
+            "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
             "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location",
           },
           body: JSON.stringify({
@@ -2968,12 +3083,9 @@ export default function App() {
           const SEG_RANK = { transient: 0, active_hotel: 1, partial: 2, unknown: 3 };
           const pointMap = new Map();
           for (const f of (data.features || [])) {
-            const coords = f.geometry?.coordinates;
-            if (!coords) continue;
-            const ring = f.geometry.type === "MultiPolygon" ? coords[0][0] : coords[0];
-            let cx = 0, cy = 0;
-            for (const [x, y] of ring) { cx += x; cy += y; }
-            cx /= ring.length; cy /= ring.length;
+            const c = featureCentroid(f);
+            if (!c) continue;
+            const [cx, cy] = c;
             const addr = (f.properties.address || "").trim();
             const key = addr || `${cx.toFixed(4)},${cy.toFixed(4)}`;
             const existing = pointMap.get(key);
