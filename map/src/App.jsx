@@ -162,6 +162,9 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
   if (filters.filterRecentSale) {
     refinements.push([">=", ["get", "last_sale_date"], filters._recentSaleCutoff]);
   }
+  if (filters.filterSplitUse) {
+    refinements.push(["all", [">", ["get", "hpd_class_a"], 0], [">", ["get", "hpd_class_b"], 0]]);
+  }
   if (filters.filterCommercialZone) {
     refinements.push(["any",
       ["==", ["slice", ["get", "zonedist1"], 0, 1], "C"],
@@ -1312,6 +1315,7 @@ function FilterPanel({
   hideBrandTypes, toggleBrandType,
   hideCondos, setHideCondos,
   hideRestricted, setHideRestricted,
+  extraFilters, setFilter,
   minUnits, setMinUnits,
   minClassB, setMinClassB,
   featureCount, overlayCounts,
@@ -1435,6 +1439,32 @@ function FilterPanel({
                 <span className="text-xs text-gray-700">Reversion window</span>
                 <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.reversions})</span>
                 <InfoTip text="Hotels that converted to residential post-2021. Can revert to hotel use without CPC special permit before Dec 2027. Red outline on map." />
+              </div>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+              <input
+                type="checkbox"
+                checked={extraFilters.filterSplitUse}
+                onChange={(e) => setFilter("filterSplitUse", e.target.checked)}
+                className="sr-only"
+              />
+              <span
+                className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
+                style={{
+                  borderColor: "#0891b2",
+                  backgroundColor: extraFilters.filterSplitUse ? "#0891b2" : "transparent",
+                }}
+              >
+                {extraFilters.filterSplitUse && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-700">Split use only</span>
+                <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.splitUse})</span>
+                <InfoTip text="Buildings registering both Class A (permanent) and Class B (transient) units, so any deal involves sitting tenants. Unlike the two overlays above, this narrows the current view rather than adding to it — turn it on with only Transient capacity active to get the split-use count for the target list." />
               </div>
             </label>
           </div>
@@ -1603,6 +1633,12 @@ function FilterPanel({
               + Reversion window
             </button>
           </div>
+          <button
+            onClick={() => onAddCategory("_split_use")}
+            className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-cyan-200 text-cyan-700 hover:bg-cyan-50 cursor-pointer transition-colors"
+          >
+            + Split use
+          </button>
         </div>
       </div>
     </div>
@@ -1879,6 +1915,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
       if (filters.filterHasClassB && !(p.hpd_class_b > 0)) return false;
       if (filters.filterMultiOwner && !(p.owner_portfolio_size > 1)) return false;
       if (filters.filterRecentSale && (!p.last_sale_date || p.last_sale_date < filters._recentSaleCutoff)) return false;
+      if (filters.filterSplitUse && !((p.hpd_class_a || 0) > 0 && (p.hpd_class_b || 0) > 0)) return false;
       if (filters.filterCommercialZone) {
         const z = (p.zonedist1 || "")[0];
         if (z !== "C" && z !== "M") return false;
@@ -3002,6 +3039,7 @@ export default function App() {
     filterMultiOwner: false,
     filterRecentSale: false,
     filterCommercialZone: false,
+    filterSplitUse: false,
     _recentSaleCutoff: new Date(Date.now() - 3 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   });
   const setFilter = useCallback((key, val) => {
@@ -3011,7 +3049,7 @@ export default function App() {
   const [matrixFilter, setMatrixFilter] = useState(null); // { fn, label } from methodology drill-down
   // Score is now purely legal — no configurable weights
   const [featureCount, setFeatureCount] = useState(0);
-  const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, priorOpsExtra: 0, reversions: 0, reversionsExtra: 0, tempCoo: 0, segmentCounts: {} });
+  const [overlayCounts, setOverlayCounts] = useState({ priorOps: 0, priorOpsExtra: 0, reversions: 0, reversionsExtra: 0, tempCoo: 0, splitUse: 0, segmentCounts: {} });
   const [dataDate, setDataDate] = useState(null);
 
   // Load GeoJSON for overlay counts + bulk select
@@ -3043,6 +3081,11 @@ export default function App() {
           reversions: revAll.length,
           reversionsExtra: revExtra.length,
           tempCoo: feats.filter((f) => f.properties.coo_has_temporary).length,
+          splitUse: new Set(
+            feats
+              .filter((f) => (f.properties.hpd_class_a || 0) > 0 && (f.properties.hpd_class_b || 0) > 0)
+              .map((f) => f.properties.bbl)
+          ).size,
           segmentCounts: segCounts,
         });
         // Extract data date from first feature's source_pulled_on (YYYYMMDD)
@@ -3083,10 +3126,15 @@ export default function App() {
   }, []);
 
   const handleAddCategory = useCallback((propKey) => {
+    // Split use is derived from the two class counts, not a stored flag.
+    const matches = (p) =>
+      propKey === "_split_use"
+        ? (p.hpd_class_a || 0) > 0 && (p.hpd_class_b || 0) > 0
+        : !!p[propKey];
     setExportList((prev) => {
       const next = new Map(prev);
       for (const f of allFeaturesRef.current) {
-        if (f.properties[propKey]) {
+        if (matches(f.properties)) {
           next.set(f.properties.bbl, f);
         }
       }
@@ -3445,6 +3493,8 @@ export default function App() {
         hideCondos={hideCondos}
         hideRestricted={hideRestricted}
         setHideRestricted={setHideRestricted}
+        extraFilters={extraFilters}
+        setFilter={setFilter}
         setHideCondos={setHideCondos}
         minUnits={minUnits}
         setMinUnits={setMinUnits}
