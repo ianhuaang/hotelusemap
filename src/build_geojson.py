@@ -486,8 +486,12 @@ def build_geojson(
             legal += 25
         if record.get("dob_has_r1"):
             legal += 15
-        if record.get("coo_has_temporary"):
+        # Mirror of computeScore(): a final C of O outranks a temporary one.
+        coo_type = record.get("coo_latest_type") or ""
+        if coo_type == "Final" or coo_type.startswith("Renewal"):
             legal += 10
+        elif coo_type in ("Temporary", "Initial"):
+            legal += 6
         if (record.get("permit_transient_strong") or 0) >= 1:
             legal += 8
         # Zoning penalty applies only where there are no grandfathered rights.

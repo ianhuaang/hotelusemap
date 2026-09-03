@@ -83,7 +83,14 @@ function computeScore(p) {
   if (hasClassB) score += 35;
   if (hasH) score += 25;
   if (p.dob_has_r1) score += 15;
-  if (p.coo_has_temporary) score += 10;
+  // A final C of O is the strongest evidence transient use is approved, so it
+  // scores highest. coo_has_temporary only means "a temporary one appears
+  // somewhere in the history" — 19 West 103 Street has 24 C of O records, one
+  // temporary, and was collecting the full bonus while buildings with a clean
+  // final C of O collected nothing. Judge the latest record instead.
+  const cooType = p.coo_latest_type || "";
+  if (cooType === "Final" || cooType.startsWith("Renewal")) score += 10;
+  else if (cooType === "Temporary" || cooType === "Initial") score += 6;
   if ((p.permit_transient_strong || 0) >= 1) score += 8;
   // dob_r1_filing_count is NOT scored: it counts the same DOB filings that set
   // dob_has_r1, so scoring both awarded 22 of 100 points for one signal.
@@ -452,7 +459,8 @@ function ScoreExplainer({ p }) {
     { label: "HPD Class B rooms registered", pts: 35, hit: (p.hpd_class_b || 0) > 0 },
     { label: "Hotel building class (H-series)", pts: 25, hit: (p.bldgclass || "").startsWith("H") },
     { label: "DOB R-1 transient occupancy", pts: 15, hit: !!p.dob_has_r1 },
-    { label: "Temporary C of O issued", pts: 10, hit: !!p.coo_has_temporary },
+    { label: "Final C of O on file", pts: 10, hit: (p.coo_latest_type || "") === "Final" || (p.coo_latest_type || "").startsWith("Renewal") },
+    { label: "Temporary C of O only", pts: 6, hit: (p.coo_latest_type || "") === "Temporary" || (p.coo_latest_type || "") === "Initial" },
     { label: "DOB transient permit activity", pts: 8, hit: (p.permit_transient_strong || 0) >= 1 },
   ];
   const hasGrandfathered = (p.hpd_class_b || 0) > 0 || (p.bldgclass || "").startsWith("H");
@@ -2933,6 +2941,10 @@ export default function App() {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
   const allFeaturesRef = useRef([]);
+  // Bumped once the geojson lands. tableFeatures reads allFeaturesRef, which a
+  // useMemo cannot depend on — without this the table computed against an empty
+  // ref on first paint and stayed empty until some other dep changed.
+  const [featuresVersion, setFeaturesVersion] = useState(0);
   const currentFilterRef = useRef(null);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
   const { notes, save: saveNote } = useNotes();
@@ -2985,6 +2997,7 @@ export default function App() {
       .then((data) => {
         const feats = data.features || [];
         allFeaturesRef.current = feats;
+        setFeaturesVersion((v) => v + 1);
         const segCounts = {};
         const seenBBLs = {};
         for (const f of feats) {
@@ -3312,7 +3325,7 @@ export default function App() {
 
   const tableFeatures = useMemo(() => {
     return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted);
-  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
+  }, [featuresVersion, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
