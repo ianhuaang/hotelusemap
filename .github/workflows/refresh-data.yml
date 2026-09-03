@@ -6,13 +6,20 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch: # Allow manual trigger
 
+# The commit step pushes map/public/buildings.geojson back to main. Without
+# this the default GITHUB_TOKEN is read-only and the push fails after every
+# pull has already run — which is what happened to run #7.
+permissions:
+  contents: write
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # Per-step budgets sum to ~180 min; a 60-min job cap guaranteed a mid-run
-    # cancellation on any slow day (run #6 died at 1h00m21s). Real runs land
-    # well under this — the cap is a backstop, not a target.
-    timeout-minutes: 120
+    # Must exceed the sum of the per-step caps (275 min). If the job cap fires
+    # first, the run is cancelled before the verify step can report which
+    # sources failed — the cap killing the run costs us the diagnosis. Real
+    # runs land far under: run #7 pulled everything in 1h46m.
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
 
@@ -23,44 +30,59 @@ jobs:
       - name: Install Python dependencies
         run: pip install certifi
 
+      # Every pull carries continue-on-error so a single flaky source doesn't
+      # abort the run — one run then tells us everything that broke instead of
+      # only the first failure. The cost is that a timed-out step reports its
+      # conclusion as "success", so the guard step after Phase 3 is what
+      # actually decides whether the data is complete enough to publish.
+      # Each step needs an id so that guard can read its true outcome.
+
       # Phase 1: Pull independent data sources (no dependencies)
-      # continue-on-error so one flaky API doesn't kill the whole run
       - name: Pull PLUTO
+        id: p_pluto
         run: python src/pull_pluto.py
         continue-on-error: true
         timeout-minutes: 10
 
       - name: Pull HPD
+        id: p_hpd
         run: python src/pull_hpd.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 15
 
       - name: Pull building footprints
+        id: p_footprints
         run: python src/pull_footprints.py
         continue-on-error: true
         timeout-minutes: 20
 
       - name: Pull DOF sales
+        id: p_sales
         run: python src/pull_sales.py
         continue-on-error: true
         timeout-minutes: 10
 
       - name: Pull DOB permits
+        id: p_permits
         run: python src/pull_permits.py
-        continue-on-error: true
-        timeout-minutes: 10
-
-      - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
-        run: python src/pull_distress.py
         continue-on-error: true
         timeout-minutes: 15
 
+      # Ran 15.2m against a 15m cap in run #7 — it was truncated, not finished.
+      - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
+        id: p_distress
+        run: python src/pull_distress.py
+        continue-on-error: true
+        timeout-minutes: 30
+
       - name: Pull DCWP hotel licenses
+        id: p_licenses
         run: python src/pull_hotel_licenses.py
         continue-on-error: true
         timeout-minutes: 10
 
       - name: Pull DOB occupancy
+        id: p_occupancy
         run: python src/pull_dob_occupancy.py
         continue-on-error: true
         timeout-minutes: 10
@@ -71,39 +93,88 @@ jobs:
 
       # Phase 3: Pull data that depends on pipeline output
       - name: Pull C of O records
+        id: p_coo
         run: python src/pull_coo.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 15
 
+      # Truncated at 10m in run #7.
       - name: Pull ACRIS owners
+        id: p_acris
         run: python src/pull_acris_owners.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 25
 
+      # Truncated at 10m in run #7.
       - name: Pull HPD registrations
+        id: p_hpdreg
         run: python src/pull_hpd_registrations.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 25
 
+      # Truncated at 10m in run #7.
       - name: Pull alt addresses
+        id: p_altaddr
         run: python src/pull_alt_addresses.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 25
 
       - name: Pull LPC landmarks
+        id: p_landmarks
         run: python src/pull_landmarks.py
         continue-on-error: true
         timeout-minutes: 10
 
+      # Truncated at 30m in run #7.
       - name: Pull tax benefits (421-a/J-51)
+        id: p_taxben
         run: python src/pull_tax_benefits.py
         continue-on-error: true
-        timeout-minutes: 30
+        timeout-minutes: 45
 
       - name: Pull rent stabilization
+        id: p_rentstab
         run: python src/pull_rent_stabilization.py
         continue-on-error: true
-        timeout-minutes: 5
+        timeout-minutes: 10
+
+      # Gate: refuse to publish a build made from truncated inputs.
+      #
+      # continue-on-error rewrites a timed-out step's `conclusion` to success,
+      # so `outcome` is the only field that tells the truth. Run #7 reported all
+      # 23 steps green while five sources had actually been killed at their cap,
+      # and would have committed that partial build silently. This reports every
+      # bad source at once, then stops the run before enrichment.
+      - name: Verify every source completed
+        run: |
+          FAILED=""
+          check() {
+            if [ "$2" != "success" ]; then
+              FAILED="$FAILED\n  - $1 ($2)"
+            fi
+          }
+          check "PLUTO"              "${{ steps.p_pluto.outcome }}"
+          check "HPD"                "${{ steps.p_hpd.outcome }}"
+          check "building footprints" "${{ steps.p_footprints.outcome }}"
+          check "DOF sales"          "${{ steps.p_sales.outcome }}"
+          check "DOB permits"        "${{ steps.p_permits.outcome }}"
+          check "distress signals"   "${{ steps.p_distress.outcome }}"
+          check "DCWP hotel licenses" "${{ steps.p_licenses.outcome }}"
+          check "DOB occupancy"      "${{ steps.p_occupancy.outcome }}"
+          check "C of O"             "${{ steps.p_coo.outcome }}"
+          check "ACRIS owners"       "${{ steps.p_acris.outcome }}"
+          check "HPD registrations"  "${{ steps.p_hpdreg.outcome }}"
+          check "alt addresses"      "${{ steps.p_altaddr.outcome }}"
+          check "LPC landmarks"      "${{ steps.p_landmarks.outcome }}"
+          check "tax benefits"       "${{ steps.p_taxben.outcome }}"
+          check "rent stabilization" "${{ steps.p_rentstab.outcome }}"
+          if [ -n "$FAILED" ]; then
+            echo "::error title=Incomplete data pull::One or more sources did not complete. Not publishing a partial build."
+            printf '%b\n' "Sources that did not complete:$FAILED"
+            echo "A step that hit its timeout-minutes cap shows here even though the run log marks it green."
+            exit 1
+          fi
+          echo "All 15 sources completed."
 
       # Phase 4: Enrich and build
       - name: Run enrichment
