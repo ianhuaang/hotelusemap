@@ -1323,7 +1323,6 @@ function FilterPanel({
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
         <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Capacity</h1>
-        <p className="text-[11px] text-gray-500 mt-0.5">Manhattan &middot; Downtown BK &middot; Williamsburg &middot; LIC</p>
         {dataDate && (() => {
           const days = dataDate.daysAgo;
           const color = days <= 7 ? "text-emerald-600" : days <= 30 ? "text-amber-600" : "text-red-600";
@@ -1596,6 +1595,12 @@ function FilterPanel({
               className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 cursor-pointer transition-colors"
             >
               + Prior operators
+            </button>
+            <button
+              onClick={() => onAddCategory("has_reversion")}
+              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-red-200 text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
+            >
+              + Reversion window
             </button>
           </div>
         </div>
@@ -3043,7 +3048,9 @@ export default function App() {
         // Extract data date from first feature's source_pulled_on (YYYYMMDD)
         const raw = feats[0]?.properties?.source_pulled_on || "";
         if (raw.length === 8) {
-          const d = new Date(`${raw.slice(0,4)}-${raw.slice(4,6)}-${raw.slice(6,8)}`);
+          // Build in local time. `new Date("2026-08-21")` is parsed as UTC midnight,
+          // so rendering it locally west of UTC shows the previous day.
+          const d = new Date(Number(raw.slice(0,4)), Number(raw.slice(4,6)) - 1, Number(raw.slice(6,8)));
           const daysAgo = Math.floor((Date.now() - d.getTime()) / 86400000);
           setDataDate({
             formatted: d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
