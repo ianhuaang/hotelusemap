@@ -2942,8 +2942,10 @@ export default function App() {
   const [activeSegments, setActiveSegments] = useState(
     Object.fromEntries(SEGMENTS.map((s) => [s.key, s.defaultOn]))
   );
-  const [showPriorOps, setShowPriorOps] = useState(true);
-  const [showReversion, setShowReversion] = useState(true);
+  // Both overlays bypass every refinement filter (see applyFilters), so leaving
+  // them on by default injected rows that ignored the user's own filters.
+  const [showPriorOps, setShowPriorOps] = useState(false);
+  const [showReversion, setShowReversion] = useState(false);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
   const [hideBrandTypes, setHideBrandTypes] = useState(new Set(["chain", "club"]));

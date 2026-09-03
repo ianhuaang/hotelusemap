@@ -20,6 +20,25 @@ from config import (
 
 TODAY = date.today().strftime("%Y%m%d")
 
+
+def _data_vintage() -> str:
+    """Date stamp of the newest PLUTO pull actually being read.
+
+    source_pulled_on is surfaced in the UI as the map's data date, so it has to
+    describe the data rather than the build. Using date.today() meant a rebuild
+    from older raw files claimed today's date — e.g. a build from 20260821 files
+    labelled itself 20260903.
+    """
+    files = sorted(DATA_RAW.glob("pluto_[0-9]*.json"), reverse=True)
+    if files:
+        stem = files[0].stem.split("_")[-1]
+        if len(stem) == 8 and stem.isdigit():
+            return stem
+    return TODAY
+
+
+DATA_VINTAGE = _data_vintage()
+
 # Building classes that indicate direct hotel/transient use
 HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H9",
                  "HB", "HH", "HS", "RH"}
@@ -320,7 +339,7 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             "prior_operator": prior_op_info,
             "reversion_window": reversion_window,
             "class_b_split": class_b_split,
-            "source_pulled_on": TODAY,
+            "source_pulled_on": DATA_VINTAGE,
         }
         results.append(record)
 
@@ -357,7 +376,7 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "prior_operator": op_info,
                 "reversion_window": None,
                 "class_b_split": None,
-                "source_pulled_on": TODAY,
+                "source_pulled_on": DATA_VINTAGE,
             })
 
     # Summary
