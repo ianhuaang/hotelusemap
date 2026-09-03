@@ -228,7 +228,14 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         blockers = []
 
         is_excluded_class = bldgclass in EXCLUDED_HOTEL_CLASSES
+        # PLUTO building class alone misses most SRO stock: HPD records 42
+        # transient targets as SINGLE ROOM OCCUPANCY under building classes as
+        # varied as C1, C5, D6, H3, HS and RM. HPD's own classification is the
+        # reliable signal, so check both.
         restricted_reason = RESTRICTED_CONVERSION_CLASSES.get(bldgclass)
+        hpd_dob_class = (hpd_info.get("dobbuildingclass") or "").upper()
+        if not restricted_reason and "SINGLE ROOM OCCUPANCY" in hpd_dob_class:
+            restricted_reason = "SRO — HPD records single room occupancy, conversion restricted"
         is_hotel_class = (bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H") and not is_excluded_class
         is_mixed_class = bldgclass in MIXED_CLASSES
         is_dob_transient = bbl in dob_transient_bbls
