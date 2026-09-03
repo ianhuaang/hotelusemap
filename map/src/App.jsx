@@ -104,7 +104,7 @@ function computeScore(p) {
   return Math.min(score, 100);
 }
 
-function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted) {
+function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideCondos, hideRestricted) {
   const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
   const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
@@ -181,12 +181,6 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
   }
   if (noOperatorOnly) {
     refinements.push(["!", ["has", "hotel_name"]]);
-  }
-  if (hideBrandTypes.size > 0) {
-    const hiddenTypes = [...hideBrandTypes];
-    for (const bt of hiddenTypes) {
-      refinements.push(["!=", ["get", "brand_type"], bt]);
-    }
   }
   if (hideCondos) {
     refinements.push(["!=", ["get", "is_condo"], true]);
@@ -1312,7 +1306,6 @@ function FilterPanel({
   showReversion, setShowReversion,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
-  hideBrandTypes, toggleBrandType,
   hideCondos, setHideCondos,
   hideRestricted, setHideRestricted,
   extraFilters, setFilter,
@@ -1516,30 +1509,6 @@ function FilterPanel({
             <span className="text-xs text-gray-700">No known operator</span>
             <InfoTip text="Show only buildings where we couldn't find an active hotel operation via Google Places. These have legal transient capacity but no identifiable operator — a potential management opportunity. Based on Google Places coverage, not a verified fact." />
           </label>
-
-          <div className="px-2.5 mt-1.5 space-y-1.5">
-            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Hide by brand type</div>
-            {[
-              { bt: "chain", label: "Chains", tip: "Major flag systems (Marriott, Hilton, Hyatt, IHG, etc.). Not management targets." },
-              { bt: "independent", label: "Branded independents", tip: "Recognizable independent brands (Arlo, Dream, Gansevoort). May be open to management changes." },
-              { bt: "club", label: "Private clubs", tip: "Members-only clubs (Soho House, NY Athletic Club). Not hotel targets." },
-            ].map(({ bt, label, tip }) => (
-              <label key={bt} className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={hideBrandTypes.has(bt)} onChange={() => toggleBrandType(bt)} className="sr-only" />
-                <span className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
-                  hideBrandTypes.has(bt) ? "bg-gray-800 border-gray-800" : "border-gray-300"
-                }`}>
-                  {hideBrandTypes.has(bt) && (
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </span>
-                <span className="text-xs text-gray-700">{label}</span>
-                <InfoTip text={tip} />
-              </label>
-            ))}
-          </div>
 
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
             <input
@@ -1900,7 +1869,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted) {
+function applyFilters(features, activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideCondos, hideRestricted) {
   return features.filter((f) => {
     const p = f.properties;
     const segOk = activeSegments[p.segment];
@@ -1925,7 +1894,6 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      if (hideBrandTypes.size > 0 && p.brand_type && hideBrandTypes.has(p.brand_type)) return false;
       if (hideCondos && p.is_condo) return false;
       if (hideRestricted && p.restricted_class) return false;
     }
@@ -2968,16 +2936,6 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
         </div>
 
         {/* Brand classification */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Brand Classification</div>
-          <div className="text-[11px] text-gray-500 mb-2">Buildings with recognized hotel brands are classified into three types:</div>
-          <div className="space-y-1 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Chain</strong> — Major flag systems (Marriott, Hilton, Hyatt, IHG, Wyndham, etc.). Detected by operator name or Google Places hotel name matching. Hidden by default — not management targets.</div>
-            <div><strong className="text-gray-600">Independent</strong> — Recognizable independent brands (Arlo, Dream, Gansevoort, Pod, etc.). May be open to management changes. Shown by default.</div>
-            <div><strong className="text-gray-600">Club</strong> — Private members' clubs (Soho House, NY Athletic Club, Harvard Club, etc.). Not hotel targets. Hidden by default.</div>
-          </div>
-        </div>
-
         {/* Data sources */}
         <div className="text-[11px] text-gray-400 leading-relaxed border-t border-gray-200 pt-4">
           <strong className="text-gray-500">Data sources:</strong> PLUTO (building class, zoning), HPD registration (Class A/B unit counts, managing agents),
@@ -3006,6 +2964,10 @@ export default function App() {
   // useMemo cannot depend on — without this the table computed against an empty
   // ref on first paint and stayed empty until some other dep changed.
   const [featuresVersion, setFeaturesVersion] = useState(0);
+  // Set once the map's layers exist. The filter effect bails early when they
+  // don't, and its other deps are all filter state — so without this it never
+  // re-ran and the map stayed unfiltered until the user touched a control.
+  const [layersReady, setLayersReady] = useState(false);
   const currentFilterRef = useRef(null);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
   const { notes, save: saveNote } = useNotes();
@@ -3021,12 +2983,6 @@ export default function App() {
   const [showReversion, setShowReversion] = useState(false);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
-  const [hideBrandTypes, setHideBrandTypes] = useState(new Set(["chain", "club"]));
-  const toggleBrandType = useCallback((bt) => setHideBrandTypes(prev => {
-    const next = new Set(prev);
-    next.has(bt) ? next.delete(bt) : next.add(bt);
-    return next;
-  }), []);
   const [hideCondos, setHideCondos] = useState(false);
   // SRO / dormitory / hostel stock is hidden by default: it scores well on Class B
   // rooms but sits in a different regulatory and operating world.
@@ -3341,6 +3297,8 @@ export default function App() {
       });
 
 
+      setLayersReady(true);
+
       map.on("mousemove", "buildings-fill", () => {
         map.getCanvas().style.cursor = "pointer";
       });
@@ -3377,7 +3335,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted);
+    const filter = buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted);
     currentFilterRef.current = filter;
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
@@ -3386,20 +3344,22 @@ export default function App() {
     if (map.getLayer("prior-op-outline")) map.setLayoutProperty("prior-op-outline", "visibility", showPriorOps ? "visible" : "none");
     if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", showReversion ? "visible" : "none");
 
-    setTimeout(() => {
+    // Count after the map has actually repainted with the new filter. A fixed
+    // 100ms timeout raced the repaint and could read the previous frame.
+    const countVisible = () => {
       const layers = [];
       if (map.getLayer("buildings-fill")) layers.push("buildings-fill");
       if (map.getLayer("buildings-dots")) layers.push("buildings-dots");
       if (layers.length === 0) return;
       const features = map.queryRenderedFeatures({ layers });
-      const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
-      setFeatureCount(uniqueBBLs.size);
-    }, 100);
-  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
+      setFeatureCount(new Set(features.map((f) => f.properties.bbl)).size);
+    };
+    map.once("idle", countVisible);
+  }, [layersReady, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted]);
 
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted);
-  }, [featuresVersion, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
+    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted);
+  }, [featuresVersion, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -3488,8 +3448,6 @@ export default function App() {
         setDistressOnly={setDistressOnly}
         noOperatorOnly={noOperatorOnly}
         setNoOperatorOnly={setNoOperatorOnly}
-        hideBrandTypes={hideBrandTypes}
-        toggleBrandType={toggleBrandType}
         hideCondos={hideCondos}
         hideRestricted={hideRestricted}
         setHideRestricted={setHideRestricted}
