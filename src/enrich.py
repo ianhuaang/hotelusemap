@@ -868,15 +868,34 @@ def enrich_pipeline(
         # Rent stabilization (from DOF tax bills)
         rs = rent_stab.get(bbl)
         if rs:
-            record["rent_stabilized_units"] = rs["stabilized_units"]
+            stab = rs["stabilized_units"]
+            class_a = record.get("hpd_class_a") or 0
+            class_b = record.get("hpd_class_b") or 0
+            record["rent_stabilized_units"] = stab
             record["rent_stab_data_year"] = rs["data_year"]
-            if rs["stabilized_units"] > 0:
-                record.setdefault("blockers", []).append(
-                    f"{rs['stabilized_units']} rent-stabilized units (as of {rs['data_year']} tax bill) — conversion to transient use restricted"
-                )
+            # Stabilization attaches to the Class A (permanent) units first. It only
+            # threatens the transient rooms once the stabilized count exceeds the
+            # Class A side — or in rooming stock, where the Class B rooms are
+            # themselves stabilization-eligible and class_a is 0. Flagging any
+            # stabilized unit as a blocker over-reports on split-use buildings.
+            exposure = max(0, stab - class_a)
+            record["rent_stab_class_b_exposure"] = exposure
+            if exposure > 0 and class_b > 0:
+                if class_a == 0:
+                    detail = (
+                        f"{stab} rent-stabilized rooms (as of {rs['data_year']} tax bill), "
+                        f"no Class A units to absorb them — conversion to transient use restricted"
+                    )
+                else:
+                    detail = (
+                        f"{exposure} of {stab} rent-stabilized units fall outside the {class_a} Class A units "
+                        f"(as of {rs['data_year']} tax bill) — conversion of transient rooms restricted"
+                    )
+                record.setdefault("blockers", []).append(detail)
         else:
             record["rent_stabilized_units"] = 0
             record["rent_stab_data_year"] = None
+            record["rent_stab_class_b_exposure"] = 0
 
         # Zoning compatibility for hotel use
         zoning_compat, zoning_detail = _zoning_hotel_compatibility(record.get("zonedist1", ""))
@@ -951,6 +970,12 @@ def enrich_pipeline(
 
         if sales or permits or coos:
             enriched_count += 1
+
+    # Blockers accumulate across enrichment passes and can repeat verbatim.
+    # Keep first occurrence so the detail panel doesn't render duplicate rows.
+    for record in pipeline:
+        if record.get("blockers"):
+            record["blockers"] = list(dict.fromkeys(record["blockers"]))
 
     outpath = DATA_PROCESSED / f"pipeline_{TODAY}.json"
     outpath.write_text(json.dumps(pipeline, indent=2, default=str))

@@ -85,13 +85,15 @@ function computeScore(p) {
   if (p.dob_has_r1) score += 15;
   if (p.coo_has_temporary) score += 10;
   if ((p.permit_transient_strong || 0) >= 1) score += 8;
-  if ((p.dob_r1_filing_count || 0) >= 3) score += 7;
+  // dob_r1_filing_count is NOT scored: it counts the same DOB filings that set
+  // dob_has_r1, so scoring both awarded 22 of 100 points for one signal.
+  // Filing volume is surfaced in ScoreExplainer as confidence, not points.
   // Zoning penalty only for buildings without existing transient rights
   if (p.zoning_hotel_permitted === "not_permitted" && !hasClassB && !hasH) score = Math.max(0, score - 15);
   return Math.min(score, 100);
 }
 
-function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos) {
+function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted) {
   const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
   const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
   const priorOpFilter = ["==", ["get", "has_prior_op"], true];
@@ -174,6 +176,9 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
   }
   if (hideCondos) {
     refinements.push(["!=", ["get", "is_condo"], true]);
+  }
+  if (hideRestricted) {
+    refinements.push(["!=", ["get", "restricted_class"], true]);
   }
 
   for (const ref of refinements) {
@@ -449,11 +454,13 @@ function ScoreExplainer({ p }) {
     { label: "DOB R-1 transient occupancy", pts: 15, hit: !!p.dob_has_r1 },
     { label: "Temporary C of O issued", pts: 10, hit: !!p.coo_has_temporary },
     { label: "DOB transient permit activity", pts: 8, hit: (p.permit_transient_strong || 0) >= 1 },
-    { label: "Multiple R-1 DOB filings", pts: 7, hit: (p.dob_r1_filing_count || 0) >= 3 },
   ];
   const hasGrandfathered = (p.hpd_class_b || 0) > 0 || (p.bldgclass || "").startsWith("H");
   if (p.zoning_hotel_permitted === "not_permitted" && !hasGrandfathered) signals.push({ label: "Residential zoning (penalty)", pts: -15, hit: true, penalty: true });
   if (p.zoning_hotel_permitted === "not_permitted" && hasGrandfathered) signals.push({ label: "Residential zoning (grandfathered)", pts: 0, hit: true });
+  // Same filings that earned the R-1 points above — shown as corroboration, worth no points.
+  const r1Filings = p.dob_r1_filing_count || 0;
+  if (r1Filings >= 3) signals.push({ label: `Corroborated by ${r1Filings} R-1 filings`, pts: 0, hit: true });
 
   return (
     <div>
@@ -1292,6 +1299,7 @@ function FilterPanel({
   noOperatorOnly, setNoOperatorOnly,
   hideBrandTypes, toggleBrandType,
   hideCondos, setHideCondos,
+  hideRestricted, setHideRestricted,
   minUnits, setMinUnits,
   minClassB, setMinClassB,
   featureCount, overlayCounts,
@@ -1512,6 +1520,28 @@ function FilterPanel({
             </span>
             <span className="text-xs text-gray-700">Hide condos</span>
             <InfoTip text="Exclude condominium buildings. Condos require board approval or commercial condo owner negotiation — a different deal structure than single-owner rentals." />
+          </label>
+
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+            <input
+              type="checkbox"
+              checked={hideRestricted}
+              onChange={(e) => setHideRestricted(e.target.checked)}
+              className="sr-only"
+            />
+            <span
+              className={`w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors ${
+                hideRestricted ? "bg-gray-800 border-gray-800" : "border-gray-300"
+              }`}
+            >
+              {hideRestricted && (
+                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="text-xs text-gray-700">Hide SRO / dorm / hostel</span>
+            <InfoTip text="Exclude SRO (HR, RS), dormitory (H8) and hostel (HH) building classes. These register Class B rooms and so score well, but SRO stock is rent-regulated and dorms and hostels are a different operating model. On by default." />
           </label>
 
           <div className="flex items-center justify-between px-2.5 mt-2">
@@ -1817,7 +1847,7 @@ const TABLE_COLS = [
   { key: "zonedist1", label: "Zoning", sortable: true, width: "min-w-[85px]" },
 ];
 
-function applyFilters(features, activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos) {
+function applyFilters(features, activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted) {
   return features.filter((f) => {
     const p = f.properties;
     const segOk = activeSegments[p.segment];
@@ -1843,6 +1873,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
       if (noOperatorOnly && p.hotel_name) return false;
       if (hideBrandTypes.size > 0 && p.brand_type && hideBrandTypes.has(p.brand_type)) return false;
       if (hideCondos && p.is_condo) return false;
+      if (hideRestricted && p.restricted_class) return false;
     }
 
     return true;
@@ -2922,6 +2953,9 @@ export default function App() {
     return next;
   }), []);
   const [hideCondos, setHideCondos] = useState(false);
+  // SRO / dormitory / hostel stock is hidden by default: it scores well on Class B
+  // rooms but sits in a different regulatory and operating world.
+  const [hideRestricted, setHideRestricted] = useState(true);
   const [minUnits, setMinUnits] = useState(0);
   const [minClassB, setMinClassB] = useState(10);
   const [extraFilters, setExtraFilters] = useState({
@@ -3254,7 +3288,7 @@ export default function App() {
     const map = mapRef.current;
     if (!map || !map.getLayer("buildings-fill")) return;
 
-    const filter = buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos);
+    const filter = buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted);
     currentFilterRef.current = filter;
     map.setFilter("buildings-fill", filter);
     map.setFilter("buildings-outline", filter);
@@ -3272,11 +3306,11 @@ export default function App() {
       const uniqueBBLs = new Set(features.map((f) => f.properties.bbl));
       setFeatureCount(uniqueBBLs.size);
     }, 100);
-  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos]);
+  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
 
   const tableFeatures = useMemo(() => {
-    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos);
-  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos]);
+    return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted);
+  }, [activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideBrandTypes, hideCondos, hideRestricted]);
 
   return (
     <div className="relative w-full h-full flex flex-col">
@@ -3368,6 +3402,8 @@ export default function App() {
         hideBrandTypes={hideBrandTypes}
         toggleBrandType={toggleBrandType}
         hideCondos={hideCondos}
+        hideRestricted={hideRestricted}
+        setHideRestricted={setHideRestricted}
         setHideCondos={setHideCondos}
         minUnits={minUnits}
         setMinUnits={setMinUnits}

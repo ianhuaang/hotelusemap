@@ -24,8 +24,21 @@ TODAY = date.today().strftime("%Y%m%d")
 HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H9",
                  "HB", "HH", "HS", "RH"}
 
-# Excluded hotel-adjacent classes — legal constraints make them non-targets
+# Excluded hotel-adjacent classes — legal constraints make them non-targets.
+# NOTE: the tier exclusion below only fires when class_b == 0, so it never
+# catches the SROs/dorms that actually reach the target list. Those are flagged
+# via RESTRICTED_CONVERSION_CLASSES instead and hidden behind a UI toggle, so
+# they stay reachable rather than being dropped from the dataset entirely.
 EXCLUDED_HOTEL_CLASSES = {"HR", "H8"}  # HR=SRO (rent-regulated), H8=dormitory
+
+# Classes whose conversion to conventional transient use is legally or
+# operationally restricted. Kept in the data, hidden from the default view.
+RESTRICTED_CONVERSION_CLASSES = {
+    "HR": "SRO — rent-regulated rooming stock, conversion restricted",
+    "RS": "SRO — rent-regulated rooming stock, conversion restricted",
+    "H8": "Dormitory — institutional use, not a conventional hotel target",
+    "HH": "Hostel — shared-room operating model, not a conventional hotel target",
+}
 
 # Mixed residential/commercial classes — the interesting middle
 MIXED_CLASSES = {"RM", "RR", "RC", "RD", "RK", "RI", "RW", "RS", "RX"}
@@ -196,6 +209,7 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
         blockers = []
 
         is_excluded_class = bldgclass in EXCLUDED_HOTEL_CLASSES
+        restricted_reason = RESTRICTED_CONVERSION_CLASSES.get(bldgclass)
         is_hotel_class = (bldgclass in HOTEL_CLASSES or bldgclass[:1] == "H") and not is_excluded_class
         is_mixed_class = bldgclass in MIXED_CLASSES
         is_dob_transient = bbl in dob_transient_bbls
@@ -299,6 +313,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             "blockers": blockers,
             "hpd_class_a": class_a,
             "hpd_class_b": class_b,
+            "restricted_class": bool(restricted_reason),
+            "restricted_class_reason": restricted_reason or "",
             "hpd_dob_class": hpd_info.get("dobbuildingclass", ""),
             "hpd_stories": hpd_info.get("legalstories", ""),
             "prior_operator": prior_op_info,
@@ -334,6 +350,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "blockers": [],
                 "hpd_class_a": class_a,
                 "hpd_class_b": class_b,
+                "restricted_class": bool(restricted_reason),
+                "restricted_class_reason": restricted_reason or "",
                 "hpd_dob_class": hpd_info.get("dobbuildingclass", ""),
                 "hpd_stories": hpd_info.get("legalstories", ""),
                 "prior_operator": op_info,

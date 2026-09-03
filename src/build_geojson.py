@@ -343,6 +343,10 @@ def build_geojson(
             "blockers": record["blockers"],
             "hpd_class_a": record["hpd_class_a"],
             "hpd_class_b": record["hpd_class_b"],
+            "restricted_class": record.get("restricted_class", False),
+            "restricted_class_reason": record.get("restricted_class_reason", ""),
+            "rent_stabilized_units": record.get("rent_stabilized_units", 0),
+            "rent_stab_class_b_exposure": record.get("rent_stab_class_b_exposure", 0),
             "hpd_dob_class": record["hpd_dob_class"],
             "ownername": record["ownername"],
             "cd": record.get("cd", ""),
@@ -467,22 +471,29 @@ def build_geojson(
         # Deal sub-scores (each 0-100, combined on frontend with adjustable weights)
         # Legal certainty (max 50 raw pts -> normalized to 0-100)
         legal = 0
-        tier = record["tier"]
-        if tier == "legal_transient":
-            legal += 30
-        elif tier == "partial":
-            legal += 8
-        if record.get("coo_has_temporary"):
-            legal += 10
-        if record.get("hpd_class_b", 0) > 0:
-            legal += 10
+        # Must stay identical to computeScore() in map/src/App.jsx, which is what
+        # the UI actually displays, sorts and exports. These two had drifted apart
+        # and agreed on only 18 of 2,917 rows.
+        # Additive, max 93. dob_r1_filing_count is deliberately NOT scored: it
+        # counts the same DOB filings that set dob_has_r1, so awarding points for
+        # both double-counted one signal.
+        bldgclass = record.get("bldgclass") or ""
+        has_class_b = (record.get("hpd_class_b") or 0) > 0
+        has_h_class = bldgclass.startswith("H")
+        if has_class_b:
+            legal += 35
+        if has_h_class:
+            legal += 25
         if record.get("dob_has_r1"):
             legal += 15
-        if record.get("permit_transient_strong", 0) >= 1:
+        if record.get("coo_has_temporary"):
+            legal += 10
+        if (record.get("permit_transient_strong") or 0) >= 1:
             legal += 8
-        if record.get("has_hotel_license"):
-            legal += 20
-        properties["score_legal"] = round(min(legal / 50, 1.0) * 100)
+        # Zoning penalty applies only where there are no grandfathered rights.
+        if record.get("zoning_hotel_permitted") == "not_permitted" and not (has_class_b or has_h_class):
+            legal = max(0, legal - 15)
+        properties["score_legal"] = min(legal, 100)
 
         # Availability (max 45 raw pts -> normalized to 0-100)
         avail = 0
