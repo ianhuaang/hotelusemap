@@ -19,7 +19,10 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, SOCRATA_BASE_URL, BUILDING_FOOTPRINTS_DATASET_ID
 
-BATCH_SIZE = 2000
+# 10k measured fastest for this dataset: ~84 requests at ~5MB each, vs 419
+# requests at 2k. Larger pages get slower per byte and spike memory, since
+# these rows carry the_geom polygon geometry.
+BATCH_SIZE = 10000
 COLUMNS = [
     "the_geom", "base_bbl", "mappluto_bbl", "bin", "height_roof",
     "construction_year", "feature_code", "doitt_id",
@@ -72,7 +75,7 @@ def pull_footprints() -> Path:
         all_rows.extend(batch)
         print(f"  fetched {len(all_rows)} footprints...")
         offset += BATCH_SIZE
-        time.sleep(1)
+        time.sleep(0.5)  # matches every other pull script
 
     outfile.write_text(json.dumps(all_rows, indent=2))
     print(f"Saved {len(all_rows)} footprint rows -> {outfile}")

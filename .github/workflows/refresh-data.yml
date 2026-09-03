@@ -9,7 +9,10 @@ on:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Per-step budgets sum to ~180 min; a 60-min job cap guaranteed a mid-run
+    # cancellation on any slow day (run #6 died at 1h00m21s). Real runs land
+    # well under this — the cap is a backstop, not a target.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +38,7 @@ jobs:
       - name: Pull building footprints
         run: python src/pull_footprints.py
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 20
 
       - name: Pull DOF sales
         run: python src/pull_sales.py
