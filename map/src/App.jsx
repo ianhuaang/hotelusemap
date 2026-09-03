@@ -2906,19 +2906,6 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
           </div>
         </div>
 
-        {/* Client-side filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Client-Side Filters</div>
-          <div className="space-y-1 text-[11px] text-gray-500">
-            <div><strong className="text-gray-600">Hide condos</strong> — Condominiums identified by "CONDO" in owner name or building class R1/R2/R4. Condos require board approval or commercial condo owner negotiation — different deal structure than rentals.</div>
-            <div><strong className="text-gray-600">Distress signals only</strong> — Tax liens, lis pendens/judgments, high ECB fines, or significant HPD violations.</div>
-            <div><strong className="text-gray-600">No known operator</strong> — Buildings where Google Places, DCWP, and operator name keywords found no active hotel operation.</div>
-            <div><strong className="text-gray-600">Hide by brand type</strong> — Three toggles: <em>Chains</em> (Marriott, Hilton, etc.), <em>Branded independents</em> (Arlo, Dream — potential targets), and <em>Private clubs</em> (Soho House, NY Athletic Club). Chains and clubs hidden by default; branded independents shown.</div>
-            <div><strong className="text-gray-600">Min Class B</strong> — Minimum HPD Class B room count (default: 10). Exempts partial signal and active hotel segments to avoid filtering out buildings with zero Class B by definition.</div>
-            <div><strong className="text-gray-600">Min rooms</strong> — Minimum room count threshold (estimated from Class B, C of O, PLUTO, or floor count).</div>
-          </div>
-        </div>
-
         {/* Scoring framework */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Scoring Framework</div>
