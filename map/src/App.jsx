@@ -2710,7 +2710,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
             and <strong>HPD Class B registration</strong> (are transient rooms confirmed?). {(cellTotals.hc_cb.count + cellTotals.hc_nocb.count + cellTotals.nohc_cb.count + cellTotals.nohc_nocb.count).toLocaleString()} buildings after pipeline filters.
           </p>
           <p className="text-[11px] text-gray-400 mt-1 max-w-xl">
-            Already excluded: incompatible zoning, universities, shelters, HDFCs, hospitals, YMCAs, warehouses, garages, vacant land, SROs, dormitories, 1-4 family homes, apartment hotels (R5), and buildings with negligible Class B.
+            Excluded by the pipeline: incompatible zoning, universities, shelters, HDFCs, hospitals, YMCAs, warehouses, garages, vacant land, 1-4 family homes, apartment hotels (R5), and buildings with negligible Class B. SROs, dormitories and hostels are <em>not</em> excluded &mdash; they stay in the data and are hidden by the default-on "Hide SRO / dorm / hostel" filter.
           </p>
         </div>
 
@@ -2802,6 +2802,34 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
               <SubRow label="Mixed-use building class" data={g("nohc_nocb__partial")} color="#94a3b8" filterKey="nohc_nocb__partial" />
             </div>
             <ExampleLink quadrant="nohc_nocb" />
+          </div>
+        </div>
+
+        {/* Decision tree — same diagram as the written reference, served as a
+            static asset from /public rather than inlined, so the 13KB of SVG
+            stays out of the JS bundle. */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-baseline justify-between gap-3 mb-1">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Decision Tree</div>
+            <a
+              href="/decision-tree.svg"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] text-gray-400 hover:text-gray-600"
+            >
+              Open full size &rarr;
+            </a>
+          </div>
+          <p className="text-[11px] text-gray-400 mb-3 max-w-xl">
+            How a building moves from the full PLUTO set through the pipeline filters to a tier and then a segment. The matrix above is the two axes at the top of this tree; everything below it is how the overlays and operator check resolve.
+          </p>
+          <div className="overflow-x-auto">
+            <img
+              src="/decision-tree.svg"
+              alt="Decision tree: all NYC buildings pass through pipeline filters, then split on HPD Class B rooms and hotel building class into legal transient, partial and excluded tiers, then split again by whether an active operator was found."
+              loading="lazy"
+              className="block w-full min-w-[720px] max-w-3xl mx-auto"
+            />
           </div>
         </div>
 
