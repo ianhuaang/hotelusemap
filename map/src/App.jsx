@@ -80,7 +80,11 @@ function computeScore(p) {
   let score = 0;
   const hasClassB = (p.hpd_class_b || 0) > 0;
   const hasH = (p.bldgclass || "").startsWith("H");
-  if (hasClassB) score += 35;
+  // Weights sum to 100 so a full house reads as 100 and the number is a real
+  // percentage of available legal evidence. They previously topped out at 93,
+  // which made "out of 100" unanswerable — 16 buildings sat at the unreachable
+  // ceiling and nothing could ever be a 100.
+  if (hasClassB) score += 40;
   if (hasH) score += 25;
   if (p.dob_has_r1) score += 15;
   // A final C of O is the strongest evidence transient use is approved, so it
@@ -89,8 +93,8 @@ function computeScore(p) {
   // temporary, and was collecting the full bonus while buildings with a clean
   // final C of O collected nothing. Judge the latest record instead.
   const cooType = p.coo_latest_type || "";
-  if (cooType === "Final" || cooType.startsWith("Renewal")) score += 10;
-  else if (cooType === "Temporary" || cooType === "Initial") score += 6;
+  if (cooType === "Final" || cooType.startsWith("Renewal")) score += 12;
+  else if (cooType === "Temporary" || cooType === "Initial") score += 7;
   if ((p.permit_transient_strong || 0) >= 1) score += 8;
   // dob_r1_filing_count is NOT scored: it counts the same DOB filings that set
   // dob_has_r1, so scoring both awarded 22 of 100 points for one signal.
@@ -456,11 +460,11 @@ function ScoreExplainer({ p }) {
   const [open, setOpen] = useState(false);
 
   const signals = [
-    { label: "HPD Class B rooms registered", pts: 35, hit: (p.hpd_class_b || 0) > 0 },
+    { label: "HPD Class B rooms registered", pts: 40, hit: (p.hpd_class_b || 0) > 0 },
     { label: "Hotel building class (H-series)", pts: 25, hit: (p.bldgclass || "").startsWith("H") },
     { label: "DOB R-1 transient occupancy", pts: 15, hit: !!p.dob_has_r1 },
-    { label: "Final C of O on file", pts: 10, hit: (p.coo_latest_type || "") === "Final" || (p.coo_latest_type || "").startsWith("Renewal") },
-    { label: "Temporary C of O only", pts: 6, hit: (p.coo_latest_type || "") === "Temporary" || (p.coo_latest_type || "") === "Initial" },
+    { label: "Final C of O on file", pts: 12, hit: (p.coo_latest_type || "") === "Final" || (p.coo_latest_type || "").startsWith("Renewal") },
+    { label: "Temporary C of O only", pts: 7, hit: (p.coo_latest_type || "") === "Temporary" || (p.coo_latest_type || "") === "Initial" },
     { label: "DOB transient permit activity", pts: 8, hit: (p.permit_transient_strong || 0) >= 1 },
   ];
   const hasGrandfathered = (p.hpd_class_b || 0) > 0 || (p.bldgclass || "").startsWith("H");
