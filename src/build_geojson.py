@@ -327,8 +327,48 @@ def build_geojson(
                 elif rec_priority == existing_priority and record.get("prior_operator"):
                     best_by_doitt[doitt_id] = (record, fp)
 
+    # Collapse to one feature per PROPERTY, not per structure. A single tax lot
+    # can carry several building footprints — 17 Battery Place has two BINs, and
+    # one lot has fourteen. Emitting a feature each produced 302 duplicate
+    # features over 205 BBLs, every copy identical but for bin/height_roof/
+    # construction_year. That inflated counts and double-counted exports.
+    # Merge the footprints into one MultiPolygon; the tallest structure supplies
+    # the representative bin, height and year.
+    def _height(fp_):
+        try:
+            return float(fp_.get("height_roof") or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _polygons(geom):
+        if not geom:
+            return []
+        if geom.get("type") == "Polygon":
+            return [geom["coordinates"]]
+        if geom.get("type") == "MultiPolygon":
+            return list(geom["coordinates"])
+        return []
+
+    best_by_bbl: dict[str, tuple[dict, dict]] = {}
+    for record, fp in best_by_doitt.values():
+        bbl = record["bbl"]
+        existing = best_by_bbl.get(bbl)
+        if existing is None:
+            merged = dict(fp)
+            merged["the_geom"] = {
+                "type": "MultiPolygon",
+                "coordinates": _polygons(fp.get("the_geom")),
+            }
+            best_by_bbl[bbl] = (record, merged)
+            continue
+        merged = existing[1]
+        merged["the_geom"]["coordinates"].extend(_polygons(fp.get("the_geom")))
+        if _height(fp) > _height(merged):
+            for k in ("bin", "height_roof", "construction_year"):
+                merged[k] = fp.get(k)
+
     features = []
-    for doitt_id, (record, fp) in best_by_doitt.items():
+    for record, fp in best_by_bbl.values():
         properties = {
             "bbl": record["bbl"],
             "address": record["address"],
