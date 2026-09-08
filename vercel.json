@@ -1,5 +1,11 @@
 {
-  "buildCommand": "cd map && npm install && npm run build",
-  "outputDirectory": "map/dist",
-  "framework": null
+  "outputDirectory": "public",
+  "framework": null,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://kasa-sourcing.vercel.app/?tab=transient",
+      "permanent": true
+    }
+  ]
 }
