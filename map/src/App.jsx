@@ -1309,6 +1309,7 @@ function FilterPanel({
   activeSegments, setActiveSegments,
   showPriorOps, setShowPriorOps,
   showReversion, setShowReversion,
+  showKasa, setShowKasa,
   distressOnly, setDistressOnly,
   noOperatorOnly, setNoOperatorOnly,
   hideCondos, setHideCondos,
@@ -1437,6 +1438,31 @@ function FilterPanel({
                 <span className="text-xs text-gray-700">Reversion window</span>
                 <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.reversions})</span>
                 <InfoTip text="Hotels that converted to residential post-2021. Can revert to hotel use without CPC special permit before Dec 2027. Red outline on map." />
+              </div>
+            </label>
+            <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
+              <input
+                type="checkbox"
+                checked={showKasa}
+                onChange={(e) => setShowKasa(e.target.checked)}
+                className="sr-only"
+              />
+              <span
+                className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors"
+                style={{
+                  borderColor: "#111827",
+                  backgroundColor: showKasa ? "#111827" : "transparent",
+                }}
+              >
+                {showKasa && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </span>
+              <div className="flex items-center">
+                <span className="text-xs text-gray-700">Kasa properties</span>
+                <InfoTip text="Kasa's own NYC portfolio, drawn from a hand-maintained list rather than the pipeline. Public data cannot identify a white-label or partner-branded Kasa building, so add those to kasa_properties.geojson by hand." />
               </div>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
@@ -2986,6 +3012,7 @@ export default function App() {
   // them on by default injected rows that ignored the user's own filters.
   const [showPriorOps, setShowPriorOps] = useState(false);
   const [showReversion, setShowReversion] = useState(false);
+  const [showKasa, setShowKasa] = useState(false);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
   const [hideCondos, setHideCondos] = useState(false);
@@ -3301,6 +3328,43 @@ export default function App() {
         },
       });
 
+      // Kasa's own properties. A standalone file rather than a flag on the
+      // buildings data, because the independent-hotels map needs the same
+      // layer and its dataset does not contain these buildings at all.
+      // Visible at every zoom — unlike the footprint layers, you always want
+      // to know where your own portfolio sits.
+      fetch("/kasa_properties.geojson")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((kasa) => {
+          if (!kasa || !map.getCanvas()) return;
+          map.addSource("kasa", { type: "geojson", data: kasa });
+          map.addLayer({
+            id: "kasa-dots",
+            type: "circle",
+            source: "kasa",
+            layout: { visibility: "none" },
+            paint: {
+              "circle-color": "#111827",
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 8, 17, 11],
+              "circle-stroke-width": 2.5,
+              "circle-stroke-color": "#ffffff",
+            },
+          });
+          map.on("click", "kasa-dots", (e) => {
+            const f = e.features?.[0];
+            if (f) new maplibregl.Popup({ closeButton: false, offset: 12 })
+              .setLngLat(f.geometry.coordinates)
+              .setHTML(
+                `<div style="font:600 12px system-ui;padding:2px 0">${f.properties.name}</div>` +
+                `<div style="font:11px system-ui;color:#666">${f.properties.address}</div>`
+              )
+              .addTo(map);
+          });
+          map.on("mousemove", "kasa-dots", () => { map.getCanvas().style.cursor = "pointer"; });
+          map.on("mouseleave", "kasa-dots", () => { map.getCanvas().style.cursor = ""; });
+        })
+        .catch(() => {});
+
 
       setLayersReady(true);
 
@@ -3348,6 +3412,7 @@ export default function App() {
 
     if (map.getLayer("prior-op-outline")) map.setLayoutProperty("prior-op-outline", "visibility", showPriorOps ? "visible" : "none");
     if (map.getLayer("reversion-outline")) map.setLayoutProperty("reversion-outline", "visibility", showReversion ? "visible" : "none");
+    if (map.getLayer("kasa-dots")) map.setLayoutProperty("kasa-dots", "visibility", showKasa ? "visible" : "none");
 
     // Count after the map has actually repainted with the new filter. A fixed
     // 100ms timeout raced the repaint and could read the previous frame.
@@ -3360,7 +3425,7 @@ export default function App() {
       setFeatureCount(new Set(features.map((f) => f.properties.bbl)).size);
     };
     map.once("idle", countVisible);
-  }, [layersReady, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted]);
+  }, [layersReady, activeSegments, showPriorOps, showReversion, showKasa, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted]);
 
   const tableFeatures = useMemo(() => {
     return applyFilters(allFeaturesRef.current, activeSegments, showPriorOps, showReversion, minUnits, minClassB, extraFilters, distressOnly, noOperatorOnly, hideCondos, hideRestricted);
@@ -3425,6 +3490,8 @@ export default function App() {
               setMinClassB={setMinClassB}
               showPriorOps={showPriorOps}
               setShowPriorOps={setShowPriorOps}
+              showKasa={showKasa}
+              setShowKasa={setShowKasa}
               showReversion={showReversion}
               setShowReversion={setShowReversion}
               notes={notes}

@@ -1,0 +1,44 @@
+{
+  "type": "FeatureCollection",
+  "_comment": "Kasa's own NYC properties. Hand-maintained: add a feature to put a property on both maps. Seeded from operator-name matches in buildings.geojson and cross-checked against kasa.com/locations, which lists exactly these two in NYC. A white-label or partner-branded Kasa building would not appear in public data, so add those here by hand.",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.007763,
+          40.706438
+        ]
+      },
+      "properties": {
+        "name": "Mint House 70 Pine by Kasa",
+        "address": "66 PINE STREET",
+        "neighborhood": "Financial District / Tribeca",
+        "bbl": "1000417504",
+        "units_total": 777,
+        "class_a": 612,
+        "class_b": 165
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.98983,
+          40.719469
+        ]
+      },
+      "properties": {
+        "name": "Kasa Lantern Lower East Side",
+        "address": "119 ORCHARD STREET",
+        "neighborhood": "Lower East Side / Chinatown",
+        "bbl": "1004150077",
+        "units_total": 2,
+        "class_a": 4,
+        "class_b": 16
+      }
+    }
+  ]
+}
