@@ -1462,7 +1462,7 @@ function FilterPanel({
               </span>
               <div className="flex items-center">
                 <span className="text-xs text-gray-700">Kasa properties</span>
-                <InfoTip text="Kasa's own NYC portfolio, drawn from a hand-maintained list rather than the pipeline. Public data cannot identify a white-label or partner-branded Kasa building, so add those to kasa_properties.geojson by hand." />
+                <InfoTip text="Kasa's portfolio in every city, drawn from kasa.com rather than the pipeline. A white-label or partner-branded building will not appear on kasa.com either, so add those to kasa_properties.geojson by hand." />
               </div>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer px-2.5">

@@ -1,44 +1,1214 @@
 {
-  "type": "FeatureCollection",
-  "_comment": "Kasa's own NYC properties. Hand-maintained: add a feature to put a property on both maps. Seeded from operator-name matches in buildings.geojson and cross-checked against kasa.com/locations, which lists exactly these two in NYC. A white-label or partner-branded Kasa building would not appear in public data, so add those here by hand.",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.007763,
-          40.706438
-        ]
-      },
-      "properties": {
-        "name": "Mint House 70 Pine by Kasa",
-        "address": "66 PINE STREET",
-        "neighborhood": "Financial District / Tribeca",
-        "bbl": "1000417504",
-        "units_total": 777,
-        "class_a": 612,
-        "class_b": 165
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -73.98983,
-          40.719469
-        ]
-      },
-      "properties": {
-        "name": "Kasa Lantern Lower East Side",
-        "address": "119 ORCHARD STREET",
-        "neighborhood": "Lower East Side / Chinatown",
-        "bbl": "1004150077",
-        "units_total": 2,
-        "class_a": 4,
-        "class_b": 16
-      }
-    }
-  ]
+ "type": "FeatureCollection",
+ "_comment": "Kasa's portfolio, all cities. Names and street addresses scraped from kasa.com/properties/<slug>; coordinates geocoded from those addresses via OpenStreetMap Nominatim. Hand-editable: add a Feature to put a property on every map. Two known gaps \u2014 Kasa El Paseo Miami Beach publishes no address, and Boardwalk Hotel on Lake Anna (196 Boardwalk Way, Mineral VA) would not geocode. A white-label or partner-branded building will not appear on kasa.com at all, so add those by hand.",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -111.923231,
+     33.624003
+    ]
+   },
+   "properties": {
+    "name": "Kasa Scottsdale Quarter Phoenix",
+    "address": "15125 North Scottsdale Road, Scottsdale, AZ 85254",
+    "city": "Scottsdale",
+    "state": "AZ",
+    "slug": "kasa-scottsdale-quarter-phoenix"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.185302,
+     33.770413
+    ]
+   },
+   "properties": {
+    "name": "City Center Hotel by Kasa",
+    "address": "566 East 3rd Street, Long Beach, CA 90802",
+    "city": "Long Beach",
+    "state": "CA",
+    "slug": "city-center-hotel-by-kasa-long-beach"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.316479,
+     34.09833
+    ]
+   },
+   "properties": {
+    "name": "Kasa Sunset Los Angeles",
+    "address": "5825 Sunset Boulevard, Los Angeles, CA 90028",
+    "city": "Los Angeles",
+    "state": "CA",
+    "slug": "kasa-sunset-los-angeles"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.257012,
+     34.041872
+    ]
+   },
+   "properties": {
+    "name": "STILE Downtown Los Angeles",
+    "address": "929 South Broadway, Los Angeles, CA 90015",
+    "city": "Los Angeles",
+    "state": "CA",
+    "slug": "stile-downtown-los-angeles-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.184137,
+     37.454953
+    ]
+   },
+   "properties": {
+    "name": "Mint House Menlo Park by Kasa",
+    "address": "550 Oak Grove Avenue, Menlo Park, CA 94025",
+    "city": "Menlo Park",
+    "state": "CA",
+    "slug": "mint-house-menlo-park-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.226594,
+     37.485384
+    ]
+   },
+   "properties": {
+    "name": "Kasa Niche Hotel Redwood City",
+    "address": "868 Main Street, Redwood City, CA 94063",
+    "city": "Redwood City",
+    "state": "CA",
+    "slug": "kasa-niche-hotel-redwood-city"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.085182,
+     33.115022
+    ]
+   },
+   "properties": {
+    "name": "Kasa Gaslamp Quarter San Diego",
+    "address": "552 Fifth Avenue, San Diego, CA 92101",
+    "city": "San Diego",
+    "state": "CA",
+    "slug": "kasa-gaslamp-quarter-san-diego"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.167292,
+     32.71919
+    ]
+   },
+   "properties": {
+    "name": "Kasa Little Italy San Diego",
+    "address": "1331 Columbia Street, San Diego, CA 92101",
+    "city": "San Diego",
+    "state": "CA",
+    "slug": "kasa-little-italy-san-diego"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.084633,
+     33.109011
+    ]
+   },
+   "properties": {
+    "name": "The Davis Downtown San Diego",
+    "address": "765 Tenth Avenue, San Diego, CA 92101",
+    "city": "San Diego",
+    "state": "CA",
+    "slug": "the-davis-downtown-san-diego-hotel"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.430307,
+     37.790074
+    ]
+   },
+   "properties": {
+    "name": "Kasa The Addison San Francisco",
+    "address": "2263 Sacramento Street, San Francisco, CA 94115",
+    "city": "San Francisco",
+    "state": "CA",
+    "slug": "kasa-the-addison-san-francisco"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.412223,
+     37.788545
+    ]
+   },
+   "properties": {
+    "name": "La Monarca Residential Hotel",
+    "address": "717 Sutter Street, San Francisco, CA 94109",
+    "city": "San Francisco",
+    "state": "CA",
+    "slug": "kasa-la-monarca-residential-san-francisco",
+    "also_listed_as": "Kasa La Monarca San Francisco"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.436712,
+     37.760971
+    ]
+   },
+   "properties": {
+    "name": "The Hotel Castro San Francisco",
+    "address": "4230 18th Street, San Francisco, CA 94114",
+    "city": "San Francisco",
+    "state": "CA",
+    "slug": "kasa-the-hotel-castro-san-francisco"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.933675,
+     37.346271
+    ]
+   },
+   "properties": {
+    "name": "Kasa University-Airport Santa Clara",
+    "address": "588 El Camino Real, Santa Clara, CA 95050",
+    "city": "Santa Clara",
+    "state": "CA",
+    "slug": "kasa-university-airport-santa-clara"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -105.004962,
+     39.762161
+    ]
+   },
+   "properties": {
+    "name": "Kasa LoHi Denver",
+    "address": "3206 Osage Street, Denver, CO 80211",
+    "city": "Denver",
+    "state": "CO",
+    "slug": "kasa-lohi-denver"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -104.991098,
+     39.763978
+    ]
+   },
+   "properties": {
+    "name": "Kasa RiNo Denver",
+    "address": "3375 Denargo Street, Denver, CO 80216",
+    "city": "Denver",
+    "state": "CO",
+    "slug": "kasa-rino-denver"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -105.003934,
+     39.757241
+    ]
+   },
+   "properties": {
+    "name": "Kasa Union Station Denver",
+    "address": "1750 Little Raven Street, Denver, CO 80202",
+    "city": "Denver",
+    "state": "CO",
+    "slug": "kasa-union-station-denver"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.033862,
+     38.90311
+    ]
+   },
+   "properties": {
+    "name": "Mint House Washington DC Downtown by Kasa",
+    "address": "1010 Vermont Avenue Northwest, Washington, DC 20005",
+    "city": "Washington",
+    "state": "DC",
+    "slug": "mint-house-washington-dc-downtown-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.079797,
+     26.283333
+    ]
+   },
+   "properties": {
+    "name": "Hillsboro Beach Resort by Kasa",
+    "address": "1159 Hillsboro Mile, Hillsboro Beach, FL 33062",
+    "city": "Hillsboro Beach",
+    "state": "FL",
+    "slug": "hillsboro-beach-resort-by-kasa-hotel"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.165981,
+     26.043235
+    ]
+   },
+   "properties": {
+    "name": "Kasa Hollywood Ft. Lauderdale",
+    "address": "2300 North 29th Avenue, Hollywood, FL 33020",
+    "city": "Hollywood",
+    "state": "FL",
+    "slug": "kasa-at-cortland-hollywood-ft-lauderdale"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.131426,
+     25.783417
+    ]
+   },
+   "properties": {
+    "name": "Kasa Impala Miami Beach",
+    "address": "1228 Collins Avenue, Miami Beach, FL 33139",
+    "city": "Miami Beach",
+    "state": "FL",
+    "slug": "kasa-impala-miami-beach"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.131401,
+     25.783573
+    ]
+   },
+   "properties": {
+    "name": "Kasa La Flora Miami Beach",
+    "address": "1238 Collins Avenue, Miami Beach, FL 33139",
+    "city": "Miami Beach",
+    "state": "FL",
+    "slug": "kasa-la-flora-miami-beach"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.649329,
+     27.771777
+    ]
+   },
+   "properties": {
+    "name": "Mint House St. Petersburg by Kasa",
+    "address": "77 11th Street North, St. Petersburg, FL 33705",
+    "city": "St. Petersburg",
+    "state": "FL",
+    "slug": "mint-house-st-petersburg-downtown-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.452585,
+     27.946855
+    ]
+   },
+   "properties": {
+    "name": "Mint House Tampa Downtown by Kasa",
+    "address": "801 East Whiting Street, Tampa, FL 33602",
+    "city": "Tampa",
+    "state": "FL",
+    "slug": "mint-house-tampa-downtown-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.215653,
+     26.646292
+    ]
+   },
+   "properties": {
+    "name": "Kasa Wellington South Florida",
+    "address": "2301 Wellington Green Drive, Wellington, FL 33414",
+    "city": "Wellington",
+    "state": "FL",
+    "slug": "kasa-wellington-south-florida"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -83.37839,
+     33.957749
+    ]
+   },
+   "properties": {
+    "name": "The Bell Athens by Kasa Living",
+    "address": "183 West Clayton Street, Athens, GA 30601",
+    "city": "Athens",
+    "state": "GA",
+    "slug": "the-bell-athens-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -81.091904,
+     32.078623
+    ]
+   },
+   "properties": {
+    "name": "Kasa Altmayer Savannah",
+    "address": "100 Bull Street, Savannah, GA 31401",
+    "city": "Savannah",
+    "state": "GA",
+    "slug": "kasa-altmayer-savannah"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -81.092539,
+     32.075423
+    ]
+   },
+   "properties": {
+    "name": "Kasa Jules Savannah",
+    "address": "230 Bull Street, Savannah, GA 31401",
+    "city": "Savannah",
+    "state": "GA",
+    "slug": "kasa-jules-savannah"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -93.625274,
+     41.589097
+    ]
+   },
+   "properties": {
+    "name": "Kasa Downtown Des Moines",
+    "address": "550 Watson Powell Junior Way, Des Moines, IA 50309",
+    "city": "Des Moines",
+    "state": "IA",
+    "slug": "kasa-downtown-des-moines"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -116.19156,
+     43.6038
+    ]
+   },
+   "properties": {
+    "name": "Kasa on the River Boise",
+    "address": "749 East Park Boulevard, Boise, ID 83712",
+    "city": "Boise",
+    "state": "ID",
+    "slug": "kasa-at-cortland-on-the-river-boise"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -87.616451,
+     41.893862
+    ]
+   },
+   "properties": {
+    "name": "Kasa Lake Shore Chicago",
+    "address": "446 East Ontario Street, Chicago, IL 60611",
+    "city": "Chicago",
+    "state": "IL",
+    "slug": "kasa-lake-shore-chicago"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -87.628938,
+     41.895323
+    ]
+   },
+   "properties": {
+    "name": "Kasa Magnificent Mile Chicago",
+    "address": "1 West Superior Street, Chicago, IL 60654",
+    "city": "Chicago",
+    "state": "IL",
+    "slug": "kasa-magnificent-mile-chicago"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -87.634529,
+     41.89688
+    ]
+   },
+   "properties": {
+    "name": "Kasa River North Chicago",
+    "address": "808 North Wells Street, Chicago, IL 60610",
+    "city": "Chicago",
+    "state": "IL",
+    "slug": "kasa-river-north-chicago"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -87.631054,
+     41.870331
+    ]
+   },
+   "properties": {
+    "name": "Kasa South Loop Chicago",
+    "address": "900 S Clark St, Chicago, IL 60605",
+    "city": "Chicago",
+    "state": "IL",
+    "slug": "kasa-south-loop-chicago"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -90.057456,
+     29.96232
+    ]
+   },
+   "properties": {
+    "name": "The Frenchmen New Orleans by Kasa Living",
+    "address": "417 Frenchmen Street, New Orleans, LA 70116",
+    "city": "New Orleans",
+    "state": "LA",
+    "slug": "the-frenchmen-new-orleans-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -90.071044,
+     29.947737
+    ]
+   },
+   "properties": {
+    "name": "The Lafayette New Orleans by Kasa Living",
+    "address": "600 Saint Charles Avenue, New Orleans, LA 70130",
+    "city": "New Orleans",
+    "state": "LA",
+    "slug": "the-lafayette-new-orleans-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.101803,
+     42.343969
+    ]
+   },
+   "properties": {
+    "name": "Kasa Boston at Fenway",
+    "address": "200 Brookline Avenue, Boston, MA 02215",
+    "city": "Boston",
+    "state": "MA",
+    "slug": "kasa-boston-at-fenway"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.061265,
+     42.356239
+    ]
+   },
+   "properties": {
+    "name": "Kasa at Boston Common",
+    "address": "6 Hamilton Place, Boston, MA 02108",
+    "city": "Boston",
+    "state": "MA",
+    "slug": "kasa-at-boston-common"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -69.720445,
+     44.764232
+    ]
+   },
+   "properties": {
+    "name": "The Skowhegan by Kasa",
+    "address": "7 Island Avenue, Skowhegan, ME 04976",
+    "city": "Skowhegan",
+    "state": "ME",
+    "slug": "the-skowhegan-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -83.044118,
+     42.331308
+    ]
+   },
+   "properties": {
+    "name": "Kasa Cadillac Square Detroit",
+    "address": "139 Cadillac Square, Detroit, MI 48226",
+    "city": "Detroit",
+    "state": "MI",
+    "slug": "kasa-cadillac-square-detroit"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -85.413269,
+     44.899051
+    ]
+   },
+   "properties": {
+    "name": "Dexter Hotel",
+    "address": "112 Dexter St, Elk Rapids, MI 49629",
+    "city": "Elk Rapids",
+    "state": "MI",
+    "slug": "the-dexter-elk-rapids-hotel-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -85.619439,
+     44.762592
+    ]
+   },
+   "properties": {
+    "name": "Boardwalk Suites and Residences by Kasa",
+    "address": "232 East State Street, Traverse City, MI 49684",
+    "city": "Traverse City",
+    "state": "MI",
+    "slug": "boardwalk-suites-and-residences-by-kasa-traverse-city"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -85.625992,
+     44.763585
+    ]
+   },
+   "properties": {
+    "name": "The Loop Downtown by Kasa",
+    "address": "139 Pine Street, Traverse City, MI 49684",
+    "city": "Traverse City",
+    "state": "MI",
+    "slug": "the-loop-downtown-traverse-city-apartments-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -85.579851,
+     44.759249
+    ]
+   },
+   "properties": {
+    "name": "The Vic by Kasa",
+    "address": "461 Munson Avenue, Traverse City, MI 49686",
+    "city": "Traverse City",
+    "state": "MI",
+    "slug": "the-vic-hotel-by-kasa-traverse-city"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -93.297193,
+     44.992522
+    ]
+   },
+   "properties": {
+    "name": "Kasa Bryn Mawr Minneapolis",
+    "address": "265 North Girard Avenue, Minneapolis, MN 55405",
+    "city": "Minneapolis",
+    "state": "MN",
+    "slug": "kasa-bryn-mawr-minneapolis"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.836977,
+     35.207095
+    ]
+   },
+   "properties": {
+    "name": "Kasa Dilworth Charlotte",
+    "address": "1440 Harding Place, Charlotte, NC 28204",
+    "city": "Charlotte",
+    "state": "NC",
+    "slug": "kasa-kasa-dilworth-charlotte"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.846359,
+     35.20098
+    ]
+   },
+   "properties": {
+    "name": "Kasa Edison House South End Dilworth Charlotte",
+    "address": "1921 Charlotte Drive, Charlotte, NC 28203",
+    "city": "Charlotte",
+    "state": "NC",
+    "slug": "kasa-edison-house-charlotte"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.821936,
+     35.236996
+    ]
+   },
+   "properties": {
+    "name": "Kasa NoDa Charlotte",
+    "address": "1700 North Brevard Street, Charlotte, NC 28206",
+    "city": "Charlotte",
+    "state": "NC",
+    "slug": "kasa-at-cortland-noda-charlotte"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -80.874452,
+     35.224638
+    ]
+   },
+   "properties": {
+    "name": "The FreeMoreWest Charlotte by Kasa Living",
+    "address": "2109 Morton Street, Charlotte, NC 28208",
+    "city": "Charlotte",
+    "state": "NC",
+    "slug": "kasa-freemorewest-charlotte"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -78.662651,
+     35.789769
+    ]
+   },
+   "properties": {
+    "name": "Kasa Village District Raleigh",
+    "address": "2128 Clark Avenue, Raleigh, NC 27605",
+    "city": "Raleigh",
+    "state": "NC",
+    "slug": "kasa-at-berkshire-village-district-raleigh"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.799672,
+     39.501802
+    ]
+   },
+   "properties": {
+    "name": "Kasa Archive Reno-Tahoe",
+    "address": "2080 District Street, Reno, NV 89502",
+    "city": "Reno",
+    "state": "NV",
+    "slug": "kasa-archive-reno-tahoe"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -73.989937,
+     40.719493
+    ]
+   },
+   "properties": {
+    "name": "Kasa Lantern Lower East Side",
+    "address": "120 Allen Street, New York City, NY 10002",
+    "city": "New York City",
+    "state": "NY",
+    "slug": "kasa-lantern-les"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -74.007741,
+     40.706473
+    ]
+   },
+   "properties": {
+    "name": "Mint House 70 Pine by Kasa",
+    "address": "70 Pine Street, New York City, NY 10005",
+    "city": "New York City",
+    "state": "NY",
+    "slug": "mint-house-at-70-pine-by-kasa-new-york-city"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.681616,
+     45.522013
+    ]
+   },
+   "properties": {
+    "name": "The Clyde Hotel Portland by Kasa Living",
+    "address": "1022 Southwest Harvey Milk Street, Portland, OR 97205",
+    "city": "Portland",
+    "state": "OR",
+    "slug": "the-clyde-hotel-portland-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -75.202452,
+     39.955736
+    ]
+   },
+   "properties": {
+    "name": "Kasa the Niche University City Philadelphia",
+    "address": "4003 Chestnut Street, Philadelphia, PA 19104",
+    "city": "Philadelphia",
+    "state": "PA",
+    "slug": "kasa-the-niche-university-city-philadelphia"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -79.92579,
+     40.461416
+    ]
+   },
+   "properties": {
+    "name": "The Maverick by Kasa",
+    "address": "120 South Whitfield Street, Pittsburgh, PA 15206",
+    "city": "Pittsburgh",
+    "state": "PA",
+    "slug": "kasa-the-maverick-pittsburgh"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -82.403263,
+     34.84607
+    ]
+   },
+   "properties": {
+    "name": "Mint House Greenville Downtown by Kasa",
+    "address": "101 Falls Park Drive, Greenville, SC 29601",
+    "city": "Greenville",
+    "state": "SC",
+    "slug": "mint-house-greenville-downtown-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -86.782835,
+     36.16222
+    ]
+   },
+   "properties": {
+    "name": "Kasa Capitol Hill Downtown Nashville",
+    "address": "211 7th Avenue North, Nashville, TN 37219",
+    "city": "Nashville",
+    "state": "TN",
+    "slug": "kasa-capitol-hill-downtown-nashville"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -86.788426,
+     36.148915
+    ]
+   },
+   "properties": {
+    "name": "Mint House Nashville Marathon Village by Kasa",
+    "address": "808 14th Avenue, Nashville, TN 37203",
+    "city": "Nashville",
+    "state": "TN",
+    "slug": "mint-house-nashville-marathon-village-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -86.794746,
+     36.149382
+    ]
+   },
+   "properties": {
+    "name": "The Artisan Music Row Nashville by Kasa Living",
+    "address": "819 18th Avenue South, Nashville, TN 37203",
+    "city": "Nashville",
+    "state": "TN",
+    "slug": "kasa-at-artisan-music-row-nashville"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -86.755628,
+     36.176996
+    ]
+   },
+   "properties": {
+    "name": "The Eighteen by Kasa",
+    "address": "18 Mcferrin Avenue, Nashville, TN 37206",
+    "city": "Nashville",
+    "state": "TN",
+    "slug": "the-eighteen-by-kasa-nashville"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.748064,
+     30.266283
+    ]
+   },
+   "properties": {
+    "name": "Kasa 2nd Street Austin",
+    "address": "421 West 3rd Street, Austin, TX 78701",
+    "city": "Austin",
+    "state": "TX",
+    "slug": "kasa-2nd-street-austin"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.746281,
+     30.265295
+    ]
+   },
+   "properties": {
+    "name": "Kasa Downtown Austin",
+    "address": "201 Lavaca Street, Austin, TX 78701",
+    "city": "Austin",
+    "state": "TX",
+    "slug": "kasa-downtown-austin"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.741896,
+     30.265024
+    ]
+   },
+   "properties": {
+    "name": "Kasa Lady Bird Lake Austin",
+    "address": "301 Brazos Street, Austin, TX 78701",
+    "city": "Austin",
+    "state": "TX",
+    "slug": "kasa-lady-bird-lake-austin"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.734389,
+     30.271043
+    ]
+   },
+   "properties": {
+    "name": "Kasa at The Waller Austin",
+    "address": "1104 Sabine Street, Austin, TX 78701",
+    "city": "Austin",
+    "state": "TX",
+    "slug": "kasa-at-the-waller-apartment-austin"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -97.722835,
+     30.262128
+    ]
+   },
+   "properties": {
+    "name": "Studio Haus East 6th Austin by Kasa",
+    "address": "1812 East 6th Street, Austin, TX 78702",
+    "city": "Austin",
+    "state": "TX",
+    "slug": "studio-haus-east-6th-austin-by-kasa-hotel"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.840314,
+     32.825349
+    ]
+   },
+   "properties": {
+    "name": "Kasa Love Field-Medical District Dallas",
+    "address": "6162 Maple Avenue, Dallas, TX 75235",
+    "city": "Dallas",
+    "state": "TX",
+    "slug": "kasa-love-field-medical-district-dallas"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.797782,
+     32.781962
+    ]
+   },
+   "properties": {
+    "name": "Mint House Dallas Downtown by Kasa",
+    "address": "1601 Elm Street, Dallas, TX 75201",
+    "city": "Dallas",
+    "state": "TX",
+    "slug": "mint-house-dallas-downtown-by-kasa"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.058762,
+     38.827344
+    ]
+   },
+   "properties": {
+    "name": "Kasa Del Ray Alexandria",
+    "address": "2415 Mount Vernon Avenue, Alexandria, VA 22301",
+    "city": "Alexandria",
+    "state": "VA",
+    "slug": "kasa-del-ray-alexandria"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -77.048366,
+     38.805526
+    ]
+   },
+   "properties": {
+    "name": "The King Street House by Kasa",
+    "address": "805 King Street, Alexandria, VA 22314",
+    "city": "Alexandria",
+    "state": "VA",
+    "slug": "the-king-street-house-by-kasa-hotels-alexandria"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.195977,
+     47.618984
+    ]
+   },
+   "properties": {
+    "name": "The Bellevue Seattle by Kasa Living",
+    "address": "900 108th Ave NE, Bellevue, WA 98004",
+    "city": "Bellevue",
+    "state": "WA",
+    "slug": "kasa-bellevue-seattle"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.328532,
+     47.615292
+    ]
+   },
+   "properties": {
+    "name": "Kasa Capitol Hill Seattle",
+    "address": "1208 Pine Street, Seattle, WA 98101",
+    "city": "Seattle",
+    "state": "WA",
+    "slug": "kasa-capitol-hill-seattle"
+   }
+  }
+ ]
 }
