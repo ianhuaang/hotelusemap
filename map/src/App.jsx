@@ -1225,15 +1225,20 @@ function InfoTip({ text }) {
 
   return (
     <span className="relative inline-flex ml-1">
-      <button
-        type="button"
+      {/* A span, not a button: InfoTip is rendered inside the segment row
+          buttons, and a nested <button> is invalid HTML — React logged a
+          "cannot be a descendant" error on every render. The tooltip text goes
+          to assistive tech via aria-label instead of a second control. */}
+      <span
+        role="img"
+        aria-label={text}
         className="w-3.5 h-3.5 rounded-full bg-gray-200 hover:bg-gray-300 text-[9px] font-bold text-gray-500 hover:text-gray-700 inline-flex items-center justify-center cursor-pointer transition-colors leading-none"
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
         onClick={(e) => { e.stopPropagation(); setShow(!show); }}
       >
         i
-      </button>
+      </span>
       {show && (
         <div
           ref={tipRef}
