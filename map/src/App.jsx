@@ -7,8 +7,8 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
 
 const SEGMENTS = [
   {
-    key: "transient", label: "Transient capacity", color: "#8b5cf6", defaultOn: true,
-    info: "Buildings with HPD Class B (transient) rooms but no known active hotel operator. The primary sourcing targets.",
+    key: "transient", label: "Class B, no operator", color: "#8b5cf6", defaultOn: true,
+    info: "HPD has registered Class B (transient) rooms here, and no hotel operator turned up in DCWP licences or Google Places. Most still have a managing agent on file, which is not the same thing. A couple qualify on DOB R-1 occupancy rather than Class B. The primary sourcing targets.",
   },
   {
     key: "active_hotel", label: "Active hotel", color: "#16a34a", defaultOn: false,
@@ -2761,7 +2761,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
             <div className="border-t border-emerald-100 mt-1.5 pt-1.5 space-y-0">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
               <SubRow label="Active hotel (operator found)" data={g("hc_cb__active")} color="#16a34a" filterKey="hc_cb__active" />
-              <SubRow label="Transient capacity (no active business)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
+              <SubRow label="Class B rooms (no operator found)" data={g("hc_cb__transient")} color="#8b5cf6" filterKey="hc_cb__transient" />
             </div>
             <ExampleLink quadrant="hc_cb" />
           </div>
@@ -2799,7 +2799,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
             <div className="border-t border-blue-100 mt-1.5 pt-1.5 space-y-0">
               <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5">By Operator Status</div>
               <SubRow label="Active hotel (operator found)" data={g("nohc_cb__active")} color="#16a34a" filterKey="nohc_cb__active" />
-              <SubRow label="Transient capacity (no active business)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
+              <SubRow label="Class B rooms (no operator found)" data={g("nohc_cb__transient")} color="#8b5cf6" filterKey="nohc_cb__transient" />
             </div>
             <ExampleLink quadrant="nohc_cb" />
           </div>
@@ -2853,7 +2853,7 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
           <div className="space-y-2 text-[11px] text-gray-600">
             <div className="flex items-start gap-2">
               <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#8b5cf6" }} />
-              <div><strong className="text-gray-800">Transient capacity</strong> — Buildings with legally established transient use (HPD Class B rooms, DOB R-1 occupancy, or hotel building class) but no known active hotel operator. The primary sourcing targets.</div>
+              <div><strong className="text-gray-800">Class B, no operator</strong> — Almost always HPD-registered Class B (transient) rooms where no hotel operator surfaced via DCWP licence, Google Places or an operator-name match. Absence of evidence, not proof the building is idle: most carry a managing agent, and an operator running 30-day stays leaves no public record at all. A few qualify instead on DOB R-1 occupancy or a hotel building class. The primary sourcing targets.</div>
             </div>
             <div className="flex items-start gap-2">
               <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#16a34a" }} />
