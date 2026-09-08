@@ -3490,8 +3490,6 @@ export default function App() {
               setMinClassB={setMinClassB}
               showPriorOps={showPriorOps}
               setShowPriorOps={setShowPriorOps}
-              showKasa={showKasa}
-              setShowKasa={setShowKasa}
               showReversion={showReversion}
               setShowReversion={setShowReversion}
               notes={notes}
@@ -3514,6 +3512,8 @@ export default function App() {
         setActiveSegments={setActiveSegments}
         showPriorOps={showPriorOps}
         setShowPriorOps={setShowPriorOps}
+        showKasa={showKasa}
+        setShowKasa={setShowKasa}
         showReversion={showReversion}
         setShowReversion={setShowReversion}
         distressOnly={distressOnly}
