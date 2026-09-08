@@ -3001,6 +3001,23 @@ export default function App() {
   const [layersReady, setLayersReady] = useState(false);
   const currentFilterRef = useRef(null);
   const [inspectedFeature, setInspectedFeature] = useState(null); // single click detail
+
+  // An incoming ?bbl= cannot be honoured until buildings.geojson has loaded, so
+  // hold it here. Without this the sync effect below fires on mount with nothing
+  // selected and deletes the parameter before it can ever be used.
+  const pendingDeepLink = useRef(new URLSearchParams(window.location.search).get("bbl"));
+
+  // Mirror the open building into the URL so it can be shared or linked from a
+  // HubSpot record. replaceState, not pushState: the back button should leave
+  // the map, not step through every building someone clicked.
+  useEffect(() => {
+    if (!inspectedFeature && pendingDeepLink.current) return;
+    const url = new URL(window.location.href);
+    const bbl = inspectedFeature?.properties?.bbl;
+    if (bbl) url.searchParams.set("bbl", bbl);
+    else url.searchParams.delete("bbl");
+    if (url.href !== window.location.href) window.history.replaceState(null, "", url);
+  }, [inspectedFeature]);
   const { notes, save: saveNote } = useNotes();
   const { statuses: crmStatuses, setStatus: setCrmStatus } = useCrmStatuses();
   const [exportList, setExportList] = useState(new Map()); // bbl -> feature
@@ -3048,6 +3065,22 @@ export default function App() {
         const feats = data.features || [];
         allFeaturesRef.current = feats;
         setFeaturesVersion((v) => v + 1);
+
+        // Deep link: ?bbl= opens straight onto that building. Done here rather
+        // than on mount because the features have to exist to select one.
+        const wanted = pendingDeepLink.current;
+        if (wanted) {
+          const hit = feats.find((f) => String(f.properties?.bbl) === wanted);
+          // Release the hold either way: a bbl that matches nothing should not
+          // sit in the URL pretending something is selected.
+          pendingDeepLink.current = null;
+          if (hit) setInspectedFeature(hit);
+          else {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("bbl");
+            window.history.replaceState(null, "", url);
+          }
+        }
         const segCounts = {};
         const seenBBLs = {};
         for (const f of feats) {
