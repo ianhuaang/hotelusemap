@@ -1325,7 +1325,7 @@ function FilterPanel({
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
       <div className="p-4 border-b border-gray-100">
-        <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Capacity</h1>
+        <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Use</h1>
         {dataDate && (() => {
           const days = dataDate.daysAgo;
           const color = days <= 7 ? "text-emerald-600" : days <= 30 ? "text-amber-600" : "text-red-600";
@@ -1351,10 +1351,10 @@ function FilterPanel({
                   key={seg.key}
                   onClick={() => toggleSegment(seg.key)}
                   className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
-                  style={{
-                    backgroundColor: active ? `${seg.color}10` : "transparent",
-                    borderLeft: `3px solid ${active ? seg.color : "transparent"}`,
-                  }}
+                  // No left accent bar: with the row flush to the panel gutter it
+                  // collided with the checkbox. Active state is already carried by
+                  // the tinted background and the filled, segment-coloured box.
+                  style={{ backgroundColor: active ? `${seg.color}14` : "transparent" }}
                 >
                   <span
                     className="w-3.5 h-3.5 rounded-sm border-2 flex items-center justify-center transition-colors shrink-0"
