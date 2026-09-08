@@ -107,7 +107,7 @@ function computeScore(p) {
 function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minClassB, filters, distressOnly, noOperatorOnly, hideCondos, hideRestricted) {
   const allowedSegs = Object.entries(activeSegments).filter(([, v]) => v).map(([k]) => k);
   const segFilter = ["in", ["get", "segment"], ["literal", allowedSegs]];
-  const priorOpFilter = ["==", ["get", "has_prior_op"], true];
+  const priorOpFilter = ["==", ["get", "has_flex_op"], true];
   const reversionFilter = ["==", ["get", "has_reversion"], true];
 
   const overlayParts = [];
@@ -1408,9 +1408,9 @@ function FilterPanel({
                 )}
               </span>
               <div className="flex items-center">
-                <span className="text-xs text-gray-700">Prior operators</span>
+                <span className="text-xs text-gray-700">Flex operators</span>
                 <span className="text-[10px] text-gray-400 ml-1">({overlayCounts.priorOps})</span>
-                <InfoTip text="Highlights buildings previously operated by flex-stay companies (Sonder, Placemakr, Kasa, Mint House, etc.). Adds any not already visible through active segments. Purple outline on map." />
+                <InfoTip text="Buildings run by a flex-stay operator (Sonder, Placemakr, Kasa, Mint House, LuxUrban) either now or in the past. Former operators are reversion candidates; current ones are managed by someone who could be replaced." />
               </div>
             </label>
             <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
@@ -1878,7 +1878,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
   return features.filter((f) => {
     const p = f.properties;
     const segOk = activeSegments[p.segment];
-    const overlayOk = (showPriorOps && p.has_prior_op) || (showReversion && p.has_reversion);
+    const overlayOk = (showPriorOps && p.has_flex_op) || (showReversion && p.has_reversion);
     if (!segOk && !overlayOk) return false;
 
     if (!overlayOk && estRooms(p).value < minUnits) return false;
@@ -3032,7 +3032,7 @@ export default function App() {
             segCounts[seg] = (segCounts[seg] || 0) + 1;
           }
         }
-        const priorOpsAll = feats.filter((f) => f.properties.has_prior_op);
+        const priorOpsAll = feats.filter((f) => f.properties.has_flex_op);
         const priorOpsExtra = priorOpsAll.filter((f) => f.properties.segment !== "transient");
         const revAll = feats.filter((f) => f.properties.has_reversion);
         const revExtra = revAll.filter((f) => f.properties.segment !== "transient" && f.properties.segment !== "active_hotel");

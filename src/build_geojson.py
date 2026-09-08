@@ -4,6 +4,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 """
 
 import json
+import re
 from datetime import date
 from pathlib import Path
 
@@ -149,6 +150,24 @@ NON_TARGET_SAFE_WORDS = ["hospitality"]
 
 
 INSTITUTIONAL_BLDG_CLASSES = {"I4", "I7", "I9", "N2", "N4", "N9", "M2", "M4", "M9", "P3", "P5", "W5", "W6", "W7"}
+
+
+FLEX_OPERATORS = (
+    "sonder", "placemakr", "kasa", "mint house", "blueground",
+    "sentral", "whyhotel", "locale", "frontdesk", "landing",
+)
+# Deliberately excludes purpose-built extended-stay hotel brands (Residence
+# Inn, Element, Hyatt House). Those sell hotel product; these take over
+# apartment inventory, which is the distinction that matters for sourcing.
+
+
+def _current_flex_operator(record: dict) -> str:
+    """Name of a flex-stay operator running this building now, if any."""
+    hotel = (record.get("hotel_name") or "").strip()
+    operator = (record.get("operator_name") or "").strip()
+    # These two are usually the same string; only join when they differ.
+    name = hotel if hotel.lower() == operator.lower() else " / ".join(x for x in (hotel, operator) if x)
+    return name if any(op in name.lower() for op in FLEX_OPERATORS) else ""
 
 
 def _is_non_target(record: dict) -> bool:
@@ -484,6 +503,24 @@ def build_geojson(
         if record.get("prior_operator"):
             properties["prior_operator"] = record["prior_operator"]
             properties["has_prior_op"] = True
+
+        # Flex-stay operator, current as well as former. has_prior_op only ever
+        # meant "a flex company has left this building"; one running it right
+        # now matters just as much for sourcing, and the overlay missed those.
+        # has_prior_op is left untouched so the detail panel and export category
+        # keep meaning "former".
+        current_flex = _current_flex_operator(record)
+        if current_flex:
+            properties["flex_op_name"] = current_flex
+            properties["flex_op_status"] = "current"
+        elif record.get("prior_operator"):
+            properties["flex_op_name"] = record["prior_operator"]["name"]
+            properties["flex_op_status"] = "former"
+        if properties.get("flex_op_name"):
+            properties["has_flex_op"] = True
+            properties["flex_op_is_kasa"] = bool(
+                re.search(r"\bkasa\b", properties["flex_op_name"], re.I)
+            )
 
         reversion_info = POST_2021_REVERSIONS.get(record["bbl"])
         if reversion_info:
