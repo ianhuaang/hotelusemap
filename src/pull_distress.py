@@ -28,7 +28,12 @@ from config import (
     TAX_LIENS_DATASET_ID, ACRIS_LEGALS_DATASET_ID, ACRIS_MASTER_DATASET_ID,
 )
 
-BATCH_SIZE = 5000
+# Socrata's page maximum is 50,000, not the 5,000 we had been using. ECB
+# violations and the tax lien list are whole-dataset pulls of ~200k rows each,
+# so this is the difference between ~85 sequential pages and ~10. Measured:
+# one 50,000-row page comes back in 0.7-32s depending on the dataset, against
+# 10s for a 5,000-row page of the same data.
+BATCH_SIZE = 50000
 # BBLs per WHERE clause. 100 measured ~1.2s/chunk; 200 was ~12s -- the query
 # planner falls off a cliff, so bigger is emphatically not better here.
 BBL_CHUNK = 100
