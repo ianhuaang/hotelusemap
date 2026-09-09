@@ -102,7 +102,13 @@ jobs:
                       "DCWP hotel licenses:${{ steps.p_licenses.outcome }}" \
                       "DOB occupancy:${{ steps.p_occupancy.outcome }}"; do
             name="${pair%:*}"; outcome="${pair##*:}"
-            [ "$outcome" != "success" ] && FAILED="$FAILED\n  - $name ($outcome)"
+            # An `if` rather than `[ ] && ...`: the latter leaves the loop with
+            # a non-zero status on its last iteration whenever the test is
+            # false, and `run:` executes under `bash -e`, so the check failed
+            # exactly when every source had succeeded.
+            if [ "$outcome" != "success" ]; then
+              FAILED="$FAILED\n  - $name ($outcome)"
+            fi
           done
           if [ -n "$FAILED" ]; then
             echo "::error title=Phase 1 incomplete::Stopping before the pipeline build."
