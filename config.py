@@ -68,7 +68,9 @@ CONFIDENCE_LOW = "low"
 # same code does locally. An app token is free and moves us to a per-token
 # quota. Absent the token the header is simply omitted and everything still
 # works, just throttled.
-SOCRATA_APP_TOKEN = os.environ.get("SOCRATA_APP_TOKEN", "")
+# .strip() because a token pasted into a secret box frequently carries a
+# trailing newline, and Socrata rejects the whole request rather than trimming.
+SOCRATA_APP_TOKEN = os.environ.get("SOCRATA_APP_TOKEN", "").strip()
 
 SOCRATA_HEADERS = {"User-Agent": "nyc-transient-capacity/0.1"}
 if SOCRATA_APP_TOKEN:
