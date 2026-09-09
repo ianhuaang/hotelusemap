@@ -26,6 +26,8 @@ from config import DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL, ACRIS_LEGALS_DATA
 
 ACRIS_PARTIES_DATASET_ID = "636b-3b5g"
 BATCH_SIZE = 5000
+# doc_id IN (...) chunk size. 500 ids -> ~12.7k char URL; 1000 -> HTTP 414.
+DOC_CHUNK = 500
 TODAY = date.today().strftime("%Y%m%d")
 
 
@@ -52,6 +54,10 @@ def _fetch_all(dataset_id, params_base, label="records"):
         all_rows.extend(batch)
         if len(all_rows) % 20000 == 0 or len(batch) < BATCH_SIZE:
             print(f"  fetched {len(all_rows)} {label}...")
+        # A short page is the last page. Socrata always fills a page while more
+        # rows exist, so looping again only to receive [] doubles our requests.
+        if len(batch) < BATCH_SIZE:
+            break
         offset += BATCH_SIZE
         time.sleep(0.3)
     return all_rows
@@ -105,6 +111,7 @@ def pull_acris_owners():
                 {
                     "$select": "document_id,borough,block,lot",
                     "$where": where,
+                    "$order": "document_id",
                 },
                 label=f"legals boro {boro} chunk {i // 100 + 1}",
             )
@@ -132,16 +139,17 @@ def pull_acris_owners():
     master_by_id = {}
     doc_id_list = sorted(all_doc_ids)
 
-    for i in range(0, len(doc_id_list), 200):
-        chunk = doc_id_list[i:i + 200]
+    for i in range(0, len(doc_id_list), DOC_CHUNK):
+        chunk = doc_id_list[i:i + DOC_CHUNK]
         id_list = ",".join(f"'{d}'" for d in chunk)
         masters = _fetch_all(
             ACRIS_MASTER_DATASET_ID,
             {
                 "$select": "document_id,doc_type,document_date,recorded_datetime,document_amt",
                 "$where": f"document_id IN ({id_list}) AND doc_type IN ('DEED','MTGE')",
+                "$order": "document_id",
             },
-            label=f"master batch {i // 200 + 1}",
+            label=f"master batch {i // DOC_CHUNK + 1}",
         )
         for m in masters:
             master_by_id[m["document_id"]] = m
@@ -149,21 +157,47 @@ def pull_acris_owners():
 
     print(f"DEED/MTGE documents: {len(master_by_id)}")
 
-    # Step 3: Get Parties for these documents
-    print("Step 3: Fetching ACRIS Parties...")
-    relevant_doc_ids = sorted(master_by_id.keys())
+    # Step 3: Get Parties — but only for the documents step 4 actually reads.
+    # Step 4 uses the most recent DEED and the most recent MTGE per BBL and
+    # discards the rest, so resolving "latest" first cuts this fetch by ~90%.
+    latest_by_bbl = {}
+    for bbl in target_bbls:
+        deeds, mortgages = [], []
+        for did in doc_ids_by_bbl.get(bbl, set()):
+            m = master_by_id.get(did)
+            if not m:
+                continue
+            rec_date = (m.get("recorded_datetime") or "")[:10]
+            if m["doc_type"] == "DEED":
+                deeds.append((rec_date, did))
+            elif m["doc_type"] == "MTGE":
+                mortgages.append((rec_date, did))
+        # max() over (rec_date, document_id) reproduces the original
+        # sort(reverse=True)[0] exactly, including the document_id tie-break.
+        latest_by_bbl[bbl] = (
+            max(deeds) if deeds else None,
+            max(mortgages) if mortgages else None,
+        )
+
+    relevant_doc_ids = sorted({
+        did for pair in latest_by_bbl.values() for entry in pair if entry
+        for did in (entry[1],)
+    })
+    print(f"Step 3: Fetching ACRIS Parties for {len(relevant_doc_ids)} "
+          f"current documents (of {len(master_by_id)} DEED/MTGE)...")
     all_parties = []
 
-    for i in range(0, len(relevant_doc_ids), 200):
-        chunk = relevant_doc_ids[i:i + 200]
+    for i in range(0, len(relevant_doc_ids), DOC_CHUNK):
+        chunk = relevant_doc_ids[i:i + DOC_CHUNK]
         id_list = ",".join(f"'{d}'" for d in chunk)
         parties = _fetch_all(
             ACRIS_PARTIES_DATASET_ID,
             {
                 "$select": "document_id,party_type,name,address_1,city,state,zip",
                 "$where": f"document_id IN ({id_list})",
+                "$order": "document_id,party_type,name",
             },
-            label=f"parties batch {i // 200 + 1}",
+            label=f"parties batch {i // DOC_CHUNK + 1}",
         )
         all_parties.extend(parties)
         time.sleep(0.3)
@@ -180,25 +214,14 @@ def pull_acris_owners():
 
     results = {}
     for bbl in target_bbls:
-        doc_ids = doc_ids_by_bbl.get(bbl, set())
-        deeds = []
-        mortgages = []
-        for did in doc_ids:
-            m = master_by_id.get(did)
-            if not m:
-                continue
-            rec_date = (m.get("recorded_datetime") or "")[:10]
-            if m["doc_type"] == "DEED":
-                deeds.append((rec_date, did, m))
-            elif m["doc_type"] == "MTGE":
-                mortgages.append((rec_date, did, m))
+        latest_deed_entry, latest_mtge_entry = latest_by_bbl.get(bbl, (None, None))
 
         entry = {"bbl": bbl}
 
         # Most recent deed — grantee = buyer = current owner
-        if deeds:
-            deeds.sort(reverse=True)
-            latest_deed_date, latest_deed_id, latest_deed = deeds[0]
+        if latest_deed_entry:
+            latest_deed_date, latest_deed_id = latest_deed_entry
+            latest_deed = master_by_id[latest_deed_id]
             grantees = [
                 p for p in parties_by_doc.get(latest_deed_id, [])
                 if str(p.get("party_type")) == "2"
@@ -220,9 +243,9 @@ def pull_acris_owners():
             ]
 
         # Most recent mortgage — grantor = borrower
-        if mortgages:
-            mortgages.sort(reverse=True)
-            latest_mtge_date, latest_mtge_id, latest_mtge = mortgages[0]
+        if latest_mtge_entry:
+            latest_mtge_date, latest_mtge_id = latest_mtge_entry
+            latest_mtge = master_by_id[latest_mtge_id]
             grantors = [
                 p for p in parties_by_doc.get(latest_mtge_id, [])
                 if str(p.get("party_type")) == "1"
