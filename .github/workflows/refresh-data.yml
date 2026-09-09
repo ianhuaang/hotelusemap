@@ -19,7 +19,10 @@ jobs:
     # first, the run is cancelled before the verify step can report which
     # sources failed — the cap killing the run costs us the diagnosis. Real
     # runs land far under: run #7 pulled everything in 1h46m.
-    timeout-minutes: 300
+    # Must exceed the sum of every step cap (310m) or the job dies before a
+    # slow step does, and the guard never gets to say which source was short.
+    # GitHub kills hosted jobs at 360m, so this is close to the real ceiling.
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
 
@@ -73,7 +76,7 @@ jobs:
         id: p_distress
         run: python src/pull_distress.py
         continue-on-error: true
-        timeout-minutes: 30
+        timeout-minutes: 45
 
       - name: Pull DCWP hotel licenses
         id: p_licenses
@@ -98,12 +101,16 @@ jobs:
         continue-on-error: true
         timeout-minutes: 15
 
-      # Truncated at 10m in run #7.
+      # Truncated at 10m in run #7, then again at 25m on 8 Sep 2026 — it ran
+      # 25.2m and was killed a few seconds over. Raised to 45 rather than 30:
+      # this source has now outgrown two caps set just above its previous run
+      # time, and a cap chosen to barely fit is a cap that fails again the next
+      # time ACRIS is slow. The job's own 300m budget is the real ceiling.
       - name: Pull ACRIS owners
         id: p_acris
         run: python src/pull_acris_owners.py
         continue-on-error: true
-        timeout-minutes: 25
+        timeout-minutes: 45
 
       # Truncated at 10m in run #7.
       - name: Pull HPD registrations
