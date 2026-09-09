@@ -71,13 +71,6 @@ jobs:
         continue-on-error: true
         timeout-minutes: 15
 
-      # Ran 15.2m against a 15m cap in run #7 — it was truncated, not finished.
-      - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
-        id: p_distress
-        run: python src/pull_distress.py
-        continue-on-error: true
-        timeout-minutes: 45
-
       - name: Pull DCWP hotel licenses
         id: p_licenses
         run: python src/pull_hotel_licenses.py
@@ -90,11 +83,48 @@ jobs:
         continue-on-error: true
         timeout-minutes: 10
 
+      # Checkpoint. The full verification runs at the end, but waiting for it
+      # means a source that dies at minute 20 still burns the remaining 90
+      # before anyone is told. Phase 2 cannot produce a correct build without
+      # these, so stop here instead.
+      - name: Checkpoint — phase 1 sources
+        run: |
+          FAILED=""
+          for pair in "PLUTO:${{ steps.p_pluto.outcome }}" \
+                      "HPD:${{ steps.p_hpd.outcome }}" \
+                      "building footprints:${{ steps.p_footprints.outcome }}" \
+                      "DOF sales:${{ steps.p_sales.outcome }}" \
+                      "DOB permits:${{ steps.p_permits.outcome }}" \
+                      "DCWP hotel licenses:${{ steps.p_licenses.outcome }}" \
+                      "DOB occupancy:${{ steps.p_occupancy.outcome }}"; do
+            name="${pair%:*}"; outcome="${pair##*:}"
+            [ "$outcome" != "success" ] && FAILED="$FAILED\n  - $name ($outcome)"
+          done
+          if [ -n "$FAILED" ]; then
+            echo "::error title=Phase 1 incomplete::Stopping before the pipeline build."
+            printf '%b\n' "Sources that did not complete:$FAILED"
+            exit 1
+          fi
+          echo "Phase 1 complete."
+
       # Phase 2: Run pipeline (needs PLUTO + HPD)
       - name: Run pipeline
         run: python src/pipeline.py
 
       # Phase 3: Pull data that depends on pipeline output
+
+      # Moved here from phase 1 on 9 Sep 2026. It used to pull open violations
+      # for all of Manhattan/Brooklyn/Queens — 2.1M rows across 76k buildings —
+      # to compute two integers for each of the ~15k buildings in the pipeline,
+      # so its runtime tracked NYC's data rather than ours. It outgrew a 15m cap
+      # and then a 45m one. Reading the pipeline's BBL list first cuts it to
+      # ~55k rows. pipeline.py has no distress dependency, so the reorder is safe.
+      - name: Pull distress signals (HPD violations, ECB, tax liens, lis pendens)
+        id: p_distress
+        run: python src/pull_distress.py
+        continue-on-error: true
+        timeout-minutes: 20
+
       - name: Pull C of O records
         id: p_coo
         run: python src/pull_coo.py
@@ -182,6 +212,15 @@ jobs:
             exit 1
           fi
           echo "All 15 sources completed."
+
+      # Every cap here was set just above the previous run time, so each one
+      # eventually failed. This prints how close each step came, so drift shows
+      # up as a warning weeks before it becomes a failed run.
+      - name: Report step runtimes against caps
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python src/report_step_budget.py
 
       # Phase 4: Enrich and build
       - name: Run enrichment

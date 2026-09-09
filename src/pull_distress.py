@@ -23,12 +23,15 @@ import certifi
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
-    DATA_RAW, SOCRATA_BASE_URL,
+    DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL,
     HPD_VIOLATIONS_DATASET_ID, DOB_ECB_VIOLATIONS_DATASET_ID,
     TAX_LIENS_DATASET_ID, ACRIS_LEGALS_DATASET_ID, ACRIS_MASTER_DATASET_ID,
 )
 
 BATCH_SIZE = 5000
+# BBLs per WHERE clause. 100 measured ~1.2s/chunk; 200 was ~12s -- the query
+# planner falls off a cliff, so bigger is emphatically not better here.
+BBL_CHUNK = 100
 TODAY = date.today().strftime("%Y%m%d")
 
 
@@ -59,10 +62,51 @@ def _fetch_all(dataset_id, params_base, label="records"):
 
         all_rows.extend(batch)
         print(f"  fetched {len(all_rows)} {label}...")
+        # A short page is the last page; looping again only to receive []
+        # doubles the request count.
+        if len(batch) < BATCH_SIZE:
+            break
         offset += BATCH_SIZE
         time.sleep(0.5)
 
     return all_rows
+
+
+def _fetch_chunk(dataset_id, params, label):
+    """Fetch one small BBL chunk in a single request.
+
+    Chunks are sized so the result fits comfortably in one page (~500 rows
+    against a 5000 limit). Unordered $offset paging is undefined, so if a chunk
+    ever fills the page we cannot trust a second unordered page -- redo it with
+    an explicit $order instead of silently truncating. $order is not the
+    default because it costs 3-8s per chunk versus 0.4s without.
+    """
+    rows = _fetch_all(dataset_id, params, label=label)
+    if len(rows) < BATCH_SIZE:
+        return rows
+    print(f"  {label}: filled a page, re-fetching with explicit order")
+    return _fetch_all(
+        dataset_id,
+        {**params, "$order": "boroid,block,lot,violationid"},
+        label=f"{label} (ordered)",
+    )
+
+
+def _pipeline_bbls() -> list[str] | None:
+    """BBLs the pipeline actually cares about, newest build first.
+
+    Returns None when no pipeline build exists yet, in which case callers fall
+    back to the citywide query so the script still works standalone.
+    """
+    files = sorted(DATA_PROCESSED.glob("pipeline_*.json"), reverse=True)
+    if not files:
+        return None
+    try:
+        rows = json.loads(files[0].read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    bbls = sorted({r["bbl"] for r in rows if r.get("bbl")})
+    return bbls or None
 
 
 def pull_hpd_violations() -> Path:
@@ -75,15 +119,49 @@ def pull_hpd_violations() -> Path:
     DATA_RAW.mkdir(parents=True, exist_ok=True)
     print("Pulling HPD violations (open only)...")
 
-    rows = _fetch_all(
-        HPD_VIOLATIONS_DATASET_ID,
-        {
-            "$select": "boroid,block,lot,class,violationstatus,inspectiondate,currentstatusdate,rentimpairing",
-            "$where": "violationstatus='Open' AND boroid IN ('1','3','4')",
-            "$order": "inspectiondate DESC",
-        },
-        label="HPD violations",
-    )
+    select = ("boroid,block,lot,class,violationstatus,inspectiondate,"
+              "currentstatusdate,rentimpairing")
+    bbls = _pipeline_bbls()
+
+    if bbls:
+        # Ask only for the buildings in the pipeline. Citywide there are ~2.1M
+        # open violations across 76k buildings; the pipeline holds ~15k, whose
+        # violations number ~55k. Pulling all of them and discarding 97% is
+        # what pushed this step past its timeout -- and it grew with NYC's
+        # data, not with ours, so every raised cap only bought a few weeks.
+        print(f"Pulling HPD violations (open) for {len(bbls):,} pipeline buildings...")
+        by_boro: dict[str, list[str]] = {}
+        for b in bbls:
+            by_boro.setdefault(b[0], []).append(b)
+
+        rows = []
+        for boro, blist in sorted(by_boro.items()):
+            for i in range(0, len(blist), BBL_CHUNK):
+                chunk = blist[i:i + BBL_CHUNK]
+                conditions = " OR ".join(
+                    f"(block='{int(b[1:6])}' AND lot='{int(b[6:10])}')" for b in chunk
+                )
+                rows.extend(_fetch_chunk(
+                    HPD_VIOLATIONS_DATASET_ID,
+                    {
+                        "$select": select,
+                        "$where": (f"violationstatus='Open' AND boroid='{boro}' "
+                                   f"AND ({conditions})"),
+                    },
+                    label=f"HPD violations boro {boro} chunk {i // BBL_CHUNK + 1}",
+                ))
+                time.sleep(0.3)
+    else:
+        print("No pipeline build found; falling back to the citywide pull.")
+        rows = _fetch_all(
+            HPD_VIOLATIONS_DATASET_ID,
+            {
+                "$select": select,
+                "$where": "violationstatus='Open' AND boroid IN ('1','3','4')",
+                "$order": "inspectiondate DESC",
+            },
+            label="HPD violations",
+        )
 
     # Build BBL and simplify
     for r in rows:
@@ -92,6 +170,10 @@ def pull_hpd_violations() -> Path:
         lot = str(r.get("lot", "")).zfill(4)
         r["bbl"] = f"{boro}{block}{lot}"
 
+    # Chunked fetching means arrival order is an artefact of chunking, so sort
+    # for a stable file that diffs meaningfully between runs.
+    rows.sort(key=lambda r: (r["bbl"], r.get("class") or "",
+                             r.get("inspectiondate") or ""))
     outfile.write_text(json.dumps(rows, indent=2))
     print(f"Saved {len(rows)} HPD violations -> {outfile}")
     return outfile
