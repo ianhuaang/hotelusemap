@@ -13,7 +13,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL, HPD_BUILDINGS_DATASET_ID
+from config import DATA_RAW, SOCRATA_BASE_URL, HPD_BUILDINGS_DATASET_ID, SOCRATA_HEADERS
 
 BATCH_SIZE = 5000
 COLUMNS = [
@@ -50,7 +50,7 @@ def pull_hpd() -> Path:
             "$order": "buildingid",
         })
         url = f"{SOCRATA_BASE_URL}/{HPD_BUILDINGS_DATASET_ID}.json?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         batch = None
         for attempt in range(4):

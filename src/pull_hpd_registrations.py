@@ -21,7 +21,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL
+from config import DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL, SOCRATA_HEADERS
 
 HPD_REGISTRATIONS_DATASET_ID = "tesw-yqqr"
 HPD_CONTACTS_DATASET_ID = "feu5-w2e2"
@@ -36,7 +36,7 @@ def _fetch_all(dataset_id, params_base, label="records"):
     while True:
         params = {**params_base, "$limit": BATCH_SIZE, "$offset": offset}
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
         for attempt in range(3):
             try:
                 with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:

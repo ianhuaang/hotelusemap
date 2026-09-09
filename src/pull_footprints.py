@@ -17,7 +17,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL, BUILDING_FOOTPRINTS_DATASET_ID
+from config import DATA_RAW, SOCRATA_BASE_URL, BUILDING_FOOTPRINTS_DATASET_ID, SOCRATA_HEADERS
 
 # 10k measured fastest for this dataset: ~84 requests at ~5MB each, vs 419
 # requests at 2k. Larger pages get slower per byte and spike memory, since
@@ -54,7 +54,7 @@ def pull_footprints() -> Path:
             "$order": "base_bbl",
         })
         url = f"{SOCRATA_BASE_URL}/{BUILDING_FOOTPRINTS_DATASET_ID}.json?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         batch = None
         for attempt in range(4):

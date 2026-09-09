@@ -26,7 +26,7 @@ from config import (
     DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL,
     HPD_VIOLATIONS_DATASET_ID, DOB_ECB_VIOLATIONS_DATASET_ID,
     TAX_LIENS_DATASET_ID, ACRIS_LEGALS_DATASET_ID, ACRIS_MASTER_DATASET_ID,
-)
+ SOCRATA_HEADERS,)
 
 # Socrata's page maximum is 50,000, not the 5,000 we had been using. ECB
 # violations and the tax lien list are whole-dataset pulls of ~200k rows each,
@@ -49,7 +49,7 @@ def _fetch_all(dataset_id, params_base, label="records"):
     while True:
         params = {**params_base, "$limit": BATCH_SIZE, "$offset": offset}
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         for attempt in range(3):
             try:

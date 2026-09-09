@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
     DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL,
     COO_LEGACY_DATASET_ID, COO_NOW_DATASET_ID,
-)
+ SOCRATA_HEADERS,)
 
 BATCH_SIZE = 5000
 
@@ -61,7 +61,7 @@ def _fetch_paginated(dataset_id: str, columns: list[str], where: str, ctx) -> li
             "$offset": offset,
         })
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         for attempt in range(3):
             try:

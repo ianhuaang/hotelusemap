@@ -17,7 +17,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL
+from config import DATA_RAW, SOCRATA_BASE_URL, SOCRATA_HEADERS
 
 DCWP_DATASET_ID = "w7w3-xahh"
 
@@ -54,7 +54,7 @@ def pull_hotel_licenses() -> Path:
         "$order": "address_borough,business_name",
     })
     url = f"{SOCRATA_BASE_URL}/{DCWP_DATASET_ID}.json?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+    req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
     rows = None
     for attempt in range(4):

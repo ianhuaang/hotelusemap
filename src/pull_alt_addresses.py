@@ -19,7 +19,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_PROCESSED, SOCRATA_BASE_URL, DOB_FILINGS_DATASET_ID
+from config import DATA_PROCESSED, SOCRATA_BASE_URL, DOB_FILINGS_DATASET_ID, SOCRATA_HEADERS
 
 TODAY = date.today().strftime("%Y%m%d")
 BATCH_SIZE = 50  # BBLs per Socrata request
@@ -93,7 +93,7 @@ def _fetch_batch(bbls: list[str], ctx) -> list[dict]:
         "$limit": 50000,
     })
     url = f"{SOCRATA_BASE_URL}/{DOB_FILINGS_DATASET_ID}.json?{params}"
-    req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+    req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
     for attempt in range(2):
         try:

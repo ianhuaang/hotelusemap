@@ -22,7 +22,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL, ACRIS_LEGALS_DATASET_ID, ACRIS_MASTER_DATASET_ID
+from config import DATA_RAW, DATA_PROCESSED, SOCRATA_BASE_URL, ACRIS_LEGALS_DATASET_ID, ACRIS_MASTER_DATASET_ID, SOCRATA_HEADERS
 
 ACRIS_PARTIES_DATASET_ID = "636b-3b5g"
 BATCH_SIZE = 5000
@@ -38,7 +38,7 @@ def _fetch_all(dataset_id, params_base, label="records"):
     while True:
         params = {**params_base, "$limit": BATCH_SIZE, "$offset": offset}
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
         for attempt in range(3):
             try:
                 with urllib.request.urlopen(req, timeout=120, context=ctx) as resp:

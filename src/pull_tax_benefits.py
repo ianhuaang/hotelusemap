@@ -20,7 +20,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL
+from config import DATA_RAW, SOCRATA_BASE_URL, SOCRATA_HEADERS
 
 DATASET_ID = "muvi-b6kx"
 BATCH_SIZE = 5000
@@ -70,7 +70,7 @@ def pull_tax_benefits() -> Path:
             "$offset": offset,
         })
         url = f"{SOCRATA_BASE_URL}/{DATASET_ID}.json?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         for attempt in range(4):
             try:

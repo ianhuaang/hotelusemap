@@ -1,3 +1,4 @@
+import os
 """Pipeline configuration constants."""
 
 from pathlib import Path
@@ -59,3 +60,16 @@ TIER_EXCLUDED = "excluded"
 CONFIDENCE_HIGH = "high"
 CONFIDENCE_MEDIUM = "medium"
 CONFIDENCE_LOW = "low"
+
+
+# Socrata throttles unauthenticated requests against a pool shared by everyone
+# coming from the same IP. GitHub's hosted runners share IPs widely, which is
+# the leading suspect for CI runs taking an order of magnitude longer than the
+# same code does locally. An app token is free and moves us to a per-token
+# quota. Absent the token the header is simply omitted and everything still
+# works, just throttled.
+SOCRATA_APP_TOKEN = os.environ.get("SOCRATA_APP_TOKEN", "")
+
+SOCRATA_HEADERS = {"User-Agent": "nyc-transient-capacity/0.1"}
+if SOCRATA_APP_TOKEN:
+    SOCRATA_HEADERS["X-App-Token"] = SOCRATA_APP_TOKEN

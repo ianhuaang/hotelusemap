@@ -26,7 +26,7 @@ import certifi
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, SOCRATA_BASE_URL, DOB_FILINGS_DATASET_ID
+from config import DATA_RAW, SOCRATA_BASE_URL, DOB_FILINGS_DATASET_ID, SOCRATA_HEADERS
 
 TODAY = date.today().strftime("%Y%m%d")
 BATCH_SIZE = 5000
@@ -51,7 +51,7 @@ def _fetch_paginated(where: str, ctx) -> list[dict]:
             "$order": "bbl,pre__filing_date DESC",
         })
         url = f"{SOCRATA_BASE_URL}/{DOB_FILINGS_DATASET_ID}.json?{params}"
-        req = urllib.request.Request(url, headers={"User-Agent": "nyc-transient-capacity/0.1"})
+        req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
 
         for attempt in range(4):
             try:
