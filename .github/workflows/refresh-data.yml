@@ -302,3 +302,25 @@ jobs:
           git commit -m "Auto-refresh: update buildings data $(date +%Y-%m-%d) (${FEATURES} features)"
           git push
           echo "Published ${FEATURES} features. Vercel will redeploy kasa-sourcing."
+
+      # Buildings in HubSpot carry a copy of the public data, which goes stale
+      # the moment this pipeline runs. Rewriting the fields that move keeps a
+      # CRM record honest without touching anything a person typed — notes,
+      # CRM status and owner are left alone. Runs against the clone made above,
+      # so it reads exactly what was just published.
+      #
+      # Optional: with the secrets unset the pipeline still publishes, it just
+      # leaves HubSpot showing whatever it showed before.
+      - name: Refresh building records in HubSpot
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          HUBSPOT_BUILDING_OBJECT: ${{ secrets.HUBSPOT_BUILDING_OBJECT }}
+        working-directory: /tmp/app
+        run: |
+          # Checked here rather than in `if:`, where a step's own env block is
+          # not yet in scope and the condition would silently never be true.
+          if [ -z "$HUBSPOT_TOKEN" ] || [ -z "$HUBSPOT_BUILDING_OBJECT" ]; then
+            echo "::warning title=HubSpot refresh skipped::Set HUBSPOT_TOKEN and HUBSPOT_BUILDING_OBJECT to keep CRM records current."
+            exit 0
+          fi
+          node map/scripts/hubspot-refresh.mjs
