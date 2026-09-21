@@ -5,7 +5,8 @@ Counts are for the 2,615 buildings on the map unless stated.
 --- 1. UNION ---------------------------------------------------------------
 > the list should be cross-referenced with the union database
 
-Done. We use HTC's own roster now. 237 of their shops are buildings we hold.
+Done. We cross-reference HTC's own roster of union shops rather than inferring
+it. 237 of their shops are buildings we hold.
 
 38 of those are union-covered and no longer hotels — the roster says what the
 building became: Residence, Club, Shelter. 18 of the 38 were sitting in
@@ -34,8 +35,12 @@ buildings. No flag.
 > Owned by "Housing Development..." could be a tip off. but this misses
 > supportive housing that is run by a non-profit.
 
-Done. Project Renewal, Praxis Housing Initiatives, Palladia and the Longacre
-and Varet Street shelters now flag, whoever owns them.
+Done. We stopped reading the ownership record for this and now check what is
+operating in the building, so a non-profit operator flags the same as an
+HDFC.
+
+Project Renewal, Praxis Housing Initiatives, Palladia, and the Longacre and
+Varet Street shelters.
 
 
 --- 3. NPISA / USE GROUP ---------------------------------------------------
@@ -52,8 +57,9 @@ the end.
 --- 4. STUDENT HOUSING -----------------------------------------------------
 > Example: 569 Lexington Avenue
 
-Fixed. We now check what is in a building, not only what it is permitted to
-be. 124 buildings contradict their tier, holding 5,289 Class B rooms:
+Fixed. Every city source tells you what a building is permitted to be, so we
+added a check on what is actually operating in it. 124 buildings contradict
+their tier, holding 5,289 Class B rooms:
 
     730  569 Lexington Avenue    FOUND Study Midtown East
     506  525 Lexington Avenue    FOUND Study Turtle Bay
@@ -71,8 +77,10 @@ strict — see the costed note at the end.
 --- 5. CONDOS -------------------------------------------------------------
 > This data is on DOB but may not always be super accurate
 
-We do not use DOB for this, and our own method was worse. Fixed, off the tax
-lot: 1,118 condos before, 3,585 now, 1,814 of them on the map.
+We do not use DOB for this, and our own method was worse. We read it off the
+condo billing lot now, which Finance assigns to every condominium unit.
+
+1,118 condos before, 3,585 now, 1,814 of them on the map.
 
 1335 Avenue of the Americas and 1535 Broadway were outside the filter
 entirely. They are the two largest Class B counts we hold.
@@ -137,8 +145,9 @@ authority.
 > Perhaps we look at the ownership records and if it is a religious
 > institution we discount it?
 
-Covered without an ownership rule, which would misfire on buildings that have
-since changed hands.
+Covered by the same current-use check as finding 4, so no ownership rule is
+needed — which is just as well, since one would misfire on any building that
+has changed hands.
 
 97 Columbia Heights reads as FOUND Study Columbia Heights Waterfront, student
 housing, 105 Class B rooms.
@@ -157,9 +166,11 @@ Noted. We will watch the docket and tell you if the reading of the Act shifts.
 > need to check that the existing transient use was permitted prior to
 > December 9, 2021
 
-Done, and it cut hard. Of 27 reversion candidates, 5 have evidence of
-transient use before the cutoff. The other 22 are flagged for review rather
-than dropped — a gap in the record is not proof the grandfathering is gone.
+Done. We test each candidate against its certificate history for transient use
+predating the cutoff.
+
+Of 27 candidates, 5 pass. The other 22 are flagged for review rather than
+dropped — a gap in the record is not proof the grandfathering is gone.
 
 
 --- R8. PROHIBITED BUILDINGS LIST -----------------------------------------
