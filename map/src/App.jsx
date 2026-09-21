@@ -196,6 +196,54 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
   return ["all", ...conditions];
 }
 
+// --- Kasa portfolio marker ---
+//
+// A square k badge rather than a dot. The portfolio layer sits on top of the
+// segment fills, and a dark circle there reads as just another data point;
+// the wordmark makes it obvious at a glance which buildings are already ours.
+// Drawn on a canvas instead of loaded as an SVG because MapLibre's loadImage
+// rasterises SVG data URIs inconsistently across browsers, and a canvas gives
+// us the retina pixel ratio for free.
+const KASA_BADGE_DPR = 2;
+const KASA_NAVY = "#061332"; // from the brand mark in map/public/brand
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function makeKasaBadge(size = 26) {
+  const s = size * KASA_BADGE_DPR;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = s;
+  const ctx = canvas.getContext("2d");
+
+  // White keyline first, so the badge separates from a dark basemap.
+  ctx.fillStyle = "#ffffff";
+  roundRect(ctx, 0, 0, s, s, s * 0.26);
+  ctx.fill();
+
+  const pad = s * 0.09;
+  ctx.fillStyle = KASA_NAVY;
+  roundRect(ctx, pad, pad, s - pad * 2, s - pad * 2, s * 0.2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = `700 ${Math.round(s * 0.62)}px Georgia, "Tiempos Headline", serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  // Optical centring: the k has no descender, so sitting it on the baseline
+  // at 73% of the height reads centred where true middle alignment does not.
+  ctx.fillText("k", s / 2, s * 0.73);
+
+  return { width: s, height: s, data: ctx.getImageData(0, 0, s, s).data };
+}
+
 // --- CSV export ---
 const CSV_COLUMNS = [
   { key: "address", label: "Address" },
@@ -699,6 +747,48 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           <div className="space-y-1.5">
             {(() => {
               const items = [];
+              // What the building is today, ahead of what its records permit.
+              // City data describes entitlement; this describes occupancy.
+              if (p.current_use_checked && p.current_use && p.current_use !== "unknown") {
+                const who = p.current_use_name ? ` — ${p.current_use_name}` : "";
+                const conf = p.current_use_confidence === "high" ? "" : ` (${p.current_use_confidence} confidence, verify)`;
+                items.push({
+                  icon: p.current_use_conflict ? "warn" : "info",
+                  text: `Currently: ${p.current_use_label}${who}${conf}`,
+                });
+              }
+              {
+                // Who Google finds at the address, in full. One classification
+                // is a guess; the list is the evidence behind it, and answers
+                // "what is this building now" on its own terms.
+                const occ = parseJsonProp(p.current_use_occupants) || [];
+                const building = occ.filter((o) => o.use !== "ground_floor_tenant");
+                if (building.length > 0) {
+                  items.push({
+                    icon: p.current_use_conflict ? "warn" : "info",
+                    text: `At this address: ${building.map((o) => o.name).join(", ")}`
+                      + (occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""),
+                  });
+                }
+              }
+              if (p.safe_hotels_guest_rooms > 0 && p.safe_hotels_room_basis !== "floor_estimate") {
+                // Guest rooms as the Act counts them — transient only. Shown
+                // separately from Est. Rooms, which counts the whole building.
+                items.push({
+                  icon: p.safe_hotels_direct_employment ? "warn" : "check",
+                  text: `${p.safe_hotels_guest_rooms} guest rooms under the Safe Hotels Act${p.safe_hotels_direct_employment ? "" : " — under the 100-room staffing threshold"}`,
+                });
+              }
+              if (p.htc_union) {
+                // Straight from the Hotel Trades Council's own roster, matched
+                // on coordinates. shop_type is what the union calls the
+                // building now, so a Residence or a Club here is a former
+                // hotel whose contract outlived the conversion.
+                items.push({
+                  icon: p.htc_converted_use ? "warn" : "info",
+                  text: `Hotel Trades Council union shop — ${p.htc_shop_type}${p.htc_union_name ? ` (${p.htc_union_name})` : ""}`,
+                });
+              }
               const bldg = (p.bldgclass || "").toUpperCase();
               const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
               if (isHotelClass) {
@@ -718,7 +808,17 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                 items.push({ icon: "info", text: `HPD DOB: ${p.hpd_dob_class}` });
               }
               if (p.has_hotel_license) {
-                items.push({ icon: "check", text: "Active DCWP hotel license" });
+                // Licensure, stated as licensure. This used to read "Active
+                // DCWP hotel license" regardless of the actual status, and was
+                // also what the map used to decide a building had an operator.
+                // The licensee is the owner; it says the building may lawfully
+                // trade as a hotel, not that anyone is trading in it.
+                const status = p.hotel_license_status || "unknown status";
+                const licensed = p.safe_hotels_licensed;
+                items.push({
+                  icon: licensed ? "check" : "info",
+                  text: `DCWP hotel license — ${status}${licensed ? ", licensed under the Safe Hotels Act" : ""}${p.hotel_license_name ? ` (${p.hotel_license_name})` : ""}`,
+                });
               }
               if (reasonCodes.includes("dob_transient_occupancy")) {
                 items.push({ icon: "check", text: "DOB transient occupancy (R-1/J-1)" });
@@ -801,8 +901,55 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           }
           if (p.is_condo) {
             considerations.push({
-              text: "Condominium — requires board approval or commercial condo owner negotiation",
+              text: "Condominium (condo billing lot) — requires board approval or commercial condo owner negotiation",
               severity: "medium",
+            });
+          }
+          if (p.ecb_illegal_transient > 0) {
+            considerations.push({
+              text: `${p.ecb_illegal_transient} open DOB violation${p.ecb_illegal_transient === 1 ? "" : "s"} under §28-210.3 — permanent dwelling offered or used for other than permanent residential purpose. This is the statute cited against illegal hotels, so somebody has already been running transient stays here without authority.`,
+              severity: "high",
+            });
+          }
+          if (p.fisp_applicable) {
+            considerations.push({
+              text: `Over six storeys — subject to the facade inspection programme (Local Law 11 / FISP). Inspection and filing every five years, and an unsafe finding carries a repair deadline. A recurring cost, not a one-off.`,
+              severity: "low",
+            });
+          }
+          if (p.safe_hotels_large_hotel) {
+            considerations.push({
+              text: `${p.safe_hotels_guest_rooms} guest rooms — over 400 makes this a "large hotel" under the Safe Hotels Act: core staff must be employed directly, and a security guard must be on duty continuously. Roughly 4-5 FTE of fixed cover before occupancy.`,
+              severity: "high",
+            });
+          } else if (p.safe_hotels_direct_employment) {
+            considerations.push({
+              text: `${p.safe_hotels_guest_rooms} guest rooms — at 100 or more, the Safe Hotels Act requires housekeeping, front desk and front service staff to be employed directly rather than subcontracted. Re-underwrite labor before pricing.`,
+              severity: "high",
+            });
+          }
+          if (p.reversion_unverified) {
+            considerations.push({
+              text: "Reversion window unverified — no record shows transient use here before the December 9, 2021 special-permit cutoff. Without that, re-establishing hotel use may require a special permit rather than being as-of-right.",
+              severity: "high",
+            });
+          }
+          if (p.htc_converted_use) {
+            considerations.push({
+              text: `Union shop under a Hotel Trades Council contract, listed as ${p.htc_shop_type.toLowerCase()} rather than a hotel. The agreement can survive a conversion or a change of operator, so labor obligations may attach before any deal is signed.`,
+              severity: "high",
+            });
+          }
+          if (p.current_use_needs_review) {
+            considerations.push({
+              text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
+              severity: "medium",
+            });
+          }
+          if (p.current_use_conflict) {
+            considerations.push({
+              text: `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${p.current_use_name ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`,
+              severity: p.current_use_confidence === "high" ? "high" : "medium",
             });
           }
           if (p.zoning_hotel_permitted === "not_permitted") {
@@ -3371,16 +3518,23 @@ export default function App() {
         .then((kasa) => {
           if (!kasa || !map.getCanvas()) return;
           map.addSource("kasa", { type: "geojson", data: kasa });
+          if (!map.hasImage("kasa-badge")) {
+            map.addImage("kasa-badge", makeKasaBadge(), { pixelRatio: KASA_BADGE_DPR });
+          }
           map.addLayer({
             id: "kasa-dots",
-            type: "circle",
+            type: "symbol",
             source: "kasa",
-            layout: { visibility: "none" },
-            paint: {
-              "circle-color": "#111827",
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 14, 8, 17, 11],
-              "circle-stroke-width": 2.5,
-              "circle-stroke-color": "#ffffff",
+            layout: {
+              visibility: "none",
+              "icon-image": "kasa-badge",
+              "icon-size": ["interpolate", ["linear"], ["zoom"], 10, 0.5, 14, 0.75, 17, 1],
+              // Our own portfolio should never be hidden by label collision,
+              // and it should stay upright when the map is pitched or rotated.
+              "icon-allow-overlap": true,
+              "icon-ignore-placement": true,
+              "icon-pitch-alignment": "viewport",
+              "icon-rotation-alignment": "viewport",
             },
           });
           map.on("click", "kasa-dots", (e) => {

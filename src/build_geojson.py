@@ -4,6 +4,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 """
 
 import json
+import math
 import re
 from datetime import date
 from pathlib import Path
@@ -197,6 +198,29 @@ def _is_non_target(record: dict) -> bool:
     return True
 
 
+def _is_condo(record: dict) -> bool:
+    """Condominium, read off the tax lot rather than guessed from a name.
+
+    Finance gives every condominium unit a billing lot numbered 7501 or above,
+    and PLUTO carries that lot. It agrees with the R building-class family
+    almost exactly — 3,584 R-class buildings in the pipeline, every one on a
+    7501+ lot — so either test alone would do, and together they cover the
+    handful the other would miss.
+
+    This replaces a substring search for "CONDO" in the owner name, which read
+    SECONDO and CONDOR REALTY LLC as condominiums, and a class list of R1, R2
+    and R4 that missed RM, RC, RD, RH and eleven other R codes. The old rule
+    found 1,118 condos; this finds 3,585, including 1335 Avenue of the
+    Americas and 1535 Broadway, two of the largest buildings we hold.
+    """
+    bbl = str(record.get("bbl") or "")
+    if len(bbl) == 10 and bbl[-4:].isdigit() and int(bbl[-4:]) >= 7501:
+        return True
+    bldgclass = (record.get("bldgclass") or "").upper()
+    # RS is single room occupancy, the one R code that is not a condominium.
+    return bldgclass.startswith("R") and bldgclass != "RS"
+
+
 def _is_branded(hotel_name: str, operator_name: str = "", bbl: str = "") -> bool:
     if bbl in MANUAL_BRANDED_BBLS:
         return True
@@ -204,6 +228,103 @@ def _is_branded(hotel_name: str, operator_name: str = "", bbl: str = "") -> bool
     if not combined.strip():
         return False
     return any(brand in combined for brand in BRANDED_CHAINS)
+
+
+# --- HTC union roster -------------------------------------------------------
+
+# 60m. The roster geocodes each shop to its public entrance, which drifts from
+# the tax lot centroid on corner lots and through-block buildings. Tuned on the
+# 2026-09-21 roster against 2,615 buildings:
+#
+#     40m  223 matched   29 converted-use   5 disagreements
+#     60m  237 matched   38 converted-use   6
+#     75m  238 matched   39 converted-use   6
+#    100m  242 matched   42 converted-use   7
+#
+# 60m buys nine more converted-use buildings — the ones that matter — for one
+# extra disagreement, and it flattens after that. "Disagreements" counts shops
+# whose name carries a street number differing from the matched building's,
+# which over-reports: "1 Hotel Central Park" and "123 Washington Residences"
+# are names, not addresses. Of the 140 shops still unmatched, 96 sit more than
+# 2km from any building we hold — New Jersey, Long Island, upstate casinos —
+# and are out of scope rather than mismatched.
+HTC_MATCH_METRES = 60.0
+
+# Degrees to metres at NYC's latitude.
+_M_PER_DEG_LON = 84000.0
+_M_PER_DEG_LAT = 111000.0
+
+# A union shop in one of these is a building whose labour agreement outlived
+# its hotel operation — the cohort the tool otherwise reads as free capacity.
+HTC_CONVERTED_SHOP_TYPES = frozenset({
+    "Residence", "Club", "Shelter", "Office", "Restaurant", "Audio Visual",
+})
+
+
+def load_htc_union() -> list[dict]:
+    """Load the HTC union roster, newest file wins."""
+    files = sorted(DATA_RAW.glob("htc_union_*.json"), reverse=True)
+    if not files:
+        return []
+    return json.loads(files[0].read_text())
+
+
+def _centroid(coordinates: list) -> tuple[float, float] | None:
+    """Mean vertex of a MultiPolygon ring set."""
+    xs, ys, n = 0.0, 0.0, 0
+    for poly in coordinates:
+        for ring in poly:
+            for pt in ring:
+                xs += pt[0]
+                ys += pt[1]
+                n += 1
+    return (xs / n, ys / n) if n else None
+
+
+def match_htc_union(features: list[dict], roster: list[dict]) -> int:
+    """Attach the nearest union shop to each building, in place.
+
+    Matched on position because the roster carries no street address — all 377
+    records have an empty address field — and because coordinates beat name
+    matching anyway: "The Players" and "Row NYC" would never join by string.
+    """
+    if not roster:
+        return 0
+
+    cents = []
+    for f in features:
+        c = _centroid(f["geometry"]["coordinates"])
+        if c:
+            cents.append((c, f["properties"]))
+
+    hits = 0
+    for shop in roster:
+        sx, sy = shop["longitude"], shop["latitude"]
+        best, best_d = None, float("inf")
+        for (cx, cy), props in cents:
+            d = math.hypot((cx - sx) * _M_PER_DEG_LON, (cy - sy) * _M_PER_DEG_LAT)
+            if d < best_d:
+                best_d, best = d, props
+        if best is None or best_d > HTC_MATCH_METRES:
+            continue
+        # One building can host several shops (a hotel and its restaurant).
+        # Keep the closest, but let a converted type win over a plain Hotel,
+        # since that is the fact that changes how the building reads.
+        prior = best.get("htc_union_distance_m")
+        prior_converted = best.get("htc_shop_type") in HTC_CONVERTED_SHOP_TYPES
+        now_converted = shop["shop_type"] in HTC_CONVERTED_SHOP_TYPES
+        if prior is not None and not (now_converted and not prior_converted):
+            if prior <= best_d:
+                continue
+        if prior is None:
+            hits += 1
+        best["htc_union"] = True
+        best["htc_union_name"] = shop["name"]
+        best["htc_shop_type"] = shop["shop_type"]
+        best["htc_union_status"] = shop["status"]
+        best["htc_union_distance_m"] = round(best_d)
+        best["htc_converted_use"] = now_converted
+    return hits
 
 
 def build_geojson(
@@ -391,6 +512,12 @@ def build_geojson(
         properties = {
             "bbl": record["bbl"],
             "address": record["address"],
+            # Hotel Trades Council roster; filled in by match_htc_union below.
+            "htc_union": False,
+            "htc_union_name": "",
+            "htc_shop_type": "",
+            "htc_union_status": "",
+            "htc_converted_use": False,
             "alt_addresses": alt_addresses.get(record["bbl"], []),
             "bldgclass": record["bldgclass"],
             "unitsres": record["unitsres"],
@@ -423,6 +550,14 @@ def build_geojson(
             "owner_portfolio_size": record.get("owner_portfolio_size", 0),
             "coo_count": record.get("coo_count", 0),
             "coo_latest_date": record.get("coo_latest_date"),
+            "reversion_unverified": record.get("reversion_unverified", False),
+            "ecb_illegal_transient": record.get("ecb_illegal_transient", 0),
+            "fisp_applicable": record.get("fisp_applicable", False),
+            # Safe Hotels Act thresholds
+            "safe_hotels_guest_rooms": record.get("safe_hotels_guest_rooms", 0),
+            "safe_hotels_room_basis": record.get("safe_hotels_room_basis", ""),
+            "safe_hotels_direct_employment": record.get("safe_hotels_direct_employment", False),
+            "safe_hotels_large_hotel": record.get("safe_hotels_large_hotel", False),
             "coo_latest_type": record.get("coo_latest_type"),
             "coo_has_temporary": record.get("coo_has_temporary", False),
             "coo_dwelling_units": record.get("coo_dwelling_units"),
@@ -453,12 +588,25 @@ def build_geojson(
             # Permit description transient signals
             "permit_transient_keywords": record.get("permit_transient_keywords", []),
             "permit_transient_strong": record.get("permit_transient_strong", 0),
-            # DCWP hotel license
+            # DCWP hotel license — licensure, kept distinct from operation
             "has_hotel_license": record.get("has_hotel_license", False),
             "hotel_license_name": record.get("hotel_license_name", ""),
             "hotel_license_status": record.get("hotel_license_status", ""),
+            "safe_hotels_licensed": record.get("safe_hotels_licensed", False),
+            "hotel_license_created": record.get("hotel_license_created", ""),
+            "hotel_license_term_years": record.get("hotel_license_term_years"),
             "coo_temp_only": record.get("coo_temp_only", False),
             "special_permit_required": "special_permit_required" in record.get("reason_codes", []),
+            # Current use on the ground (Google Places, address-verified)
+            "current_use": record.get("current_use", ""),
+            "current_use_label": record.get("current_use_label", ""),
+            "current_use_name": record.get("current_use_name", ""),
+            "current_use_confidence": record.get("current_use_confidence", ""),
+            "current_use_basis": record.get("current_use_basis", ""),
+            "current_use_conflict": record.get("current_use_conflict", False),
+            "current_use_occupants": record.get("current_use_occupants", []),
+            "current_use_needs_review": record.get("current_use_needs_review", False),
+            "current_use_checked": record.get("current_use_checked", False),
             # Operator identification
             "operator_name": record.get("operator_name", ""),
             "operator_source": record.get("operator_source", ""),
@@ -481,7 +629,7 @@ def build_geojson(
             "zoning_hotel_permitted": record.get("zoning_hotel_permitted", "unknown"),
             "zoning_hotel_detail": record.get("zoning_hotel_detail", ""),
             # Ownership structure
-            "is_condo": "CONDO" in (record.get("ownername") or "").upper() or record.get("bldgclass", "") in ("R1", "R2", "R4"),
+            "is_condo": _is_condo(record),
         }
 
         # Include top 3 permits (trimmed to save space)
@@ -533,9 +681,29 @@ def build_geojson(
         # Segment: subdivide legal_transient for prospecting
         # Reversion is an overlay, not a segment — building keeps its real segment
         seg_tier = record["tier"]
+        # Licensure and operation are distinct facts and are now stored as
+        # distinct fields — see the DCWP block in enrich.py. The segment below
+        # deliberately still counts a licence as operator evidence, which is
+        # the looser of the two readings, because dropping it was measured and
+        # made the map worse: 34 buildings moved to "available capacity",
+        # among them The London NYC, the Ritz-Carlton Central Park and Sonder
+        # 1 Platt. Their Places lookup had never resolved a hotel name, so the
+        # licence was the only thing standing between an operating hotel and a
+        # sourcing target.
+        #
+        # The signal that should carry this is current_use, which asks who is
+        # in the building rather than who holds paper on it. Once the Places
+        # sweep has run, licensure can come out of this test.
         op_name = (record.get("operator_name") or "").lower()
-        op_looks_like_hotel = any(w in op_name for w in ("hotel", "inn ", "suites", "hostel", "motel"))
-        has_active_operator = bool(record.get("hotel_name") or record.get("has_hotel_license") or op_looks_like_hotel)
+        op_looks_like_hotel = any(
+            w in op_name for w in ("hotel", "inn ", "suites", "hostel", "motel")
+        )
+        has_active_operator = bool(
+            record.get("hotel_name")
+            or record.get("has_hotel_license")
+            or op_looks_like_hotel
+            or record.get("current_use") == "hotel"
+        )
         if seg_tier == "legal_transient" and has_active_operator:
             properties["segment"] = "active_hotel"
         elif seg_tier == "legal_transient":
@@ -611,6 +779,15 @@ def build_geojson(
             "properties": properties,
         }
         features.append(feature)
+
+    roster = load_htc_union()
+    union_hits = match_htc_union(features, roster)
+    converted = sum(1 for f in features if f["properties"].get("htc_converted_use"))
+    if roster:
+        print(f"HTC union roster: {len(roster)} shops, {union_hits} matched to buildings")
+        print(f"  covered but no longer a hotel (Residence/Club/Shelter/...): {converted}")
+    else:
+        print("HTC union roster: not found — run src/pull_htc_union.py")
 
     geojson = {
         "type": "FeatureCollection",

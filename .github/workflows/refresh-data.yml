@@ -215,6 +215,16 @@ jobs:
         continue-on-error: true
         timeout-minutes: 15
 
+      # Deliberately absent from the gate below. Every other source here is a
+      # city dataset we need; this one is a third party's website, and a build
+      # without union data is worth far more than no build at all. load_htc_union
+      # returns nothing when the file is missing and build_geojson says so.
+      - name: Pull HTC union roster
+        id: p_htc
+        run: python src/pull_htc_union.py
+        continue-on-error: true
+        timeout-minutes: 5
+
       # Gate: refuse to publish a build made from truncated inputs.
       #
       # continue-on-error rewrites a timed-out step's `conclusion` to success,
