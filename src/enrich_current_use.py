@@ -398,11 +398,17 @@ _USE_PRIORITY = {
 }
 
 
-def lookup(address: str, lat: float, lon: float) -> dict | None:
-    """Best address-verified occupant of one building, or None."""
+def candidates(address: str, lat: float, lon: float) -> list[dict]:
+    """Every address-verified occupant, classified but not yet ranked.
+
+    Split from the ranking so the cache can hold candidates rather than a
+    verdict. Re-ordering used to mean re-querying all 2,540 buildings; the
+    first ranking change after the sweep cost exactly that, and handed 569
+    Lexington back to a travel wholesaler in the process.
+    """
     places = places_nearby(lat, lon)
     if not places:
-        return None
+        return []
 
     scored = []
     for p in places:
@@ -426,8 +432,14 @@ def lookup(address: str, lat: float, lon: float) -> dict | None:
             "names_building": _names_the_building(p),
         })
 
+    return scored
+
+
+def rank_candidates(scored: list[dict], places_seen: int = 0) -> dict | None:
+    """Pick the occupant that describes the building."""
     if not scored:
         return None
+    places = range(places_seen or len(scored))
 
     # A circle drawn on a Manhattan block catches the neighbours and the whole
     # retail parade in the base, so ordering decides the answer. Exact house
@@ -436,10 +448,15 @@ def lookup(address: str, lat: float, lon: float) -> dict | None:
     # Benjamin Royal Sonesta next door, a deli, a barbershop, a supermarket
     # and a gyro counter to reach FOUND Study Midtown East.
     rank = {"high": 0, "medium": 1}
+    # Corporate demotion comes first, ahead of the building test. "Hotel Beds
+    # USA Inc" is typed `hotel`, which makes it look like a building-identity
+    # record, and putting the building test first handed 569 Lexington back to
+    # a travel wholesaler. A registered company is never the building, whatever
+    # Google types it.
     ranked = sorted(scored, key=lambda r: (
         rank[r["address_match"]],
-        not r["names_building"],
         _is_corporate_entity(r["google_name"]),
+        not r["names_building"],
         _USE_PRIORITY.get(r["current_use"], 9),
         {"high": 0, "medium": 1, "low": 2}[r["use_confidence"]],
     ))
@@ -547,23 +564,26 @@ def main() -> None:
             continue
         key = f"{bbl}|{addr}"
 
+        # The cache holds candidates, never the verdict. Ranking is applied on
+        # every run, so changing how the winner is chosen costs nothing.
         if key in cache:
-            found = cache[key]
+            scored = cache[key]
         else:
             if args.limit and new >= args.limit:
                 break
             try:
-                found = lookup(addr, rec["lat"], rec["lon"])
+                scored = candidates(addr, rec["lat"], rec["lon"])
             except Exception as e:
                 print(f"  ERROR {addr}: {e}")
                 continue
-            cache[key] = found
+            cache[key] = scored
             new += 1
             time.sleep(0.15)
             if new % 25 == 0:
                 CACHE_FILE.write_text(json.dumps(cache, indent=2))
                 print(f"  {new} new lookups ({hits} identified, {misses} no match)")
 
+        found = rank_candidates(scored or [])
         if not found:
             misses += 1
             continue
