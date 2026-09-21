@@ -77,9 +77,16 @@ strict — see the costed note at the end.
 --- 5. CONDOS -------------------------------------------------------------
 > This data is on DOB but may not always be super accurate
 
-We do not use DOB for this, and our own method was worse. We read it off the
-condo billing lot now, which Finance assigns to every condominium unit.
-1,118 condos before, 3,585 now, 1,814 of them on the map.
+We do not use DOB for this. We take it from PLUTO, on two fields that agree
+with each other: the Finance tax lot, where every condominium unit is billed
+on a lot numbered 7501 or above, and the building class, where the R family is
+the condominium family.
+
+Across 15,176 buildings the two disagree once — 234 West 42nd Street, on a
+condo lot with an H1 hotel class. That is why we trust it over DOB.
+
+Our own method before this was worse than DOB: 1,118 condos found, against
+3,585 now, 1,814 of them on the map.
 
 What the tool does with it: every condo carries a note on the building that it
 needs board approval or a commercial condo owner negotiation, and there is a
