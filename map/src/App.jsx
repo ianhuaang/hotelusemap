@@ -757,6 +757,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                   text: `Currently: ${p.current_use_label}${who}${conf}`,
                 });
               }
+              {
+                // Who Google finds at the address, in full. One classification
+                // is a guess; the list is the evidence behind it, and answers
+                // "what is this building now" on its own terms.
+                const occ = parseJsonProp(p.current_use_occupants) || [];
+                const building = occ.filter((o) => o.use !== "ground_floor_tenant");
+                if (building.length > 0) {
+                  items.push({
+                    icon: p.current_use_conflict ? "warn" : "info",
+                    text: `At this address: ${building.map((o) => o.name).join(", ")}`
+                      + (occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""),
+                  });
+                }
+              }
               if (p.safe_hotels_guest_rooms > 0 && p.safe_hotels_room_basis !== "floor_estimate") {
                 // Guest rooms as the Act counts them — transient only. Shown
                 // separately from Est. Rooms, which counts the whole building.
@@ -924,6 +938,12 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
             considerations.push({
               text: `Union shop under a Hotel Trades Council contract, listed as ${p.htc_shop_type.toLowerCase()} rather than a hotel. The agreement can survive a conversion or a change of operator, so labor obligations may attach before any deal is signed.`,
               severity: "high",
+            });
+          }
+          if (p.current_use_needs_review) {
+            considerations.push({
+              text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
+              severity: "medium",
             });
           }
           if (p.current_use_conflict) {

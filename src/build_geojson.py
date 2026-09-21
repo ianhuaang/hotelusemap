@@ -604,6 +604,8 @@ def build_geojson(
             "current_use_confidence": record.get("current_use_confidence", ""),
             "current_use_basis": record.get("current_use_basis", ""),
             "current_use_conflict": record.get("current_use_conflict", False),
+            "current_use_occupants": record.get("current_use_occupants", []),
+            "current_use_needs_review": record.get("current_use_needs_review", False),
             "current_use_checked": record.get("current_use_checked", False),
             # Operator identification
             "operator_name": record.get("operator_name", ""),

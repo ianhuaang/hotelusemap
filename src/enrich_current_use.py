@@ -52,12 +52,19 @@ CTX = ssl.create_default_context(cafile=certifi.where())
 TODAY = date.today().strftime("%Y%m%d")
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
+NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
+
+# Metres from the footprint centroid. Wide enough to reach a tower's entrance,
+# tight enough that address verification can throw out the neighbours it pulls
+# in. At 569 Lexington a 45m circle returns ten places, of which five carry the
+# building's own house number and one survives tenant suppression.
+NEARBY_RADIUS_M = 45.0
 
 CACHE_FILE = DATA_RAW / "google_current_use_cache.json"
 OUTPUT_FILE = DATA_RAW / f"google_current_use_{TODAY}.json"
 REVIEW_FILE = DATA_PROCESSED / f"current_use_review_{TODAY}.csv"
 
-# Text Search Pro — the tier this field mask lands in, because displayName,
+# Nearby Search Pro — the tier this field mask lands in, because displayName,
 # types, formattedAddress, businessStatus and primaryTypeDisplayName are all
 # Pro fields. Since March 2025 each SKU carries its own monthly free cap
 # instead of the old shared $200 credit: Pro gets 5,000 calls a month free,
@@ -69,10 +76,6 @@ REVIEW_FILE = DATA_PROCESSED / f"current_use_review_{TODAY}.csv"
 # name runs were free for the same reason, not because the API is free.
 COST_PER_1K_USD = 32.0
 FREE_CALLS_PER_MONTH = 5000
-
-# Five candidates, not one. The right building is frequently not the top hit,
-# and address verification needs something to choose between.
-MAX_CANDIDATES = 5
 
 FIELD_MASK = ",".join([
     "places.id",
@@ -93,12 +96,19 @@ FIELD_MASK = ",".join([
 # fires on name alone is downgraded to medium and lands in the review file.
 
 TYPE_RULES = [
-    ("student_housing", "Student housing", (
+    # Education is not student housing, and the two were conflated here at
+    # first. Google types a tennis coach as `school`, which turned "Ana
+    # Gabriela Canahuate Torres - Tennis Coach" into student accommodation.
+    # An education type now means education; student housing is established
+    # by name alone, because a residential building for students says so.
+    ("education", "School / university", (
         "university", "college", "school", "primary_school", "secondary_school",
     )),
+    # Whole-building care only. An individual practitioner is a tenant with a
+    # suite, no different from the barber downstairs, and "Lai Victor T MD"
+    # was being read as the use of a Financial District tower.
     ("medical", "Medical / care facility", (
-        "hospital", "nursing_home", "assisted_living_facility", "medical_lab",
-        "doctor", "dental_clinic", "physiotherapist", "wellness_center",
+        "hospital", "nursing_home", "assisted_living_facility",
         "rehabilitation_center", "hospice",
     )),
     ("religious", "Religious institution", (
@@ -131,6 +141,14 @@ NAME_RULES = [
         "student housing", "student residence", "student living",
         "university housing", "college house", "educational housing",
         "hall of residence", "international house",
+        # Operator brands, because the category is the one place where the
+        # name reliably fails to describe the use. 569 Lexington trades as
+        # "FOUND Study Midtown East" — no street, no university, and not the
+        # word student anywhere in it. A brand list is brittle and needs
+        # adding to; it is still the only thing that reads these buildings.
+        "found study", "vita student", "outpost club", "tripalink",
+        "ehs ", "the statesman", "nest student", "student castle",
+        "scape ", "unite students", "yugo ", "hines student",
     )),
     ("supportive_housing", "Supportive / transitional housing", (
         "supportive housing", "transitional housing", "safe haven",
@@ -164,7 +182,7 @@ NAME_RULES = [
         "hospital", "medical center", "nursing home", "rehabilitation",
         "hospice", "assisted living", "senior living", "adult care",
     )),
-    ("student_housing", "Student housing", (
+    ("education", "School / university", (
         "university", "college", "yeshiva", "seminary", "academy",
     )),
 ]
@@ -177,13 +195,18 @@ TENANT_TYPES = frozenset({
     "fitness_center", "beauty_salon", "hair_salon", "nail_salon", "spa",
     "bank", "atm", "parking", "gas_station", "real_estate_agency",
     "insurance_agency", "travel_agency", "laundry", "night_club", "liquor_store",
+    # Practitioners rent a suite; they do not define the building.
+    "health", "doctor", "dentist", "dental_clinic", "physiotherapist", "medical_lab",
+    "wellness_center", "chiropractor", "psychologist", "veterinary_care",
+    "lawyer", "accounting", "consultant", "storage", "gift_shop",
+    "deli", "sandwich_shop", "juice_shop", "ice_cream_shop", "florist",
 })
 
 # Tiers where a non-transient current use is a contradiction worth surfacing.
 TRANSIENT_TIERS = ("legal_transient", "partial")
 NON_TRANSIENT_USES = frozenset({
     "student_housing", "supportive_housing", "institutional_lodging",
-    "religious", "medical", "government", "private_club",
+    "religious", "medical", "government", "private_club", "education",
 })
 
 
@@ -194,8 +217,27 @@ def classify(place: dict) -> tuple[str, str, str, str]:
     primary = (place.get("primaryType") or "").lower()
     type_set = set(types) | ({primary} if primary else set())
 
+    # primaryType is Google's own answer to "what is this place"; the types
+    # array is a bag that collects strays — a doctor's listing carrying
+    # "school" is enough to misfile the building if the bag is trusted
+    # equally. Decide on primaryType when there is one, and only fall back
+    # to the bag when there is not.
+    for pass_set in ([primary] if primary else [], type_set):
+        if not pass_set:
+            continue
+        hit_found = False
+        for use, label, keys in TYPE_RULES:
+            hit = set(pass_set).intersection(keys)
+            if hit:
+                hit_found = True
+                break
+        if hit_found:
+            break
+    else:
+        pass_set = set()
+
     for use, label, keys in TYPE_RULES:
-        hit = type_set.intersection(keys)
+        hit = set(pass_set).intersection(keys)
         if hit:
             # A name that contradicts the type wins — Google types a dorm run by
             # a university as "university", but types many of them as "lodging".
@@ -261,10 +303,26 @@ def address_match(query_addr: str, result_addr: str) -> str:
 
 # --- Places call ------------------------------------------------------------
 
-def places_search(query: str) -> list[dict]:
-    body = json.dumps({"textQuery": query, "maxResultCount": MAX_CANDIDATES}).encode()
+def places_nearby(lat: float, lon: float) -> list[dict]:
+    """Everything Places knows inside a small circle on the building.
+
+    Nearby rather than text search, because a text search for an address
+    returns the address. "569 Lexington Avenue, New York, NY" resolves to a
+    premise — Google's record of the postal address — and stops there, while
+    the student housing occupying the building sits in the same dataset under
+    a name that contains neither the street nor the word student. Asking what
+    is at a point returns occupants; asking about an address returns the
+    address.
+    """
+    body = json.dumps({
+        "locationRestriction": {
+            "circle": {"center": {"latitude": lat, "longitude": lon},
+                       "radius": NEARBY_RADIUS_M}
+        },
+        "maxResultCount": 20,
+    }).encode()
     req = urllib.request.Request(
-        SEARCH_URL,
+        NEARBY_URL,
         data=body,
         headers={
             "Content-Type": "application/json",
@@ -289,9 +347,37 @@ def places_search(query: str) -> list[dict]:
     return []
 
 
-def lookup(address: str) -> dict | None:
-    """Best address-verified Places result for one building, or None."""
-    places = places_search(f"{address}, New York, NY")
+# A venue trades under a name; a company registers one. "Hotel Beds USA Inc"
+# is a travel wholesaler with an office at 569 Lexington, and Google types it
+# `hotel` — indistinguishable from a real hotel by type, and by name too
+# unless the suffix is read. Real hotels almost never trade as "X Inc".
+_CORPORATE_SUFFIX = re.compile(
+    r"\b(inc|incorporated|llc|l\.l\.c|corp|corporation|ltd|limited|lp|l\.p|"
+    r"holdings|partners|associates|management|realty|properties)\.?$",
+    re.I,
+)
+
+
+def _is_corporate_entity(name: str) -> bool:
+    return bool(_CORPORATE_SUFFIX.search((name or "").strip().rstrip(".")))
+
+
+# What a category says about a whole building. A dormitory or a church
+# describes the building; a hotel or an apartment block usually does too, but
+# both are also what a mis-typed office looks like, so they rank below the
+# categories that can only mean what they say.
+_USE_PRIORITY = {
+    "student_housing": 0, "supportive_housing": 0, "institutional_lodging": 0,
+    "religious": 0, "medical": 0, "private_club": 0, "education": 1,
+    "government": 1,
+    "hotel": 2, "residential": 3, "office": 4,
+    "other": 5, "ground_floor_tenant": 6, "unknown": 7,
+}
+
+
+def lookup(address: str, lat: float, lon: float) -> dict | None:
+    """Best address-verified occupant of one building, or None."""
+    places = places_nearby(lat, lon)
     if not places:
         return None
 
@@ -319,25 +405,76 @@ def lookup(address: str) -> dict | None:
     if not scored:
         return None
 
-    # Prefer an exact house number, then a result that describes the building
-    # rather than a shop inside it, then Google's own ranking.
+    # A circle drawn on a Manhattan block catches the neighbours and the whole
+    # retail parade in the base, so ordering decides the answer. Exact house
+    # number first, then anything that describes the building over a shop
+    # inside it, then confidence. At 569 Lexington that walks past the
+    # Benjamin Royal Sonesta next door, a deli, a barbershop, a supermarket
+    # and a gyro counter to reach FOUND Study Midtown East.
     rank = {"high": 0, "medium": 1}
-    scored.sort(key=lambda r: (
+    ranked = sorted(scored, key=lambda r: (
         rank[r["address_match"]],
-        r["current_use"] in ("ground_floor_tenant", "other", "unknown"),
+        _is_corporate_entity(r["google_name"]),
+        _USE_PRIORITY.get(r["current_use"], 9),
         {"high": 0, "medium": 1, "low": 2}[r["use_confidence"]],
     ))
-    return scored[0]
+    at_address = [r for r in scored if r["address_match"] == "high"] or scored
+
+    # Everything at the address, kept whole. A tower has ten businesses in it
+    # and no single one of them is the answer; a person reading the panel can
+    # see what is actually there, which is what was asked for.
+    best = dict(ranked[0])
+    best["occupants"] = [
+        {"name": r["google_name"], "type": r["primary_type"], "use": r["current_use"]}
+        for r in at_address[:8]
+    ]
+    best["candidates_at_address"] = len(at_address)
+    best["candidates_seen"] = len(places)
+
+    # Two different building-level uses at one address is not something to
+    # resolve by ranking. Say so and let a person look.
+    building_uses = {r["current_use"] for r in ranked
+                     if _USE_PRIORITY.get(r["current_use"], 9) <= 3}
+    best["needs_review"] = len(building_uses) > 1
+    return best
 
 
 # --- Driver -----------------------------------------------------------------
 
-def load_pipeline() -> list[dict]:
-    files = sorted(DATA_PROCESSED.glob("pipeline_*.json"), reverse=True)
+def load_buildings() -> list[dict]:
+    """Buildings with geometry, since the lookup now needs coordinates.
+
+    The built GeoJSON rather than the pipeline JSON: it is the only artefact
+    carrying footprints, and its 2,615 features are already the set that
+    reaches the map, which is the set worth spending lookups on.
+    """
+    files = sorted(DATA_PROCESSED.glob("buildings_*.geojson"), reverse=True)
     if not files:
-        sys.exit("No pipeline file in data/processed/")
-    print(f"Pipeline: {files[0].name}")
-    return json.loads(files[0].read_text())
+        sys.exit("No buildings_*.geojson in data/processed/ — run src/build_geojson.py")
+    print(f"Buildings: {files[0].name}")
+    g = json.loads(files[0].read_text())
+
+    rows = []
+    for f in g["features"]:
+        c = _centroid(f["geometry"]["coordinates"])
+        if not c:
+            continue
+        r = dict(f["properties"])
+        r["lon"], r["lat"] = c
+        rows.append(r)
+    return rows
+
+
+def _centroid(coordinates: list) -> tuple[float, float] | None:
+    xs = ys = 0.0
+    n = 0
+    for poly in coordinates:
+        for ring in poly:
+            for pt in ring:
+                xs += pt[0]
+                ys += pt[1]
+                n += 1
+    return (xs / n, ys / n) if n else None
 
 
 def select_targets(rows: list[dict], tiers: list[str], bbls: list[str]) -> list[dict]:
@@ -356,7 +493,7 @@ def main() -> None:
                     help="report the target count and API cost, call nothing")
     args = ap.parse_args()
 
-    rows = load_pipeline()
+    rows = load_buildings()
     targets = select_targets(rows, args.tiers.split(","), [b for b in args.bbl.split(",") if b])
     cache = json.loads(CACHE_FILE.read_text()) if CACHE_FILE.exists() else {}
     uncached = [t for t in targets if f"{t['bbl']}|{t.get('address','')}" not in cache]
@@ -370,7 +507,7 @@ def main() -> None:
               f"at ${COST_PER_1K_USD:.0f}/1k")
     else:
         print(f"Estimated cost: $0.00 — {len(uncached)} calls fits inside the "
-              f"{FREE_CALLS_PER_MONTH:,}/month Text Search Pro free cap")
+              f"{FREE_CALLS_PER_MONTH:,}/month Nearby Search Pro free cap")
         print("  (assumes nothing else on the account spends Pro calls this month)")
     if args.estimate:
         return
@@ -390,7 +527,7 @@ def main() -> None:
             if args.limit and new >= args.limit:
                 break
             try:
-                found = lookup(addr)
+                found = lookup(addr, rec["lat"], rec["lon"])
             except Exception as e:
                 print(f"  ERROR {addr}: {e}")
                 continue

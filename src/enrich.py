@@ -968,6 +968,8 @@ def enrich_pipeline(
             record["current_use_name"] = cu.get("google_name", "")
             record["current_use_confidence"] = cu.get("use_confidence", "")
             record["current_use_basis"] = cu.get("basis", "")
+            record["current_use_occupants"] = cu.get("occupants", [])
+            record["current_use_needs_review"] = bool(cu.get("needs_review"))
             record["current_use_checked"] = True
             # A dorm, shelter, church or clinic is not a sourcing target no
             # matter how many Class B units it registers. Flagged rather than
@@ -984,6 +986,8 @@ def enrich_pipeline(
             record["current_use_name"] = ""
             record["current_use_confidence"] = ""
             record["current_use_basis"] = ""
+            record["current_use_occupants"] = []
+            record["current_use_needs_review"] = False
             record["current_use_checked"] = False
             record["current_use_conflict"] = False
 
