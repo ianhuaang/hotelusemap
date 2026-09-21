@@ -176,8 +176,21 @@ dropped — a gap in the record is not proof the grandfathering is gone.
 --- R8. PROHIBITED BUILDINGS LIST -----------------------------------------
 > it may be smart to cross-reference with this list of prohibited buildings
 
-Not done. We have not confirmed it is published as an export. If you know it
-is, that shortens the job.
+Checked, and the list is not published. The OSE page is the application form
+owners use to add or remove a building — no list on it, nothing downloadable,
+and nothing on Open Data.
+
+OSE does publish the STR Registration Dataset, which is the inverse: buildings
+with an active short-term rental registration, with BIN, so it would join
+straight to us. Say the word and we will add it.
+
+Worth noting for the cross-reference you had in mind, OSE state that
+"inclusion on or absence from the prohibited building list does not alter the
+legal occupancy or zoning use group of a building". So it reads as owner
+intent rather than a legal bar, which is how you framed it.
+
+To get the list itself we think it is a FOIL request or a direct ask to OSE.
+If you have a route in, that is faster than ours.
 
 
 --- R9. TABS NOT REVIEWED -------------------------------------------------
