@@ -198,6 +198,29 @@ def _is_non_target(record: dict) -> bool:
     return True
 
 
+def _is_condo(record: dict) -> bool:
+    """Condominium, read off the tax lot rather than guessed from a name.
+
+    Finance gives every condominium unit a billing lot numbered 7501 or above,
+    and PLUTO carries that lot. It agrees with the R building-class family
+    almost exactly — 3,584 R-class buildings in the pipeline, every one on a
+    7501+ lot — so either test alone would do, and together they cover the
+    handful the other would miss.
+
+    This replaces a substring search for "CONDO" in the owner name, which read
+    SECONDO and CONDOR REALTY LLC as condominiums, and a class list of R1, R2
+    and R4 that missed RM, RC, RD, RH and eleven other R codes. The old rule
+    found 1,118 condos; this finds 3,585, including 1335 Avenue of the
+    Americas and 1535 Broadway, two of the largest buildings we hold.
+    """
+    bbl = str(record.get("bbl") or "")
+    if len(bbl) == 10 and bbl[-4:].isdigit() and int(bbl[-4:]) >= 7501:
+        return True
+    bldgclass = (record.get("bldgclass") or "").upper()
+    # RS is single room occupancy, the one R code that is not a condominium.
+    return bldgclass.startswith("R") and bldgclass != "RS"
+
+
 def _is_branded(hotel_name: str, operator_name: str = "", bbl: str = "") -> bool:
     if bbl in MANUAL_BRANDED_BBLS:
         return True
@@ -528,6 +551,8 @@ def build_geojson(
             "coo_count": record.get("coo_count", 0),
             "coo_latest_date": record.get("coo_latest_date"),
             "reversion_unverified": record.get("reversion_unverified", False),
+            "ecb_illegal_transient": record.get("ecb_illegal_transient", 0),
+            "fisp_applicable": record.get("fisp_applicable", False),
             # Safe Hotels Act thresholds
             "safe_hotels_guest_rooms": record.get("safe_hotels_guest_rooms", 0),
             "safe_hotels_room_basis": record.get("safe_hotels_room_basis", ""),
@@ -603,7 +628,7 @@ def build_geojson(
             "zoning_hotel_permitted": record.get("zoning_hotel_permitted", "unknown"),
             "zoning_hotel_detail": record.get("zoning_hotel_detail", ""),
             # Ownership structure
-            "is_condo": "CONDO" in (record.get("ownername") or "").upper() or record.get("bldgclass", "") in ("R1", "R2", "R4"),
+            "is_condo": _is_condo(record),
         }
 
         # Include top 3 permits (trimmed to save space)
