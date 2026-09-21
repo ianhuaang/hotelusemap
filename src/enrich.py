@@ -533,168 +533,44 @@ def load_hotel_info(path: Path = None) -> dict[str, dict]:
 
 
 def load_google_hotel_names() -> dict[str, str]:
-    """Load Google Places hotel names keyed by BBL."""
-    result = {}
-    for pattern in ("google_hotel_names_[0-9]*.json", "google_hclass_hotels_clean_[0-9]*.json"):
-        files = sorted(DATA_RAW.glob(pattern), reverse=True)
-        if files:
-            raw = json.loads(files[0].read_text())
-            for r in raw:
-                if r.get("google_name") and r["bbl"] not in result:
-                    result[r["bbl"]] = r["google_name"]
-    return result
+    """Hotel names per BBL, the verified source taking precedence.
 
+    Two sources. The current-use sweep asks what is at the building's
+    coordinates and keeps only occupants whose house number matches, so a
+    hotel name from it belongs to the building and is current: of 304
+    buildings both sources name, they agree on 286 and the 18 disagreements
+    are all rebrands the older file missed — Cachet Boutique is now Hudson
+    Yards Hotel, the Hampton Inn on West 48th is now Motto by Hilton.
 
-# The zoning text amendment of 2021-12-09 made a new hotel a special-permit
-# use across most commercial and manufacturing districts. A hotel lawfully
-# established before that date is grandfathered, and that grandfathering is
-# what the reversion overlay is worth. Without evidence the transient use
-# predates the cutoff, a reversion candidate is only a candidate.
-# Safe Hotels Act room thresholds.
-#
-# The Act counts "guest rooms", defined as rooms made available or used for
-# transient occupancy, and it explicitly excludes residential units and single
-# room occupancy units. That makes HPD's Class B count the right measure and
-# total units the wrong one: a building with 60 apartments over 120 transient
-# rooms is a 120-room hotel under the Act, not a 180-room one.
-#
-#   100 or more  -> core employees (housekeeping, front desk, front service)
-#                   must be employed directly, not subcontracted. Below 100
-#                   the subcontracting restriction does not apply.
-#   more than 400 -> a "large hotel", carrying continuous security coverage
-#                   on top of the direct-employment duty.
-#
-# Both are thresholds on the operating model rather than the cost line, which
-# is why they are surfaced as flags. Note the asymmetry in the statute: the
-# first is "or more", the second is "more than".
-# Facade Inspection Safety Program, the successor to Local Law 11 of 1998.
-# It binds buildings greater than six storeys, which is a height test rather
-# than a use test, so it catches residential conversion targets as readily as
-# hotels. It matters to underwriting because it is cyclical rather than
-# one-off: an inspection by a qualified exterior wall inspector every five
-# years, filed with DOB, and an unsafe finding obliges repair on a deadline.
-#
-# The flag says the programme applies. It cannot say what the last cycle
-# found — that lives in DOB's facade filing records, which we do not pull.
-FISP_MIN_STORIES = 6
+    The older text-search files are weaker: their third pass asked "hotel near
+    <address>" and took the answer, which is how 60 Pine Street came to hold
+    "Mint House 70 Pine by Kasa", a real hotel on the same block.
 
-SAFE_HOTELS_DIRECT_EMPLOYMENT_ROOMS = 100
-SAFE_HOTELS_LARGE_HOTEL_ROOMS = 400
-
-HOTEL_SPECIAL_PERMIT_CUTOFF = "2021-12-09"
-
-
-def _coo_date(raw: str) -> str | None:
-    """Normalise a C of O issue date to ISO.
-
-    The two source datasets disagree on format: the BIS legacy feed writes
-    2012-10-09, DOB NOW writes 11/12/25. Comparing or sorting them as plain
-    strings puts every legacy date above every NOW date, because "2" sorts
-    after "1" — so a 2012 certificate outranks a 2026 one.
+    So a verified name wins. But a verified *absence* does not: the sweep
+    returns nothing for 21% of buildings, and rejecting on house number alone
+    misses hotels that register on the cross street — the Wythe Hotel occupies
+    75 North 11th and files as 80 Wythe Avenue. Treating silence as a
+    contradiction would have deleted 262 names here, most of them right.
+    Older names therefore stay wherever the sweep did not positively name a
+    different hotel.
     """
-    raw = (raw or "").strip()
-    if not raw:
-        return None
-    if len(raw) >= 10 and raw[4] == "-":
-        return raw[:10]
-    parts = raw.split("/")
-    if len(parts) == 3:
-        mm, dd, yy = (p_.strip() for p_ in parts)
-        if mm.isdigit() and dd.isdigit() and yy.isdigit():
-            # DOB NOW begins in 2021, so a two-digit year is this century.
-            year = int(yy)
-            if len(yy) == 2:
-                year += 2000 if year <= 69 else 1900
-            return f"{year:04d}-{int(mm):02d}-{int(dd):02d}"
-    return None
+    result: dict[str, str] = {}
 
-
-# The Act excludes single room occupancy units from "guest room", and these
-# building classes are where the exclusion bites. HPD Class B is a Multiple
-# Dwelling Law category covering hotels, rooming houses, lodging houses and
-# SRO alike, so it is broader than the Act's count and overstates it here.
-#
-# It is not a rounding difference. 35 buildings crossed the 100-room threshold
-# on SRO or dormitory stock, among them International House at 492 rooms and
-# NYU University Hall at 478 — neither of which is a hotel, so neither carries
-# a direct-employment duty at all.
-SAFE_HOTELS_EXCLUDED_CLASSES = {"HR", "RS", "H8", "HH"}
-
-
-def _guest_rooms(record: dict) -> tuple[int, str]:
-    """Guest rooms as the Safe Hotels Act counts them, and where it came from.
-
-    Class B first because it is the closest thing to a transient room count,
-    but not where the stock is SRO or dormitory — see above. The C of O
-    fallback counts dwelling units, so it is used only where there are no
-    Class A units to confuse it, and the floor estimate is a last resort that
-    should never be read as a compliance number.
-    """
-    bldgclass_full = (record.get("bldgclass") or "").upper()
-    if bldgclass_full[:2] in SAFE_HOTELS_EXCLUDED_CLASSES:
-        return 0, "sro_or_dormitory"
-
-    class_b = int(record.get("hpd_class_b") or 0)
-    if class_b:
-        return class_b, "hpd_class_b"
-
-    bldgclass = (record.get("bldgclass") or "").upper()
-    if bldgclass.startswith("H") and not int(record.get("hpd_class_a") or 0):
-        coo_units = record.get("coo_dwelling_units")
-        if coo_units:
-            return int(coo_units), "coo_dwelling_units"
-        floors = float(record.get("numfloors") or 0)
-        if floors >= 3:
-            return int(floors * 15), "floor_estimate"
-
-    return 0, "none"
-
-
-def _pre_cutoff_transient_evidence(record: dict) -> tuple[bool, str]:
-    """Is there evidence this building's transient use predates 2021-12-09?"""
-    bldgclass = (record.get("bldgclass") or "").upper()
-    if bldgclass.startswith("H"):
-        for coo in record.get("coo_records") or []:
-            iso = _coo_date(coo.get("issue_date", ""))
-            if iso and iso < HOTEL_SPECIAL_PERMIT_CUTOFF:
-                return True, f"hotel building class {bldgclass} with a C of O issued {iso}"
-
-    prior = record.get("prior_operator") or {}
-    start = str(prior.get("start_year") or prior.get("since") or "")[:4]
-    if start.isdigit() and int(start) < 2021:
-        return True, f"prior operator {prior.get('name', '')} from {start}"
-
-    if record.get("dob_has_r1") or record.get("dob_has_j1"):
-        # DOB occupancy filings carry no date through the pipeline, so this
-        # establishes transient use without establishing when. Deliberately
-        # weaker than the C of O route and labelled as such.
-        return False, "DOB R-1/J-1 occupancy on file, but undated in our data"
-
-    return False, "no transient use evidenced before the 2021-12-09 cutoff"
-
-
-def _license_term_years(created: str, expires: str) -> float | None:
-    """Length of a DCWP licence term, rounded to whole years."""
-    try:
-        start = date.fromisoformat(created[:10])
-        end = date.fromisoformat(expires[:10])
-    except (ValueError, TypeError):
-        return None
-    return round((end - start).days / 365.25)
-
-
-def load_current_use() -> dict[str, dict]:
-    """Load Google Places current-use findings keyed by BBL.
-
-    Produced by src/enrich_current_use.py. Records what is at the address
-    today, which city records do not answer — 569 Lexington Avenue reads as
-    730 Class B units in HPD and is a student dormitory on the ground.
-    """
     files = sorted(DATA_RAW.glob("google_current_use_[0-9]*.json"), reverse=True)
-    if not files:
-        return {}
-    raw = json.loads(files[0].read_text())
-    return {r["bbl"]: r for r in raw if r.get("bbl")}
+    if files:
+        for r in json.loads(files[0].read_text()):
+            if r.get("current_use") == "hotel" and r.get("google_name"):
+                result[r["bbl"]] = r["google_name"]
+
+    for pattern in ("google_hotel_names_[0-9]*.json", "google_hclass_hotels_clean_[0-9]*.json"):
+        older = sorted(DATA_RAW.glob(pattern), reverse=True)
+        if not older:
+            continue
+        for r in json.loads(older[0].read_text()):
+            if r.get("google_name") and r.get("bbl") not in result:
+                result[r["bbl"]] = r["google_name"]
+
+    return result
 
 
 def load_acris_owners(path: Path = None) -> dict[str, dict]:

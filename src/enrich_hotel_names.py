@@ -19,6 +19,7 @@ import certifi
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW
+from src.enrich_current_use import address_match
 
 CTX = ssl.create_default_context(cafile=certifi.where())
 TODAY = date.today().strftime("%Y%m%d")
@@ -48,7 +49,7 @@ def _places_search(query: str, included_type: str = ""):
         headers={
             "Content-Type": "application/json",
             "X-Goog-Api-Key": API_KEY,
-            "X-Goog-FieldMask": "places.id,places.displayName,places.types",
+            "X-Goog-FieldMask": "places.id,places.displayName,places.types,places.formattedAddress",
         },
     )
     resp = urllib.request.urlopen(req, context=CTX, timeout=15)
@@ -60,28 +61,43 @@ def _places_search(query: str, included_type: str = ""):
 def search_hotel_by_address(address: str, biz_name: str = ""):
     """Search Google Places for a hotel at a given address.
 
-    Strategy:
-    1. Type-filtered search (includedType=hotel) — most precise
-    2. Fall back to unfiltered search with biz name + address, check types
+    Every pass is now checked against the house number that came back. The
+    third pass in particular asked for "hotel near <address>" and took the
+    answer, which is a query for the neighbourhood rather than the building —
+    60 Pine Street resolved to "Mint House 70 Pine by Kasa", a real hotel on
+    the same block. Names written before this check cannot be audited after
+    the fact, because the address was never stored alongside them.
     """
     addr_query = f"{address}, New York, NY"
 
+    def verified(place):
+        if not place:
+            return None
+        got = _extract(place)
+        if address_match(address, got["formatted_address"]) == "low":
+            return None
+        return got
+
     try:
         # Pass 1: type-filtered by address
-        place = _places_search(addr_query, included_type="hotel")
-        if place:
-            return _extract(place)
+        found = verified(_places_search(addr_query, included_type="hotel"))
+        if found:
+            return found
 
         # Pass 2: biz name + address, no type filter, check types in response
         if biz_name:
             place = _places_search(f"{biz_name}, {addr_query}")
             if place and _is_lodging(place):
-                return _extract(place)
+                found = verified(place)
+                if found:
+                    return found
 
-        # Pass 3: "hotel near" + address, no type filter
+        # Pass 3: "hotel near" + address. Kept because a hotel often registers
+        # its entrance on the cross street, but now it has to land on the
+        # building rather than merely near it.
         place = _places_search(f"hotel near {addr_query}")
         if place and _is_lodging(place):
-            return _extract(place)
+            return verified(place)
     except Exception as e:
         print(f"    Error searching {address}: {e}")
     return None
@@ -97,6 +113,7 @@ def _extract(place: dict) -> dict:
         "google_name": place.get("displayName", {}).get("text", ""),
         "place_id": place.get("id", ""),
         "types": place.get("types", []),
+        "formatted_address": place.get("formattedAddress", ""),
     }
 
 

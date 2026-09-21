@@ -177,10 +177,20 @@ FOUR THINGS YOU DID NOT ASK ABOUT
   The panel labelled every DCWP licence "Active" regardless of status.
   Surrendered, Voided and Suspended all displayed as active.
 
-  Some hotel names are attached to the wrong building. "60 Pine Street"
-  displays as "Mint House 70 Pine by Kasa" — a real hotel down the block. The
-  old lookup never confirmed the address matched. Not yet fixed, and you would
-  find it by sampling, so we are telling you before you do.
+  Some hotel names are attached to the wrong building. Our older lookup asked
+  Google for a "hotel near <address>" and took the answer, which is a query
+  about the neighbourhood rather than the building: 60 Pine Street resolved to
+  "Mint House 70 Pine by Kasa", a real hotel on the same block. It now checks
+  the house number that comes back, and prefers names from the coordinate
+  sweep, which are both verified and current — of 304 buildings named by both
+  sources, the 18 disagreements are all rebrands the old file missed.
+
+  Two honest qualifications. We cannot tell you how many names were wrong,
+  because the old records never stored the address they matched, so they
+  cannot be audited after the fact. And none of them ever reached the live
+  tool: the enrichment writes to a directory the refresh job does not carry,
+  so production has been running with no Google hotel names at all. That is
+  its own gap and we are fixing it separately.
 
 
 ONE OPEN QUESTION
