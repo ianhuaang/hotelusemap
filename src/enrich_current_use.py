@@ -362,15 +362,38 @@ def _is_corporate_entity(name: str) -> bool:
     return bool(_CORPORATE_SUFFIX.search((name or "").strip().rstrip(".")))
 
 
-# What a category says about a whole building. A dormitory or a church
-# describes the building; a hotel or an apartment block usually does too, but
-# both are also what a mis-typed office looks like, so they rank below the
-# categories that can only mean what they say.
+# Google types that name a building rather than something inside one. This is
+# the distinction the first ranking got backwards: it promoted the distinctive
+# categories, on the theory that a church can only mean a church. But a church
+# can also be a congregation renting the third floor, and a traffic court can
+# sit inside an office block. Sorted the other way round, the building says
+# what it is and everything else is a tenant.
+#
+# 20 Exchange Place carries "Twenty Exchange", an apartment_complex, and a
+# tennis coach Google types `school`. 50 West Street carries "50 West Condo"
+# and a doctor. 10 South Street carries Casa Cipriani, a working hotel, and a
+# medical clinic. In each case the building was on the list all along.
+BUILDING_IDENTITY_TYPES = frozenset({
+    "apartment_building", "apartment_complex", "condominium_complex",
+    "housing_complex", "corporate_office", "business_center",
+    "hotel", "motel", "resort_hotel", "extended_stay_hotel", "inn",
+    "bed_and_breakfast", "guest_house", "lodging", "hostel",
+})
+
+
+def _names_the_building(place: dict) -> bool:
+    primary = (place.get("primaryType") or "").lower()
+    return primary in BUILDING_IDENTITY_TYPES
+
+
+# Within the tenants, a category that can only describe a whole occupancy
+# still beats a shop. This ordering only decides among places that are NOT
+# building-identity, so it never overrules the building itself.
 _USE_PRIORITY = {
     "student_housing": 0, "supportive_housing": 0, "institutional_lodging": 0,
-    "religious": 0, "medical": 0, "private_club": 0, "education": 1,
-    "government": 1,
-    "hotel": 2, "residential": 3, "office": 4,
+    "religious": 1, "medical": 1, "private_club": 1, "education": 2,
+    "government": 2,
+    "hotel": 3, "residential": 3, "office": 4,
     "other": 5, "ground_floor_tenant": 6, "unknown": 7,
 }
 
@@ -400,6 +423,7 @@ def lookup(address: str, lat: float, lon: float) -> dict | None:
             "current_use_label": label,
             "use_confidence": conf,
             "basis": basis,
+            "names_building": _names_the_building(p),
         })
 
     if not scored:
@@ -414,6 +438,7 @@ def lookup(address: str, lat: float, lon: float) -> dict | None:
     rank = {"high": 0, "medium": 1}
     ranked = sorted(scored, key=lambda r: (
         rank[r["address_match"]],
+        not r["names_building"],
         _is_corporate_entity(r["google_name"]),
         _USE_PRIORITY.get(r["current_use"], 9),
         {"high": 0, "medium": 1, "low": 2}[r["use_confidence"]],
@@ -434,7 +459,8 @@ def lookup(address: str, lat: float, lon: float) -> dict | None:
     # Two different building-level uses at one address is not something to
     # resolve by ranking. Say so and let a person look.
     building_uses = {r["current_use"] for r in ranked
-                     if _USE_PRIORITY.get(r["current_use"], 9) <= 3}
+                     if r["names_building"]
+                     or _USE_PRIORITY.get(r["current_use"], 9) == 0}
     best["needs_review"] = len(building_uses) > 1
     return best
 
