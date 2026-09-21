@@ -27,6 +27,26 @@ JOB_TYPE_LABELS = {
 }
 
 
+# Safe Hotels Act (Local Law 111 of 2024) licensing took effect 2025-05-03.
+# Every row in the DCWP feed post-dates it, but the cutoff is kept explicit so
+# a future backfill of pre-Act DCA business licenses cannot quietly mix in.
+SAFE_HOTELS_EFFECTIVE = "2025-05-03"
+
+# DCWP issues these on two terms, and the split in the data is stark: 381 at
+# one year against 343 at three, with almost nothing in between. A three-year
+# term is the review's suggested proxy for a collective bargaining agreement.
+# Treated as a lead, not a finding — it has never been validated against the
+# Hotel Trades Council's own list, so it is surfaced and labelled, never used
+# to change a tier or a score.
+LICENSE_LONG_TERM_YEARS = 3
+
+# Current uses that disqualify a building as a transient target regardless of
+# what its certificate of occupancy or HPD registration says.
+NON_TRANSIENT_CURRENT_USES = frozenset({
+    "student_housing", "supportive_housing", "institutional_lodging",
+    "religious", "medical", "government", "private_club",
+})
+
 # Zoning compatibility for hotel use (Use Group 5)
 # Post-2021 amendment: ALL new hotels require CPC special permit.
 # But we care about whether hotel use is fundamentally permitted in the district.
@@ -492,6 +512,34 @@ def load_google_hotel_names() -> dict[str, str]:
     return result
 
 
+# The zoning text amendment of 2021-12-09 made a new hotel a special-permit
+# use across most commercial and manufacturing districts. A hotel lawfully
+# established before that date is grandfathered, and that grandfathering is
+# what the reversion overlay is worth. Without evidence the transient use
+# predates the cutoff, a reversion candidate is only a candidate.
+# Safe Hotels Act room thresholds.
+#
+# The Act counts "guest rooms", defined as rooms made available or used for
+# transient occupancy, and it explicitly excludes residential units and single
+# room occupancy units. That makes HPD's Class B count the right measure and
+# total units the wrong one: a building with 60 apartments over 120 transient
+# rooms is a 120-room hotel under the Act, not a 180-room one.
+#
+#   100 or more  -> core employees (housekeeping, front desk, front service)
+#                   must be employed directly, not subcontracted. Below 100
+#                   the subcontracting restriction does not apply.
+#   more than 400 -> a "large hotel", carrying continuous security coverage
+#                   on top of the direct-employment duty.
+#
+# Both are thresholds on the operating model rather than the cost line, which
+# is why they are surfaced as flags. Note the asymmetry in the statute: the
+# first is "or more", the second is "more than".
+SAFE_HOTELS_DIRECT_EMPLOYMENT_ROOMS = 100
+SAFE_HOTELS_LARGE_HOTEL_ROOMS = 400
+
+HOTEL_SPECIAL_PERMIT_CUTOFF = "2021-12-09"
+
+
 def _coo_date(raw: str) -> str | None:
     """Normalise a C of O issue date to ISO.
 
@@ -515,6 +563,77 @@ def _coo_date(raw: str) -> str | None:
                 year += 2000 if year <= 69 else 1900
             return f"{year:04d}-{int(mm):02d}-{int(dd):02d}"
     return None
+
+
+def _guest_rooms(record: dict) -> tuple[int, str]:
+    """Guest rooms as the Safe Hotels Act counts them, and where it came from.
+
+    Class B first because it is the only source that counts transient rooms
+    and nothing else. The C of O fallback counts dwelling units, so it is used
+    only where there are no Class A units to confuse it, and the floor
+    estimate is a last resort that should never be read as a compliance number.
+    """
+    class_b = int(record.get("hpd_class_b") or 0)
+    if class_b:
+        return class_b, "hpd_class_b"
+
+    bldgclass = (record.get("bldgclass") or "").upper()
+    if bldgclass.startswith("H") and not int(record.get("hpd_class_a") or 0):
+        coo_units = record.get("coo_dwelling_units")
+        if coo_units:
+            return int(coo_units), "coo_dwelling_units"
+        floors = float(record.get("numfloors") or 0)
+        if floors >= 3:
+            return int(floors * 15), "floor_estimate"
+
+    return 0, "none"
+
+
+def _pre_cutoff_transient_evidence(record: dict) -> tuple[bool, str]:
+    """Is there evidence this building's transient use predates 2021-12-09?"""
+    bldgclass = (record.get("bldgclass") or "").upper()
+    if bldgclass.startswith("H"):
+        for coo in record.get("coo_records") or []:
+            iso = _coo_date(coo.get("issue_date", ""))
+            if iso and iso < HOTEL_SPECIAL_PERMIT_CUTOFF:
+                return True, f"hotel building class {bldgclass} with a C of O issued {iso}"
+
+    prior = record.get("prior_operator") or {}
+    start = str(prior.get("start_year") or prior.get("since") or "")[:4]
+    if start.isdigit() and int(start) < 2021:
+        return True, f"prior operator {prior.get('name', '')} from {start}"
+
+    if record.get("dob_has_r1") or record.get("dob_has_j1"):
+        # DOB occupancy filings carry no date through the pipeline, so this
+        # establishes transient use without establishing when. Deliberately
+        # weaker than the C of O route and labelled as such.
+        return False, "DOB R-1/J-1 occupancy on file, but undated in our data"
+
+    return False, "no transient use evidenced before the 2021-12-09 cutoff"
+
+
+def _license_term_years(created: str, expires: str) -> float | None:
+    """Length of a DCWP licence term, rounded to whole years."""
+    try:
+        start = date.fromisoformat(created[:10])
+        end = date.fromisoformat(expires[:10])
+    except (ValueError, TypeError):
+        return None
+    return round((end - start).days / 365.25)
+
+
+def load_current_use() -> dict[str, dict]:
+    """Load Google Places current-use findings keyed by BBL.
+
+    Produced by src/enrich_current_use.py. Records what is at the address
+    today, which city records do not answer — 569 Lexington Avenue reads as
+    730 Class B units in HPD and is a student dormitory on the ground.
+    """
+    files = sorted(DATA_RAW.glob("google_current_use_[0-9]*.json"), reverse=True)
+    if not files:
+        return {}
+    raw = json.loads(files[0].read_text())
+    return {r["bbl"]: r for r in raw if r.get("bbl")}
 
 
 def load_acris_owners(path: Path = None) -> dict[str, dict]:
@@ -624,6 +743,7 @@ def enrich_pipeline(
     dob_occ_by_bbl = load_dob_occupancy(dob_occupancy_path)
     permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
     hotel_licenses = load_hotel_licenses()
+    current_use = load_current_use()
     hpd_regs = load_hpd_registrations()
     landmarks = load_landmarks()
     tax_benefits = load_tax_benefits()
@@ -773,6 +893,73 @@ def enrich_pipeline(
             record["hotel_phone"] = ""
             record["hotel_website"] = ""
 
+        # Safe Hotels Act room thresholds
+        rooms, basis = _guest_rooms(record)
+        record["safe_hotels_guest_rooms"] = rooms
+        record["safe_hotels_room_basis"] = basis
+        # A floor estimate is too soft to assert a legal threshold against, so
+        # it flags nothing — it only tells the reader the count is unknown.
+        reliable = basis in ("hpd_class_b", "coo_dwelling_units")
+        record["safe_hotels_direct_employment"] = bool(
+            reliable and rooms >= SAFE_HOTELS_DIRECT_EMPLOYMENT_ROOMS
+        )
+        record["safe_hotels_large_hotel"] = bool(
+            reliable and rooms > SAFE_HOTELS_LARGE_HOTEL_ROOMS
+        )
+
+        # Reversion window — test it against the 2021-12-09 cutoff
+        #
+        # pipeline.py proposes a candidate from building class and unit mix
+        # alone, before any C of O history is attached. That produced 27
+        # candidates; hand research on those 27 confirmed 2, called 7 outright
+        # wrong and left 18 unclear. The overlay is only worth something when
+        # the transient use predates the special-permit amendment, so the test
+        # runs here, where the C of O records exist.
+        rw = record.get("reversion_window")
+        if rw:
+            pre_cutoff, evidence = _pre_cutoff_transient_evidence(record)
+            rw["pre_2021_use"] = pre_cutoff
+            rw["pre_2021_evidence"] = evidence
+            if not pre_cutoff:
+                # Kept, not deleted. Losing the grandfathering is the likeliest
+                # reading, but a C of O gap is not proof of one, and silently
+                # dropping buildings is what the review objected to.
+                rw["unverified"] = True
+                record["reversion_unverified"] = True
+                record.setdefault("reason_codes", []).append("reversion_unverified")
+            else:
+                rw["unverified"] = False
+                record["reversion_unverified"] = False
+        else:
+            record["reversion_unverified"] = False
+
+        # Current use on the ground (Google Places, address-verified)
+        cu = current_use.get(bbl)
+        if cu:
+            record["current_use"] = cu.get("current_use", "")
+            record["current_use_label"] = cu.get("current_use_label", "")
+            record["current_use_name"] = cu.get("google_name", "")
+            record["current_use_confidence"] = cu.get("use_confidence", "")
+            record["current_use_basis"] = cu.get("basis", "")
+            record["current_use_checked"] = True
+            # A dorm, shelter, church or clinic is not a sourcing target no
+            # matter how many Class B units it registers. Flagged rather than
+            # excluded: name-only matches are medium confidence and a human
+            # should see them before the building leaves the list.
+            if cu.get("current_use") in NON_TRANSIENT_CURRENT_USES:
+                record["current_use_conflict"] = True
+                record.setdefault("reason_codes", []).append("current_use_conflict")
+            else:
+                record["current_use_conflict"] = False
+        else:
+            record["current_use"] = ""
+            record["current_use_label"] = ""
+            record["current_use_name"] = ""
+            record["current_use_confidence"] = ""
+            record["current_use_basis"] = ""
+            record["current_use_checked"] = False
+            record["current_use_conflict"] = False
+
         # DOB occupancy classification (R-1/J-1 transient signal)
         dob_occ = dob_occ_by_bbl.get(bbl)
         if dob_occ:
@@ -816,14 +1003,37 @@ def enrich_pipeline(
             record["permit_transient_descriptions"] = []
 
         # DCWP hotel license
+        #
+        # Licensure and operation are two different facts and the tool used to
+        # treat them as one: a license alone marked a building as having an
+        # active operator, which segmented it away from the available-capacity
+        # list. Since the Safe Hotels Act the licensee is the owner, who may
+        # run the hotel themselves, contract it out, or hold a license on a
+        # building nobody is operating yet. Licensure is recorded here;
+        # whether anyone is running the building is decided separately, from
+        # operator evidence, in build_geojson.
         hl = hotel_licenses.get(bbl)
         if hl:
             record["hotel_license_name"] = hl["business_name"]
             record["hotel_license_status"] = hl["license_status"]
             record["hotel_license_expiration"] = hl["license_expiration"]
+            record["hotel_license_created"] = hl.get("license_creation_date", "")
             record["has_hotel_license"] = True
             tier = record.get("tier", "")
             status = hl["license_status"]
+
+            created = hl.get("license_creation_date", "")
+            record["safe_hotels_licensed"] = bool(
+                created >= SAFE_HOTELS_EFFECTIVE
+                and status in ("Active", "Ready for Renewal")
+            )
+            term = _license_term_years(created, hl.get("license_expiration", ""))
+            record["hotel_license_term_years"] = term
+            record["hotel_license_long_term"] = bool(
+                term is not None and term >= LICENSE_LONG_TERM_YEARS
+            )
+            if record["hotel_license_long_term"]:
+                record.setdefault("reason_codes", []).append("license_long_term")
             if status in ("Active", "Ready for Renewal"):
                 if tier in ("unknown", "partial"):
                     record["tier"] = "legal_transient"
@@ -846,7 +1056,11 @@ def enrich_pipeline(
             record["hotel_license_name"] = ""
             record["hotel_license_status"] = ""
             record["hotel_license_expiration"] = ""
+            record["hotel_license_created"] = ""
             record["has_hotel_license"] = False
+            record["safe_hotels_licensed"] = False
+            record["hotel_license_term_years"] = None
+            record["hotel_license_long_term"] = False
 
         # HPD registration (managing agent)
         hpd_reg = hpd_regs.get(bbl)
@@ -1026,6 +1240,10 @@ def enrich_pipeline(
     hl_upgraded = sum(1 for r in pipeline if "dcwp_hotel_license" in r.get("reason_codes", []))
     print(f"  DCWP hotel licenses: {hl_count} buildings matched")
     print(f"    Tier upgrades from licenses: {hl_upgraded} buildings")
+    cu_checked = sum(1 for r in pipeline if r.get("current_use_checked"))
+    cu_conflict = sum(1 for r in pipeline if r.get("current_use_conflict"))
+    print(f"  Current use (Google Places): {cu_checked} buildings checked")
+    print(f"    Conflicts with tier: {cu_conflict} buildings (dorm/shelter/religious/medical)")
     comp_upgraded = sum(1 for r in pipeline if "composite_signal" in r.get("reason_codes", []))
     print(f"  Composite signal upgrades: {comp_upgraded} buildings")
     gn_count = sum(1 for r in pipeline if r.get("hotel_name") and r["bbl"] in google_names)
