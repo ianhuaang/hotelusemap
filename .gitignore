@@ -20,3 +20,11 @@ map/dist/
 # cannot audit is worse than shipping none — the panel titles the building
 # with it.
 !data/raw/google_current_use_[0-9]*.json
+
+# The candidate cache too, at 4.5MB, and not because CI needs it — CI reads
+# the results file. It is committed because it is the only thing that makes a
+# ranking change free. The ranking has now changed twice, and both times the
+# whole sweep was re-queried: once because the cache stored verdicts instead
+# of candidates, and once because the cache was deleted during a two-building
+# test and had never been committed. Roughly $85 of Places calls each time.
+!data/raw/google_current_use_cache.json
