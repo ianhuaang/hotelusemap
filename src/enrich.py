@@ -423,6 +423,24 @@ def load_hpd_violations(path: Path = None) -> dict[str, dict]:
     return by_bbl
 
 
+# Admin Code and Building Code 28-210.3, "permanent dwelling offered, used or
+# converted to other than permanent residential purpose" — the statute the
+# Office of Special Enforcement cites against illegal hotels. 28-202.1 is the
+# daily penalty that rides on a class 1 violation of it.
+#
+# Deliberately narrower than the neighbouring occupancy codes. 28-118.3.2 and
+# 27-217 ("occupancy contrary to C of O") cover 45,000 and 23,000 violations
+# and catch everything from a converted cellar to a mezzanine office; 28-210.3
+# is specifically transient use of residential space, which is the finding the
+# review asked for.
+ILLEGAL_TRANSIENT_SECTIONS = ("28-210.3",)
+
+
+def _is_illegal_transient(row: dict) -> bool:
+    desc = (row.get("section_law_description1") or "").upper()
+    return any(sec in desc for sec in ILLEGAL_TRANSIENT_SECTIONS)
+
+
 def load_ecb_violations(path: Path = None) -> dict[str, dict]:
     """Load active DOB ECB violations, summarized per BBL."""
     path = _resolve_data_file("ecb_violations", path)
@@ -435,13 +453,16 @@ def load_ecb_violations(path: Path = None) -> dict[str, dict]:
         bbl = row.get("bbl", "")
         if not bbl:
             continue
-        entry = by_bbl.setdefault(bbl, {"count": 0, "total_penalty": 0, "total_balance": 0, "hazardous": 0})
+        entry = by_bbl.setdefault(bbl, {"count": 0, "total_penalty": 0, "total_balance": 0,
+                                        "hazardous": 0, "illegal_transient": 0})
         entry["count"] += 1
         entry["total_penalty"] += int(float(row.get("penality_imposed") or 0))
         entry["total_balance"] += int(float(row.get("balance_due") or 0))
         sev = (row.get("severity") or "").upper()
         if "HAZARDOUS" in sev or "CLASS - 1" in sev:
             entry["hazardous"] += 1
+        if _is_illegal_transient(row):
+            entry["illegal_transient"] += 1
 
     return by_bbl
 
@@ -534,6 +555,17 @@ def load_google_hotel_names() -> dict[str, str]:
 # Both are thresholds on the operating model rather than the cost line, which
 # is why they are surfaced as flags. Note the asymmetry in the statute: the
 # first is "or more", the second is "more than".
+# Facade Inspection Safety Program, the successor to Local Law 11 of 1998.
+# It binds buildings greater than six storeys, which is a height test rather
+# than a use test, so it catches residential conversion targets as readily as
+# hotels. It matters to underwriting because it is cyclical rather than
+# one-off: an inspection by a qualified exterior wall inspector every five
+# years, filed with DOB, and an unsafe finding obliges repair on a deadline.
+#
+# The flag says the programme applies. It cannot say what the last cycle
+# found — that lives in DOB's facade filing records, which we do not pull.
+FISP_MIN_STORIES = 6
+
 SAFE_HOTELS_DIRECT_EMPLOYMENT_ROOMS = 100
 SAFE_HOTELS_LARGE_HOTEL_ROOMS = 400
 
@@ -841,10 +873,14 @@ def enrich_pipeline(
             record["ecb_open_violations"] = ecb_v["count"]
             record["ecb_total_balance"] = ecb_v["total_balance"]
             record["ecb_hazardous"] = ecb_v["hazardous"]
+            record["ecb_illegal_transient"] = ecb_v.get("illegal_transient", 0)
+            if record["ecb_illegal_transient"]:
+                record.setdefault("reason_codes", []).append("illegal_transient_violation")
         else:
             record["ecb_open_violations"] = 0
             record["ecb_total_balance"] = 0
             record["ecb_hazardous"] = 0
+            record["ecb_illegal_transient"] = 0
 
         lien = liens_by_bbl.get(bbl)
         record["has_tax_lien"] = lien is not None
@@ -892,6 +928,14 @@ def enrich_pipeline(
             record["hotel_name"] = ""
             record["hotel_phone"] = ""
             record["hotel_website"] = ""
+
+        # Facade inspection programme
+        try:
+            stories = float(record.get("numfloors") or 0)
+        except (TypeError, ValueError):
+            stories = 0.0
+        record["fisp_applicable"] = stories > FISP_MIN_STORIES
+        record["fisp_stories"] = int(stories)
 
         # Safe Hotels Act room thresholds
         rooms, basis = _guest_rooms(record)

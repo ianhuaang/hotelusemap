@@ -197,7 +197,15 @@ def pull_ecb_violations() -> Path:
     rows = _fetch_all(
         DOB_ECB_VIOLATIONS_DATASET_ID,
         {
-            "$select": "boro,block,lot,bin,ecb_violation_status,severity,violation_type,issue_date,penality_imposed,balance_due",
+            # infraction_code1 / section_law_description1 carry the statute.
+            # violation_type alone is too coarse to find illegal-hotel
+            # enforcement — its nearest bucket is "Zoning", which mixes
+            # transient-use cases in with everything else zoning touches.
+            "$select": (
+                "boro,block,lot,bin,ecb_violation_status,severity,violation_type,"
+                "issue_date,penality_imposed,balance_due,"
+                "infraction_code1,section_law_description1"
+            ),
             "$where": "ecb_violation_status='ACTIVE' AND boro IN ('1','3','4')",
             "$order": "issue_date DESC",
         },
