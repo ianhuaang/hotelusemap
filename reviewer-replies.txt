@@ -5,13 +5,12 @@ Counts are for the 2,615 buildings on the map unless stated.
 --- 1. UNION ---------------------------------------------------------------
 > the list should be cross-referenced with the union database
 
-Done, using HTC's own roster rather than an inference. 377 shops, all
-geocoded, matched to buildings by position. 237 match buildings we hold.
+Done. We now use HTC's own roster. 237 of their shops are buildings we hold.
 
-38 of those are union-covered and no longer hotels. HTC keeps representing the
-workers after a conversion, and their shopType field says what the building
-became: Residence, Club, Shelter. 18 of the 38 sat in segments we were calling
-available capacity — 569 and 525 Lexington, Bretton Hall, the Downtown Club.
+38 of those are union-covered and no longer hotels. The contract outlives the
+hotel, and the roster says what the building became: Residence, Club, Shelter.
+18 of the 38 sat in segments we were calling available capacity — 569 and 525
+Lexington, Bretton Hall, the Downtown Club.
 
 > we should be cautious when looking at recent conversions or any project
 > currently undergoing the ULURP process
@@ -22,8 +21,7 @@ signals are gone.
 > the DCWP Safe Hotels Act License would show a longer term for a building
 > with a collective bargaining agreement
 
-Tested rather than shipped. The roster settles union status for 493 licensed
-buildings:
+Tested. The roster settles union status for 493 licensed buildings:
 
     3-year term    89 union of 210    42.4%
     1-year term    92 union of 283    32.5%
@@ -39,11 +37,11 @@ flag.
 > Owned by "Housing Development..." could be a tip off. but this misses
 > supportive housing that is run by a non-profit.
 
-That was our gap too. We were keyword-matching owner and agent names, which
-catches HDFCs and Breaking Ground.
+That was our gap too. Owner-name matching catches HDFCs and Breaking Ground
+and nothing run by a non-profit.
 
-We now ask what is at the building's coordinates. Project Renewal, Praxis
-Housing Initiatives, Palladia, and the Longacre and Varet Street shelters.
+Done. Project Renewal, Praxis Housing Initiatives, Palladia, and the Longacre
+and Varet Street shelters now flag.
 
 
 --- 3. NPISA / USE GROUP ---------------------------------------------------
@@ -51,13 +49,10 @@ Housing Initiatives, Palladia, and the Longacre and Varet Street shelters.
 
 Open. The only item from your review that is a project rather than a task.
 
-One correction on where to get it. Use group is not in ZoLa. ZoLa and PLUTO
-give the zoning district and an eleven-category land use code, and the DOB NOW
-certificate feed has 24 columns with no use group among them. There is no
-citywide dataset. It is on the face of the individual certificate, as a PDF.
-
-That makes it an OCR and parsing job across thousands of documents. Our
-question back to you is at the end.
+One correction. Use group is not in ZoLa, PLUTO or the DOB certificate feed —
+we checked all three. There is no citywide dataset. It is on the face of the
+individual certificate, as a PDF, so this is a parsing project rather than a
+pull. Our question back to you is at the end.
 
 
 --- 4. STUDENT HOUSING -----------------------------------------------------
@@ -90,12 +85,10 @@ our own test being strict, which is the costed note at the end.
 --- 5. CONDOS -------------------------------------------------------------
 > This data is on DOB but may not always be super accurate
 
-We do not use DOB for this. Our own method was worse: we searched the owner
-name for the string "CONDO", which matched SECONDO and CONDOR REALTY LLC, plus
-a class list covering three of the fifteen R codes.
+We do not use DOB for this. Our own method was worse — we were matching the
+string "CONDO" in the owner name, which caught SECONDO and CONDOR REALTY LLC.
 
-Finance gives every condominium unit a billing lot numbered 7501 or above.
-Across the full pipeline: 1,118 condos before, 3,585 now, of which 1,814 reach
+Fixed, off the tax lot. 1,118 condos before, 3,585 now, of which 1,814 reach
 the map. 1335 Avenue of the Americas and 1535 Broadway were outside the filter
 entirely. They are the two largest Class B counts we hold.
 
@@ -107,8 +100,8 @@ entirely. They are the two largest Class B counts we hold.
 > sense for Kasa
 
 Both flagged. The counting question mattered more than the thresholds. The Act
-counts guest rooms — rooms used for transient occupancy, explicitly excluding
-residential and SRO units — so Class B is the measure and total units is not:
+counts guest rooms and excludes residential and SRO units, so Class B is the
+measure and total units is not:
 
     66 Pine Street     165 Class B, 612 Class A   total would say 777
     116 John Street    183 Class B, 233 Class A   total would say 416
@@ -116,12 +109,11 @@ residential and SRO units — so Class B is the measure and total units is not:
 116 John crosses 400 on total units and picks up continuous security
 obligations. It is a 183-room hotel.
 
-We also had Class B wrong in the other direction. Class B is a Multiple
-Dwelling Law category covering hotels, rooming houses and SRO alike, and the
-Act excludes SRO. 35 buildings were crossing 100 rooms on dormitory and SRO
-stock, International House at 492 and NYU University Hall at 478 among them.
-Neither is a hotel, so neither carries the duty. Those classes are excluded
-now: 372 buildings cross 100 rooms and 67 cross 400.
+Class B was wrong in the other direction too. It covers SRO, which the Act
+excludes, so 35 buildings were crossing 100 rooms on dormitory and SRO stock —
+International House at 492, NYU University Hall at 478. Neither is a hotel.
+
+Fixed. 372 buildings cross 100 rooms, 67 cross 400.
 
 
 --- 8. FACADE / LOCAL LAW 11 ----------------------------------------------
@@ -155,15 +147,12 @@ See reply 3. ZoLa does not carry use group.
 --- R3. DOB VIOLATIONS FOR ILLEGAL HOTELS ---------------------------------
 > DOB Violation data utilized to reflect any illegal hotel enforcement actions
 
-Added, and it needed no new source. We were already holding 215,181 ECB rows
-and selecting only a coarse type field whose nearest bucket is "Zoning".
+Added, and it needed no new source — we were already pulling the violations
+and not reading the statute field.
 
-The statute is §28-210.3, permanent dwelling offered, used or converted to
-other than permanent residential purpose. Two more columns on a pull that
-already runs.
-
-A building carrying one has already been running transient stays without
-authority.
+§28-210.3, permanent dwelling offered, used or converted to other than
+permanent residential purpose. A building carrying one has already been
+running transient stays without authority.
 
 
 --- R4. 97 COLUMBIA HEIGHTS / WATCHTOWER ----------------------------------
@@ -191,30 +180,25 @@ of the Act shifts.
 > need to check that the existing transient use was permitted prior to
 > December 9, 2021
 
-Implemented, and it cut hard. Reversion candidates were being asserted from
-building class and unit mix before any certificate history was attached.
-
-They are now tested against the cutoff where the certificates are. 27
-candidates, 5 with evidence of transient use before 2021-12-09, 22 flagged for
-review rather than deleted. A gap in the record is not proof the
-grandfathering is gone.
+Done, and it cut hard. We had 27 reversion candidates. 5 have evidence of
+transient use before 2021-12-09. The other 22 are flagged for review rather
+than deleted — a gap in the record is not proof the grandfathering is gone.
 
 
 --- R8. PROHIBITED BUILDINGS LIST -----------------------------------------
 > it may be smart to cross-reference with this list of prohibited buildings
 
-Not done. We have not confirmed it is published in a machine-readable form and
-would rather not promise a date until we have. If you know it is available as
-an export, that shortens the job considerably.
+Not done. We have not confirmed it is published as an export. If you know it
+is, that shortens the job.
 
 
 --- R9. TABS NOT REVIEWED -------------------------------------------------
 > Did not review "Independent Hotels" or "Conversions & New Developments"
 > tabs in detail
 
-Two fixes from this round apply there too. The condominium correction and the
-union roster feed every tab, and the Independent Hotels tab was inferring
-union coverage from room count. That is replaced.
+Two fixes from this round apply there too. The Independent Hotels tab was
+inferring union coverage from room count, and the condominium correction
+changes what that tab hides by default.
 
 If there is appetite for a second pass, that tab is where we would point
 you.
@@ -224,11 +208,10 @@ you.
 
 Is use group worth building?
 
-Our read: current use answers the operational question — is this a dorm, a
-shelter, an NPISA, is somebody already running it — and that is now covered.
-Use group answers the entitlement question, which matters for a subset:
-buildings where a use change is contemplated, and manufacturing districts
-where Use Group 3 sits on a density bonus.
+Our read: current use covers the operational question — is this a dorm, a
+shelter, an NPISA — and that is now done. Use group covers entitlement, which
+matters for a smaller set: buildings where a use change is contemplated, and
+manufacturing districts where Use Group 3 sits on a density bonus.
 
 If that is right, we would parse certificates at diligence for specific
 buildings rather than build a citywide parser. If you would not trust a
@@ -236,14 +219,9 @@ building without its use group on file, say so. That is a different project.
 
 A costed improvement we have not spent on.
 
-Part of that 21% no-signal rate is our own test being strict: we accept a
-business as belonging to a building by matching the house number it registers,
-which throws out anything filed on a cross street. The Wythe Hotel occupies 75
-North 11th Street and registers as 80 Wythe Avenue.
+Part of that 21% no-signal rate is our own test being too strict. It throws
+out anything filed on a cross street — the Wythe Hotel occupies 75 North 11th
+Street and registers as 80 Wythe Avenue.
 
-The better test is whether the business stands inside the building's
-footprint, which we already hold. It is built, and on the cases we checked by
-hand it accepts the Wythe and still rejects the building next door. Applying
-it means re-running 2,600 lookups, about $85 beyond this month's free
-allowance. We have not spent it, and are flagging it as a known, costed
-improvement rather than an unknown.
+We have built a better test and not run it. Doing so costs about $85 in API
+calls. Flagging it so you know the 21% is partly ours, not all real.
