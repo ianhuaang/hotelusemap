@@ -1,0 +1,259 @@
+Replies to the 9/14 review, one per comment.
+Counts are for the 2,615 buildings on the map unless stated.
+
+
+--- 1. UNION ---------------------------------------------------------------
+> the list should be cross-referenced with the union database
+
+Done, using HTC's own roster rather than an inference. 377 shops, all
+geocoded, matched to buildings by position. 237 match buildings we hold.
+
+The finding is the 38 that are union-covered and no longer hotels — HTC keeps
+representing the workers after a conversion, and their shopType field says
+what the building became: Residence, Club, Shelter. 18 of those 38 sat in
+segments we were calling available capacity, including 569 and 525 Lexington,
+Bretton Hall and the Downtown Club.
+
+> we should be cautious when looking at recent conversions or any project
+> currently undergoing the ULURP process
+
+Agreed, and this is where the roster earns its keep — a converted building
+looks cleanest in the data precisely because the hotel signals are gone.
+
+> the DCWP Safe Hotels Act License would show a longer term for a building
+> with a collective bargaining agreement
+
+Tested rather than shipped. The roster settles union status for 493 licensed
+buildings:
+
+    3-year term    89 union of 210    42.4%
+    1-year term    92 union of 283    32.5%
+    base rate                         36.7%
+    chi2 5.06, p 0.024
+
+Statistically real, practically useless — wrong 58% of the time it fires,
+misses half of all union buildings, five points of lift over guessing. We
+removed the flag. The correlation exists; it does not mean what it looks like.
+
+
+--- 2. SUPPORTIVE HOUSING --------------------------------------------------
+> Owned by "Housing Development..." could be a tip off. but this misses
+> supportive housing that is run by a non-profit.
+
+Right, and that was our gap too — we were keyword-matching owner and agent
+names, which catches HDFCs and Breaking Ground and misses everything else.
+
+Replaced by asking what is at the building's coordinates today. Now catches
+Project Renewal, Praxis Housing Initiatives, Palladia, and the Longacre and
+Varet Street shelters, with no reliance on the ownership record.
+
+
+--- 3. NPISA / USE GROUP ---------------------------------------------------
+> Use group 3 ... so there is a special permit required for a change in use
+
+Open, and the only item from your review that is a project rather than a task.
+
+One correction on where to get it: use group is not in ZoLa. We checked —
+ZoLa and PLUTO give the zoning district and an eleven-category land use code,
+and the DOB NOW certificate feed has 24 columns with no use group among them.
+There is no citywide dataset. It exists only on the face of the individual
+certificate, as a PDF.
+
+So it is an OCR and parsing job across thousands of documents. Our question
+back to you is at the end of these replies.
+
+
+--- 4. STUDENT HOUSING -----------------------------------------------------
+> Example: 569 Lexington Avenue
+
+This one reshaped the tool. 569 Lexington carries 730 HPD Class B units, 100%
+transient, and tiered as legal transient. C of O, HPD registration and
+building class all agree with each other and all miss that it is a dormitory.
+
+The root cause runs under your findings 2, 3 and 4 and the Watchtower
+scenario: every city source answers what a building is permitted to be, never
+what it is.
+
+2,066 buildings now carry a current use; 124 contradict their tier. 5,289
+registered Class B rooms sit in buildings that are not transient uses, 5.7% of
+all Class B we checked:
+
+    730  569 Lexington Avenue    FOUND Study Midtown East
+    506  525 Lexington Avenue    FOUND Study Turtle Bay
+    492  99 Washington Street    FOUND Study Financial District
+    492  500 Riverside Drive     International House
+    478  106 East 14 Street      NYU University Hall
+    222  55 John Street          EHS 55 John Street Residence
+
+Caveat: 534 buildings, 21%, returned no verifiable occupant. Partly real —
+a residential block with no registered business has no answer to give — and
+partly our own test being strict. See the costed note at the end.
+
+
+--- 5. CONDOS -------------------------------------------------------------
+> This data is on DOB but may not always be super accurate
+
+We do not use DOB for this, so your concern does not apply — but ours was
+worse. We were searching the owner name for the string "CONDO", which matched
+SECONDO and CONDOR REALTY LLC, plus a class list covering three of the fifteen
+R codes.
+
+Finance gives every condominium unit a billing lot numbered 7501 or above.
+Across the full pipeline: 1,118 condos before, 3,585 now, of which 1,814 reach
+the map. 1335 Avenue of the Americas and 1535 Broadway — the two largest Class
+B counts we hold — were outside the filter entirely.
+
+
+--- 6 & 7. SAFE HOTELS ROOM THRESHOLDS -------------------------------------
+> You may want to understand if directly employing core employees makes a
+> difference to underwriting
+> Another factor in deciding whether operating a hotel of this size makes
+> sense for Kasa
+
+Both flagged, and the counting question turned out to matter more than the
+thresholds. The Act counts guest rooms — rooms used for transient occupancy,
+explicitly excluding residential and SRO units — so Class B is the measure
+and total units is not:
+
+    66 Pine Street     165 Class B, 612 Class A   total would say 777
+    116 John Street    183 Class B, 233 Class A   total would say 416
+
+116 John crosses 400 on total units and picks up continuous security
+obligations. It is a 183-room hotel.
+
+We also had Class B wrong in the other direction. Class B is a Multiple
+Dwelling Law category covering hotels, rooming houses and SRO alike, and the
+Act excludes SRO. 35 buildings were crossing 100 rooms on dormitory and SRO
+stock, International House at 492 and NYU University Hall at 478 among them.
+Neither is a hotel, so neither carries the duty. Those classes are excluded
+now: 372 buildings cross 100 rooms and 67 cross 400.
+
+
+--- 8. FACADE / LOCAL LAW 11 ----------------------------------------------
+> cyclical compliance filings and inspections that could affect underwriting
+
+Flagged: 1,826 of 2,615 mapped buildings are over six storeys, marked as a
+recurring rather than one-off cost.
+
+The flag says the programme applies and no more. What the last cycle actually
+found lives in DOB facade filing records, which we do not pull. If the repair
+history is what matters for underwriting, that is a further pull and worth
+telling us.
+
+
+--- R1. SAFE HOTELS LICENCE EXPORT ----------------------------------------
+> "has an operator" and "is currently licensed under the Safe Hotels Act" are
+> potentially conflated in the tool currently
+
+You were right, and it was a live defect rather than a wording problem. A DCWP
+licence alone was marking a building as having an active operator, which
+segmented it away from the available list. Since May 2025 the licensee is the
+owner, who may run the hotel themselves, contract it out, or hold a licence on
+a building nobody operates yet.
+
+The fields are now distinct. We already pull w7w3-xahh, so the export you
+linked was in hand — it was being read wrongly, not missing.
+
+
+--- R2. ZONING USE GROUP VIA ZOLA -----------------------------------------
+See reply 3. ZoLa does not carry use group.
+
+
+--- R3. DOB VIOLATIONS FOR ILLEGAL HOTELS ---------------------------------
+> DOB Violation data utilized to reflect any illegal hotel enforcement actions
+
+Added, and it needed no new source. We were already holding 215,181 ECB rows
+and selecting only a coarse type field whose nearest bucket is "Zoning".
+
+The statute is §28-210.3 — permanent dwelling offered, used or converted to
+other than permanent residential purpose. Two more columns on a pull that
+already runs. It is worth more than a compliance flag: a building carrying one
+has already been running transient stays without authority, which says
+something about the owner that no permit record does.
+
+
+--- R4. 97 COLUMBIA HEIGHTS / WATCHTOWER ----------------------------------
+> Perhaps we look at the ownership records and if it is a religious
+> institution we discount it?
+
+We would push back on the religious-ownership rule — it is a blunt instrument
+and would catch buildings that have since changed hands or use.
+
+The building answers itself. 97 Columbia Heights is no longer Watchtower's
+dormitory; it reads as FOUND Study Columbia Heights Waterfront, student
+housing, 105 Class B rooms. Asking what is in the building today resolves the
+case you could not see a way to mitigate, without a rule about owners.
+
+
+--- R5. UPDATED-AS-OF TIMESTAMP -------------------------------------------
+Already shipped before your review. Both maps show the last refresh date in
+the sidebar, and every record carries the date its sources were pulled.
+
+
+--- R6. HOTEL OWNERS OF NEW YORK v. DCWP ----------------------------------
+Noted. Not a code item; we will watch the docket and tell you if the reading
+of the Act shifts.
+
+
+--- R7. PRE-DECEMBER 9 2021 PERMITTED USE ---------------------------------
+> need to check that the existing transient use was permitted prior to
+> December 9, 2021
+
+Implemented, and it cut hard. Reversion candidates were being asserted from
+building class and unit mix before any certificate history was attached.
+
+They are now tested against the cutoff where the certificates are: 27
+candidates, 5 with evidence of transient use before 2021-12-09, 22 flagged for
+review rather than deleted. A gap in the record is not proof the
+grandfathering is gone, and we would rather show you the 22 than silently drop
+them.
+
+
+--- R8. PROHIBITED BUILDINGS LIST -----------------------------------------
+> it may be smart to cross-reference with this list of prohibited buildings
+
+Not done. We have not confirmed it is published in a machine-readable form and
+would rather not promise a date until we have. If you know it is available as
+an export, that shortens the job considerably.
+
+
+--- R9. TABS NOT REVIEWED -------------------------------------------------
+> Did not review "Independent Hotels" or "Conversions & New Developments"
+> tabs in detail
+
+Understood, and worth flagging that two fixes from this round apply there too:
+the condominium correction and the union roster both feed every tab. The
+Independent Hotels tab in particular was inferring union coverage from room
+count, which we have now replaced.
+
+If you have appetite for a second pass, that tab is where we would point you.
+
+
+--- TWO THINGS BACK TO YOU ------------------------------------------------
+
+Is use group worth building?
+
+Our read: current use answers the operational question — is this a dorm, a
+shelter, an NPISA, is somebody already running it — and that is now covered.
+Use group answers the entitlement question, which matters for a subset:
+buildings where a use change is contemplated, and manufacturing districts
+where Use Group 3 sits on a density bonus.
+
+If that is right we would parse certificates at diligence for specific
+buildings rather than build a citywide parser. If it is wrong — if you would
+not trust a building without its use group on file — say so, because that is a
+different project.
+
+A costed improvement we have not spent on.
+
+Part of that 21% no-signal rate is our own test being strict: we accept a
+business as belonging to a building by matching the house number it registers,
+which throws out anything filed on a cross street. The Wythe Hotel occupies 75
+North 11th Street and registers as 80 Wythe Avenue.
+
+The better test is whether the business stands inside the building's
+footprint, which we already hold. It is built, and on the cases we checked by
+hand it accepts the Wythe and still rejects the building next door. Applying
+it means re-running 2,600 lookups, about $85 beyond this month's free
+allowance. We have not spent it, and are flagging it as a known, costed
+improvement rather than an unknown.
