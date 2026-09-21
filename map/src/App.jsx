@@ -893,8 +893,20 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           }
           if (p.is_condo) {
             considerations.push({
-              text: "Condominium — requires board approval or commercial condo owner negotiation",
+              text: "Condominium (condo billing lot) — requires board approval or commercial condo owner negotiation",
               severity: "medium",
+            });
+          }
+          if (p.ecb_illegal_transient > 0) {
+            considerations.push({
+              text: `${p.ecb_illegal_transient} open DOB violation${p.ecb_illegal_transient === 1 ? "" : "s"} under §28-210.3 — permanent dwelling offered or used for other than permanent residential purpose. This is the statute cited against illegal hotels, so somebody has already been running transient stays here without authority.`,
+              severity: "high",
+            });
+          }
+          if (p.fisp_applicable) {
+            considerations.push({
+              text: `Over six storeys — subject to the facade inspection programme (Local Law 11 / FISP). Inspection and filing every five years, and an unsafe finding carries a repair deadline. A recurring cost, not a one-off.`,
+              severity: "low",
             });
           }
           if (p.safe_hotels_large_hotel) {
