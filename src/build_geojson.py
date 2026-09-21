@@ -595,7 +595,6 @@ def build_geojson(
             "safe_hotels_licensed": record.get("safe_hotels_licensed", False),
             "hotel_license_created": record.get("hotel_license_created", ""),
             "hotel_license_term_years": record.get("hotel_license_term_years"),
-            "hotel_license_long_term": record.get("hotel_license_long_term", False),
             "coo_temp_only": record.get("coo_temp_only", False),
             "special_permit_required": "special_permit_required" in record.get("reason_codes", []),
             # Current use on the ground (Google Places, address-verified)

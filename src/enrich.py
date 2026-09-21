@@ -32,13 +32,22 @@ JOB_TYPE_LABELS = {
 # a future backfill of pre-Act DCA business licenses cannot quietly mix in.
 SAFE_HOTELS_EFFECTIVE = "2025-05-03"
 
-# DCWP issues these on two terms, and the split in the data is stark: 381 at
-# one year against 343 at three, with almost nothing in between. A three-year
-# term is the review's suggested proxy for a collective bargaining agreement.
-# Treated as a lead, not a finding — it has never been validated against the
-# Hotel Trades Council's own list, so it is surfaced and labelled, never used
-# to change a tier or a score.
-LICENSE_LONG_TERM_YEARS = 3
+# DCWP issues these on two terms and the split is stark: 381 at one year
+# against 343 at three, with almost nothing in between. The review suggested
+# the long term as a proxy for a collective bargaining agreement, which was
+# worth testing once the HTC roster gave us ground truth. It was tested, on
+# the 493 licensed buildings whose union status the roster settles:
+#
+#     3-year term   89 union of 210   42.4%
+#     1-year term   92 union of 283   32.5%
+#     base rate                       36.7%     chi2 5.06, p 0.024
+#
+# Real but far too weak to act on. As a classifier it is wrong 58% of the
+# time it fires and misses half of all union buildings, for a five point lift
+# over simply assuming the base rate. The term is kept because it is a fact
+# about the licence; the union inference is not, and sitting a 42% guess next
+# to HTC's own roster would invite someone to read it as a finding.
+LICENSE_TERM_LONG_YEARS = 3
 
 # Current uses that disqualify a building as a transient target regardless of
 # what its certificate of occupancy or HPD registration says.
@@ -1071,13 +1080,9 @@ def enrich_pipeline(
                 created >= SAFE_HOTELS_EFFECTIVE
                 and status in ("Active", "Ready for Renewal")
             )
-            term = _license_term_years(created, hl.get("license_expiration", ""))
-            record["hotel_license_term_years"] = term
-            record["hotel_license_long_term"] = bool(
-                term is not None and term >= LICENSE_LONG_TERM_YEARS
+            record["hotel_license_term_years"] = _license_term_years(
+                created, hl.get("license_expiration", "")
             )
-            if record["hotel_license_long_term"]:
-                record.setdefault("reason_codes", []).append("license_long_term")
             if status in ("Active", "Ready for Renewal"):
                 if tier in ("unknown", "partial"):
                     record["tier"] = "legal_transient"
@@ -1104,7 +1109,6 @@ def enrich_pipeline(
             record["has_hotel_license"] = False
             record["safe_hotels_licensed"] = False
             record["hotel_license_term_years"] = None
-            record["hotel_license_long_term"] = False
 
         # HPD registration (managing agent)
         hpd_reg = hpd_regs.get(bbl)

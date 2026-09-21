@@ -805,12 +805,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                   icon: licensed ? "check" : "info",
                   text: `DCWP hotel license — ${status}${licensed ? ", licensed under the Safe Hotels Act" : ""}${p.hotel_license_name ? ` (${p.hotel_license_name})` : ""}`,
                 });
-                if (p.hotel_license_long_term) {
-                  items.push({
-                    icon: "info",
-                    text: `${p.hotel_license_term_years}-year license term — possible collective bargaining agreement, unverified`,
-                  });
-                }
               }
               if (reasonCodes.includes("dob_transient_occupancy")) {
                 items.push({ icon: "check", text: "DOB transient occupancy (R-1/J-1)" });
