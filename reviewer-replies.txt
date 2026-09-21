@@ -113,8 +113,8 @@ Excluded now.
 
 Flagged as a recurring cost. 1,826 of 2,615 buildings are over six storeys.
 
-We do not have the repair history — that is in DOB facade filings, which we do
-not pull. Tell us if it matters for underwriting and we will add it.
+We do not have the repair history — that is in DOB facade filings, which we
+do not pull. Tell us if it matters for underwriting and we will add it.
 
 
 --- R1. SAFE HOTELS LICENCE EXPORT ----------------------------------------
