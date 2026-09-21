@@ -238,7 +238,7 @@ function makeKasaBadge(size = 26) {
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   // Optical centring: the k has no descender, so sitting it on the baseline
-  // at 72% of the height reads centred where true middle alignment does not.
+  // at 73% of the height reads centred where true middle alignment does not.
   ctx.fillText("k", s / 2, s * 0.73);
 
   return { width: s, height: s, data: ctx.getImageData(0, 0, s, s).data };
