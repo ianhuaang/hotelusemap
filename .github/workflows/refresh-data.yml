@@ -49,6 +49,28 @@ jobs:
       # invalid token returns 403 "Invalid app_token specified" on every call,
       # and with continue-on-error that reads as fifteen green steps that
       # produced nothing -- which is exactly how run #13 was misread.
+      # Python resolves a name inside a function body when the function runs,
+      # so a file missing a definition still parses, still imports, and still
+      # builds. src/enrich.py lost six helpers to a bad text edit and failed an
+      # hour into a run, after every source had been pulled. The app repo already
+      # lints for exactly this on the JavaScript side, for exactly this reason.
+      #
+      # Seconds, and before anything is fetched.
+      - name: Check for undefined names
+        run: |
+          pip install pyflakes
+          FAILED=""
+          for f in src/*.py config.py; do
+            OUT=$(python -m pyflakes "$f" 2>&1 | grep "undefined name" || true)
+            [ -n "$OUT" ] && FAILED="$FAILED\n$OUT"
+          done
+          if [ -n "$FAILED" ]; then
+            echo "::error title=Undefined name::A file references something it does not define."
+            printf '%b\n' "$FAILED"
+            exit 1
+          fi
+          echo "No undefined names."
+
       - name: Check the Socrata token
         run: |
           python - <<'EOF'
