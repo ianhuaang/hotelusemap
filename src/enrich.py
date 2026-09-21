@@ -960,32 +960,6 @@ def enrich_pipeline(
             reliable and rooms > SAFE_HOTELS_LARGE_HOTEL_ROOMS
         )
 
-        # Reversion window — test it against the 2021-12-09 cutoff
-        #
-        # pipeline.py proposes a candidate from building class and unit mix
-        # alone, before any C of O history is attached. That produced 27
-        # candidates; hand research on those 27 confirmed 2, called 7 outright
-        # wrong and left 18 unclear. The overlay is only worth something when
-        # the transient use predates the special-permit amendment, so the test
-        # runs here, where the C of O records exist.
-        rw = record.get("reversion_window")
-        if rw:
-            pre_cutoff, evidence = _pre_cutoff_transient_evidence(record)
-            rw["pre_2021_use"] = pre_cutoff
-            rw["pre_2021_evidence"] = evidence
-            if not pre_cutoff:
-                # Kept, not deleted. Losing the grandfathering is the likeliest
-                # reading, but a C of O gap is not proof of one, and silently
-                # dropping buildings is what the review objected to.
-                rw["unverified"] = True
-                record["reversion_unverified"] = True
-                record.setdefault("reason_codes", []).append("reversion_unverified")
-            else:
-                rw["unverified"] = False
-                record["reversion_unverified"] = False
-        else:
-            record["reversion_unverified"] = False
-
         # Current use on the ground (Google Places, address-verified)
         cu = current_use.get(bbl)
         if cu:
@@ -1109,6 +1083,38 @@ def enrich_pipeline(
             record["has_hotel_license"] = False
             record["safe_hotels_licensed"] = False
             record["hotel_license_term_years"] = None
+
+        # Reversion window — test it against the 2021-12-09 cutoff
+        #
+        # Runs after the DCWP block on purpose. An active licence clears the
+        # reversion window outright — the building is trading as a hotel, so
+        # there is nothing to revert. Testing before that left 10 active
+        # hotels carrying an "unverified reversion" warning for a window
+        # that had already been withdrawn.
+        #
+        # pipeline.py proposes a candidate from building class and unit mix
+        # alone, before any C of O history is attached. That produced 27
+        # candidates; hand research on those 27 confirmed 2, called 7 outright
+        # wrong and left 18 unclear. The overlay is only worth something when
+        # the transient use predates the special-permit amendment, so the test
+        # runs here, where the C of O records exist.
+        rw = record.get("reversion_window")
+        if rw:
+            pre_cutoff, evidence = _pre_cutoff_transient_evidence(record)
+            rw["pre_2021_use"] = pre_cutoff
+            rw["pre_2021_evidence"] = evidence
+            if not pre_cutoff:
+                # Kept, not deleted. Losing the grandfathering is the likeliest
+                # reading, but a C of O gap is not proof of one, and silently
+                # dropping buildings is what the review objected to.
+                rw["unverified"] = True
+                record["reversion_unverified"] = True
+                record.setdefault("reason_codes", []).append("reversion_unverified")
+            else:
+                rw["unverified"] = False
+                record["reversion_unverified"] = False
+        else:
+            record["reversion_unverified"] = False
 
         # HPD registration (managing agent)
         hpd_reg = hpd_regs.get(bbl)
