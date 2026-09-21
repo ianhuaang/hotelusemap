@@ -1,5 +1,5 @@
 cache/
-data/raw/
+data/raw/*
 data/processed/
 __pycache__/
 *.pyc
@@ -9,3 +9,14 @@ node_modules/
 map/dist/
 .vercel
 .env*
+
+# The Google-derived enrichment is the one thing in data/raw that CI cannot
+# regenerate: refresh-data.yml runs the sixteen pull scripts and none of them
+# calls Places. So the sweep output is committed rather than ignored, and the
+# loaders find it on a fresh clone and in Actions alike.
+#
+# Only the verified file. The older text-search names stay ignored until they
+# have been re-run with address verification, because shipping a name we
+# cannot audit is worse than shipping none — the panel titles the building
+# with it.
+!data/raw/google_current_use_[0-9]*.json
