@@ -370,7 +370,8 @@ def load_coo(path: Path = None) -> dict[str, list[dict]]:
         })
 
     for bbl in by_bbl:
-        by_bbl[bbl].sort(key=lambda c: c.get("issue_date", ""), reverse=True)
+        # Sort on the normalised date, never the raw string — see _coo_date.
+        by_bbl[bbl].sort(key=lambda c: _coo_date(c.get("issue_date", "")) or "", reverse=True)
 
     return by_bbl
 
@@ -489,6 +490,31 @@ def load_google_hotel_names() -> dict[str, str]:
                 if r.get("google_name") and r["bbl"] not in result:
                     result[r["bbl"]] = r["google_name"]
     return result
+
+
+def _coo_date(raw: str) -> str | None:
+    """Normalise a C of O issue date to ISO.
+
+    The two source datasets disagree on format: the BIS legacy feed writes
+    2012-10-09, DOB NOW writes 11/12/25. Comparing or sorting them as plain
+    strings puts every legacy date above every NOW date, because "2" sorts
+    after "1" — so a 2012 certificate outranks a 2026 one.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    if len(raw) >= 10 and raw[4] == "-":
+        return raw[:10]
+    parts = raw.split("/")
+    if len(parts) == 3:
+        mm, dd, yy = (p_.strip() for p_ in parts)
+        if mm.isdigit() and dd.isdigit() and yy.isdigit():
+            # DOB NOW begins in 2021, so a two-digit year is this century.
+            year = int(yy)
+            if len(yy) == 2:
+                year += 2000 if year <= 69 else 1900
+            return f"{year:04d}-{int(mm):02d}-{int(dd):02d}"
+    return None
 
 
 def load_acris_owners(path: Path = None) -> dict[str, dict]:
