@@ -51,10 +51,13 @@ LICENSE_TERM_LONG_YEARS = 3
 
 # Current uses that disqualify a building as a transient target regardless of
 # what its certificate of occupancy or HPD registration says.
-NON_TRANSIENT_CURRENT_USES = frozenset({
-    "student_housing", "supportive_housing", "institutional_lodging",
-    "religious", "medical", "government", "private_club",
-})
+#
+# Imported rather than restated. This list existed in both files and drifted
+# the moment `education` was added to one of them: the sweep flagged 124
+# buildings and the map showed 82, the difference being exactly the 42
+# education records. Nothing failed — the map was simply quieter than the
+# data, which is the kind of gap that survives a review.
+from src.enrich_current_use import NON_TRANSIENT_USES as NON_TRANSIENT_CURRENT_USES
 
 # Zoning compatibility for hotel use (Use Group 5)
 # Post-2021 amendment: ALL new hotels require CPC special permit.
