@@ -77,8 +77,22 @@ YOUR EIGHT FINDINGS
       168  317 West 45 Street      Longacre Shelter
 
   Caveat worth stating: 534 buildings, 21%, returned no verifiable occupant.
-  For a residential block with no registered business that is an answer
-  rather than a gap, but a fifth of the map has no signal either way.
+  For a residential block with no registered business that is an answer rather
+  than a gap, but a fifth of the map has no signal either way.
+
+  Some of that 21% is our own test being too strict. We accepted a business as
+  belonging to a building by matching the house number it registers, which
+  throws out anything filed on a cross street: the Wythe Hotel occupies 75
+  North 11th Street and registers as 80 Wythe Avenue. The better test is
+  whether the business stands inside the building's footprint, which we
+  already hold, and we have built it — on the two cases we checked by hand it
+  accepts the Wythe and still rejects the building next door.
+
+  Applying it means re-running the lookup across 2,600 buildings, which is
+  about $85 in API calls beyond this month's free allowance. We have not spent
+  it. Flagging it because it is a known, costed improvement rather than an
+  unknown, and because it bears on how much weight to put on a "no signal"
+  answer today.
 
 5. Condos
   Done, and you were right that DOB is unreliable — we do not use it. We were
