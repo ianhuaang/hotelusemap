@@ -183,18 +183,7 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
     refinements.push(["!", ["has", "hotel_name"]]);
   }
   if (hideCondos) {
-    // "Condo" in city data describes ownership, not the building. This filter
-    // is about fragmented residential ownership and board approval, which is
-    // not the situation in a hotel that happens to be held in condo form.
-    //
-    // Registered transient rooms are the line. Of the condos on the map, 83
-    // carry Class B and they are the largest buildings we hold — 1535
-    // Broadway at 1,981 rooms, 569 Lexington at 730. The rest have none, and
-    // those are the ones worth hiding.
-    refinements.push(["any",
-      ["!=", ["get", "is_condo"], true],
-      [">", ["to-number", ["get", "hpd_class_b"], 0], 0],
-    ]);
+    refinements.push(["!=", ["get", "is_condo"], true]);
   }
   if (hideRestricted) {
     refinements.push(["!=", ["get", "restricted_class"], true]);
@@ -2083,7 +2072,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      if (hideCondos && p.is_condo && !(p.hpd_class_b > 0)) return false;
+      if (hideCondos && p.is_condo) return false;
       if (hideRestricted && p.restricted_class) return false;
     }
 
@@ -3190,6 +3179,14 @@ export default function App() {
   const [showKasa, setShowKasa] = useState(false);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
+  // Off by default. The filter itself is unchanged — a condominium is harder
+  // to operate whatever rooms are in it, transient ones included. What
+  // changed is that it used to hide 386 buildings and now hides 1,814, so
+  // leaving it on meant the tool opened showing 31% of its own data and
+  // 28,343 Class B rooms sat behind a checkbox nobody had ticked.
+  //
+  // The panel says condominium on the building itself. Better to show the
+  // building and the difficulty together than to remove it quietly.
   const [hideCondos, setHideCondos] = useState(false);
   // SRO / dormitory / hostel stock is hidden by default: it scores well on Class B
   // rooms but sits in a different regulatory and operating world.
