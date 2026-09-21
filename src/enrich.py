@@ -609,14 +609,31 @@ def _coo_date(raw: str) -> str | None:
     return None
 
 
+# The Act excludes single room occupancy units from "guest room", and these
+# building classes are where the exclusion bites. HPD Class B is a Multiple
+# Dwelling Law category covering hotels, rooming houses, lodging houses and
+# SRO alike, so it is broader than the Act's count and overstates it here.
+#
+# It is not a rounding difference. 35 buildings crossed the 100-room threshold
+# on SRO or dormitory stock, among them International House at 492 rooms and
+# NYU University Hall at 478 — neither of which is a hotel, so neither carries
+# a direct-employment duty at all.
+SAFE_HOTELS_EXCLUDED_CLASSES = {"HR", "RS", "H8", "HH"}
+
+
 def _guest_rooms(record: dict) -> tuple[int, str]:
     """Guest rooms as the Safe Hotels Act counts them, and where it came from.
 
-    Class B first because it is the only source that counts transient rooms
-    and nothing else. The C of O fallback counts dwelling units, so it is used
-    only where there are no Class A units to confuse it, and the floor
-    estimate is a last resort that should never be read as a compliance number.
+    Class B first because it is the closest thing to a transient room count,
+    but not where the stock is SRO or dormitory — see above. The C of O
+    fallback counts dwelling units, so it is used only where there are no
+    Class A units to confuse it, and the floor estimate is a last resort that
+    should never be read as a compliance number.
     """
+    bldgclass_full = (record.get("bldgclass") or "").upper()
+    if bldgclass_full[:2] in SAFE_HOTELS_EXCLUDED_CLASSES:
+        return 0, "sro_or_dormitory"
+
     class_b = int(record.get("hpd_class_b") or 0)
     if class_b:
         return class_b, "hpd_class_b"

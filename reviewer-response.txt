@@ -9,6 +9,10 @@ defects we were not looking for, listed at the bottom.
 Everything below is on a branch and not yet live. The one item that needs a
 decision from you is at the end.
 
+Counts are for the 2,615 buildings on the map unless stated otherwise. The
+pipeline behind it holds 15,176; the difference is filtering, and the two
+scopes are easy to confuse, so we have said which is which where it matters.
+
 
 YOUR EIGHT FINDINGS
 
@@ -97,13 +101,23 @@ YOUR EIGHT FINDINGS
       116 John Street    183 Class B, 233 Class A   total would say 416
 
   116 John crosses 400 on total units and picks up continuous security
-  obligations. It is a 183-room hotel. Of the 4,469 buildings in mapped
-  tiers, 458 cross 100 rooms and 80 cross 400.
+  obligations. It is a 183-room hotel.
+
+  Class B is close to the Act's count but not identical, and the gap matters.
+  Class B is a Multiple Dwelling Law category covering hotels, rooming houses
+  and SRO alike, while the Act excludes SRO units from "guest room". We were
+  counting dormitory and SRO stock as guest rooms until we checked: 35
+  buildings crossed the 100-room line on it, including International House at
+  492 and NYU University Hall at 478. Neither is a hotel, so neither carries
+  the duty at all. Those classes are now excluded.
+
+  Of the 2,615 buildings on the map, 372 cross 100 rooms and 67 cross 400.
   Where the only figure is an estimate the flag stays silent, because a guess
   should not assert a legal threshold.
 
 8. Facade / Local Law 11
-  Done as a flag — 2,748 of 4,469 mapped buildings are over six storeys. What
+  Done as a flag — 1,826 of the 2,615 buildings on the map are over six
+  storeys. What
   the last inspection cycle found lives in DOB facade filings, which we do not
   pull, so the flag says the programme applies and no more.
 
@@ -173,18 +187,28 @@ ONE OPEN QUESTION
 
   Is use group worth building?
 
-  It is the last item from your review that is a project rather than a task,
-  and it means parsing certificate of occupancy PDFs. Before we spend that,
-  we want your read: how much of what you wanted use group for is already
-  answered by knowing what is in the building today?
+  First, a correction to the suggestion: ZoLa does not carry it. We checked.
+  ZoLa and PLUTO give the zoning district and an eleven-category land use
+  code, and the DOB NOW certificate feed has 24 columns with no use group
+  among them. There is no citywide use group dataset. It exists only on the
+  face of the individual certificate, as a PDF, which means the work is an
+  OCR and parsing project across thousands of documents rather than a pull.
 
-  Our instinct is that current use covers the operational question — is this
-  a dorm, a shelter, an NPISA — while use group covers the entitlement
-  question, which matters when a special permit is in play. If that is right,
-  use group is worth building for the ULURP-sensitive subset rather than for
-  all 15,000 buildings. If it is wrong, we would rather know now.
+  So the question is whether it earns that. Our read, which we would like you
+  to check:
 
-  Separately, and for counsel rather than for you: how guest rooms are counted
-  where the hotel is only part of a building. The Act says "part of such
-  building", and our split-use stock is where the 100 and 400 thresholds
-  actually bite.
+  Current use answers the operational question — is this a dorm, a shelter,
+  an NPISA, is somebody already running it. That is now covered, and it is
+  what was generating most of the noise you found.
+
+  Use group answers the entitlement question — what is this building
+  permitted to be, and does changing it require a special permit. That still
+  matters, but it matters for a subset: buildings where a use change is
+  actually contemplated, and manufacturing districts where Use Group 3 sits
+  on a density bonus.
+
+  If that is right, we would parse certificates for the ULURP-sensitive
+  subset when a building reaches diligence, rather than building a citywide
+  parser up front. If it is wrong — if you would not trust a building without
+  its use group on file — tell us, because that is a different project and we
+  would rather start it than discover it later.
