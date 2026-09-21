@@ -183,7 +183,18 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
     refinements.push(["!", ["has", "hotel_name"]]);
   }
   if (hideCondos) {
-    refinements.push(["!=", ["get", "is_condo"], true]);
+    // "Condo" in city data describes ownership, not the building. This filter
+    // is about fragmented residential ownership and board approval, which is
+    // not the situation in a hotel that happens to be held in condo form.
+    //
+    // Registered transient rooms are the line. Of the condos on the map, 83
+    // carry Class B and they are the largest buildings we hold — 1535
+    // Broadway at 1,981 rooms, 569 Lexington at 730. The rest have none, and
+    // those are the ones worth hiding.
+    refinements.push(["any",
+      ["!=", ["get", "is_condo"], true],
+      [">", ["to-number", ["get", "hpd_class_b"], 0], 0],
+    ]);
   }
   if (hideRestricted) {
     refinements.push(["!=", ["get", "restricted_class"], true]);
@@ -2072,7 +2083,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      if (hideCondos && p.is_condo) return false;
+      if (hideCondos && p.is_condo && !(p.hpd_class_b > 0)) return false;
       if (hideRestricted && p.restricted_class) return false;
     }
 

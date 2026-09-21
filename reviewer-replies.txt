@@ -79,11 +79,16 @@ strict — see the costed note at the end.
 
 We do not use DOB for this, and our own method was worse. We read it off the
 condo billing lot now, which Finance assigns to every condominium unit.
-
 1,118 condos before, 3,585 now, 1,814 of them on the map.
 
-1335 Avenue of the Americas and 1535 Broadway were outside the filter
-entirely. They are the two largest Class B counts we hold.
+What the tool does with it: condos are hidden from the default view, since
+they mean fragmented ownership and board approval. Getting the detection right
+made that filter far more aggressive, so we narrowed it — a condo with
+registered transient rooms stays visible. 1535 Broadway, 1335 Avenue of the
+Americas and 569 Lexington are all held in condo form and all still show.
+
+1,714 buildings are now hidden by default that were not before. They are
+residential condominiums with no transient capacity.
 
 
 --- 6 & 7. SAFE HOTELS ROOM THRESHOLDS -------------------------------------
