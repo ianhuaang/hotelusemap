@@ -750,39 +750,34 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
         {(() => {
           const occ = parseJsonProp(p.current_use_occupants) || [];
           const building = occ.filter((o) => o.use !== "ground_floor_tenant");
-          const notes = [];
-          if (p.current_use_conflict) {
-            notes.push({
-              severity: p.current_use_confidence === "high" ? "high" : "medium",
-              text: `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${p.current_use_name ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`,
-            });
-          }
-          if (p.current_use_needs_review) {
-            notes.push({
-              severity: "medium",
-              text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
-            });
-          }
-          if (building.length === 0 && notes.length === 0) return null;
+          const names = building.map((o) => o.name);
+          // The occupant list is the evidence, so anything it already shows is
+          // not said again. It names the occupant on 115 of 120 conflicts, and
+          // it shows a building with several uses better than a sentence
+          // saying the uses are several — which is why there is no line here
+          // for the unclear-evidence case at all.
+          const unnamed = p.current_use_name && !names.includes(p.current_use_name);
+          const conflict = p.current_use_conflict
+            ? `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${unnamed ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`
+            : null;
+          if (building.length === 0 && !conflict) return null;
+          const high = p.current_use_confidence === "high";
           return (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current use</div>
               {building.length > 0 && (
-                <div className="text-[11px] text-gray-700 mb-1.5">
+                <div className="text-[11px] text-gray-700">
                   <span className="text-gray-500">At this address: </span>
-                  {building.map((o) => o.name).join(", ")}
+                  {names.join(", ")}
                   {occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""}
                 </div>
               )}
-              <div className="space-y-1">
-                {notes.map((n, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
-                    <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${n.severity === "high" ? "bg-red-500" : "bg-amber-500"}`} />
-                    <span className={`text-[11px] ${n.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{n.text}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="text-[10px] text-gray-400 mt-1.5">What is operating here, from Google. City records describe what the building is permitted to be.</div>
+              {conflict && (
+                <div className="flex items-start gap-1.5 mt-1.5">
+                  <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${high ? "bg-red-500" : "bg-amber-500"}`} />
+                  <span className={`text-[11px] ${high ? "text-red-700" : "text-gray-600"}`}>{conflict}</span>
+                </div>
+              )}
             </div>
           );
         })()}
