@@ -516,6 +516,37 @@ function NoteEditor({ bbl, notes, onSave }) {
   );
 }
 
+function Consideration({ item }) {
+  const [open, setOpen] = useState(false);
+  const dot = item.severity === "high" ? "bg-red-500"
+    : item.severity === "medium" ? "bg-amber-500" : "bg-gray-400";
+  const tone = item.severity === "high" ? "text-red-700" : "text-gray-600";
+  return (
+    <div className="flex items-start gap-1.5">
+      <span className={`${BULLET_DOT} ${dot}`} />
+      <div className={BULLET_TEXT}>
+        <span className={tone}>{item.text}</span>
+        {item.detail && (
+          <button
+            onClick={() => setOpen(!open)}
+            aria-label={open ? "Hide detail" : "Show detail"}
+            aria-expanded={open}
+            className="ml-1 align-baseline text-[9px] text-gray-400 hover:text-gray-600 cursor-pointer"
+          >
+            {/* Same glyph the score explainer uses, so the panel has one
+                disclosure affordance rather than two. No label on it: a word
+                on every bullet costs more room than the detail it hides. */}
+            <span className={`inline-block transition-transform ${open ? "rotate-90" : ""}`}>&#9654;</span>
+          </button>
+        )}
+        {open && item.detail && (
+          <div className="mt-1 text-gray-500">{item.detail}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ScoreExplainer({ p }) {
   const [open, setOpen] = useState(false);
 
@@ -955,7 +986,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           }
           if (p.is_condo) {
             considerations.push({
-              text: "Condominium (condo billing lot) — requires board approval or commercial condo owner negotiation",
+              text: "Condominium (condo billing lot)",
+              detail: "Requires board approval, or a negotiation with a commercial condo owner.",
               kind: "operational",
               severity: "medium",
             });
@@ -969,20 +1001,23 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           }
           if (p.fisp_applicable) {
             considerations.push({
-              text: `Over six storeys — subject to the facade inspection programme (Local Law 11 / FISP). Inspection and filing every five years, and an unsafe finding carries a repair deadline. A recurring cost, not a one-off.`,
+              text: "Over six storeys — subject to facade inspection (Local Law 11 / FISP)",
+              detail: "Inspection and filing every five years, and an unsafe finding carries a repair deadline. A recurring cost, not a one-off.",
               kind: "operational",
               severity: "low",
             });
           }
           if (p.safe_hotels_large_hotel) {
             considerations.push({
-              text: `${p.safe_hotels_guest_rooms} guest rooms — over 400 makes this a "large hotel" under the Safe Hotels Act: core staff must be employed directly, and a security guard must be on duty continuously. Roughly 4-5 FTE of fixed cover before occupancy.`,
+              text: `${p.safe_hotels_guest_rooms} guest rooms — a "large hotel" under the Safe Hotels Act`,
+              detail: "Over 400 guest rooms: core staff must be employed directly, and a security guard must be on duty continuously. Roughly 4-5 FTE of fixed cover before occupancy.",
               kind: "operational",
               severity: "high",
             });
           } else if (p.safe_hotels_direct_employment) {
             considerations.push({
-              text: `${p.safe_hotels_guest_rooms} guest rooms — at 100 or more, the Safe Hotels Act requires housekeeping, front desk and front service staff to be employed directly rather than subcontracted. Re-underwrite labor before pricing.`,
+              text: `${p.safe_hotels_guest_rooms} guest rooms — direct employment required by the Safe Hotels Act`,
+              detail: "At 100 rooms or more, housekeeping, front desk and front service staff must be employed directly rather than subcontracted. Re-underwrite labor before pricing.",
               kind: "operational",
               severity: "high",
             });
@@ -996,7 +1031,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           }
           if (p.htc_converted_use) {
             considerations.push({
-              text: `Union shop under a Hotel Trades Council contract, listed as ${p.htc_shop_type.toLowerCase()} rather than a hotel. The agreement can survive a conversion or a change of operator, so labor obligations may attach before any deal is signed.`,
+              text: `Union shop under a Hotel Trades Council contract, listed as ${p.htc_shop_type.toLowerCase()} rather than a hotel`,
+              detail: "The agreement can survive a conversion or a change of operator, so labor obligations may attach before any deal is signed.",
               kind: "operational",
               severity: "high",
             });
@@ -1044,12 +1080,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                   <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</div>
                   <div className="space-y-1">
                     {items.map((c, i) => (
-                      <div key={i} className="flex items-start gap-1.5">
-                        <span className={`${BULLET_DOT} ${
-                          c.severity === "high" ? "bg-red-500" : c.severity === "medium" ? "bg-amber-500" : "bg-gray-400"
-                        }`} />
-                        <span className={`${BULLET_TEXT} ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
-                      </div>
+                      <Consideration key={i} item={c} />
                     ))}
                   </div>
                 </div>
