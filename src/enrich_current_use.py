@@ -85,6 +85,7 @@ FIELD_MASK = ",".join([
     "places.types",
     "places.formattedAddress",
     "places.businessStatus",
+    "places.location",
 ])
 
 
@@ -301,6 +302,35 @@ def address_match(query_addr: str, result_addr: str) -> str:
     return "medium"
 
 
+# --- Footprint containment -------------------------------------------------
+#
+# The honest test of "is this business in this building" is whether it stands
+# inside the building. House-number matching was a proxy for that, and a poor
+# one: the Wythe Hotel occupies 75 North 11th Street and registers as 80 Wythe
+# Avenue, so the proxy threw it out. Its coordinates sit inside the footprint.
+#
+# 177 hotel names were rejected on the house-number test alone. The footprint
+# is already in the GeoJSON we read, so none of that had to be lost.
+
+def in_footprint(lon: float, lat: float, coordinates: list) -> bool:
+    """Ray casting over each polygon's outer ring."""
+    for poly in coordinates:
+        if not poly:
+            continue
+        ring = poly[0]
+        inside = False
+        j = len(ring) - 1
+        for i in range(len(ring)):
+            xi, yi = ring[i][0], ring[i][1]
+            xj, yj = ring[j][0], ring[j][1]
+            if (yi > lat) != (yj > lat) and lon < (xj - xi) * (lat - yi) / (yj - yi) + xi:
+                inside = not inside
+            j = i
+        if inside:
+            return True
+    return False
+
+
 # --- Places call ------------------------------------------------------------
 
 def places_nearby(lat: float, lon: float) -> list[dict]:
@@ -398,7 +428,7 @@ _USE_PRIORITY = {
 }
 
 
-def candidates(address: str, lat: float, lon: float) -> list[dict]:
+def candidates(address: str, lat: float, lon: float, footprint: list = None) -> list[dict]:
     """Every address-verified occupant, classified but not yet ranked.
 
     Split from the ranking so the cache can hold candidates rather than a
@@ -412,8 +442,18 @@ def candidates(address: str, lat: float, lon: float) -> list[dict]:
 
     scored = []
     for p in places:
+        loc = p.get("location") or {}
+        contained = bool(
+            footprint
+            and loc.get("longitude") is not None
+            and in_footprint(loc["longitude"], loc["latitude"], footprint)
+        )
         match = address_match(address, p.get("formattedAddress", ""))
-        if match == "low":
+        # Standing in the building settles it. The house number is the
+        # fallback for the handful of places Google has not located precisely.
+        if contained:
+            match = "high"
+        elif match == "low":
             continue
         use, label, conf, basis = classify(p)
         scored.append({
@@ -430,6 +470,7 @@ def candidates(address: str, lat: float, lon: float) -> list[dict]:
             "use_confidence": conf,
             "basis": basis,
             "names_building": _names_the_building(p),
+            "in_footprint": contained,
         })
 
     return scored
@@ -504,6 +545,7 @@ def load_buildings() -> list[dict]:
             continue
         r = dict(f["properties"])
         r["lon"], r["lat"] = c
+        r["footprint"] = f["geometry"]["coordinates"]
         rows.append(r)
     return rows
 
@@ -572,7 +614,7 @@ def main() -> None:
             if args.limit and new >= args.limit:
                 break
             try:
-                scored = candidates(addr, rec["lat"], rec["lon"])
+                scored = candidates(addr, rec["lat"], rec["lon"], rec.get("footprint"))
             except Exception as e:
                 print(f"  ERROR {addr}: {e}")
                 continue
