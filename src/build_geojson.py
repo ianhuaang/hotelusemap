@@ -260,6 +260,52 @@ HTC_CONVERTED_SHOP_TYPES = frozenset({
     "Residence", "Club", "Shelter", "Office", "Restaurant", "Audio Visual",
 })
 
+# The shop types that describe the whole building rather than a tenant in it.
+# Narrower than HTC_CONVERTED_SHOP_TYPES on purpose: a union restaurant or an
+# audio-visual shop is a business inside a building and says nothing about
+# whether the building still lets rooms. The Rainbow Room is a Restaurant shop
+# in 30 Rockefeller Plaza, and reading it as the building's use would have
+# called 30 Rock a restaurant.
+HTC_BUILDING_SHOP_TYPES = frozenset({"Residence", "Club", "Shelter"})
+
+# What a shop type is called when it is shown to a person.
+HTC_SHOP_TYPE_LABELS = {
+    "Residence": "Residential building",
+    "Club": "Private membership club",
+    "Shelter": "Shelter",
+    "Office": "Office",
+    "Restaurant": "Restaurant",
+    "Audio Visual": "Production facility",
+}
+
+# Tiers where a non-transient current use is a contradiction worth surfacing.
+# Mirrors enrich_current_use.TRANSIENT_TIERS.
+HTC_TRANSIENT_TIERS = ("legal_transient", "partial")
+
+
+def _point_in_ring(x: float, y: float, ring: list) -> bool:
+    """Ray cast. Ring is a GeoJSON linear ring of [lon, lat] pairs."""
+    inside = False
+    n = len(ring)
+    for i in range(n):
+        x1, y1 = ring[i][0], ring[i][1]
+        x2, y2 = ring[(i + 1) % n][0], ring[(i + 1) % n][1]
+        if (y1 > y) != (y2 > y):
+            denom = (y2 - y1) or 1e-12
+            if x < (x2 - x1) * (y - y1) / denom + x1:
+                inside = not inside
+    return inside
+
+
+def point_in_footprint(geometry: dict, lon: float, lat: float) -> bool:
+    """Is this coordinate inside the building itself?"""
+    coords = geometry.get("coordinates") or []
+    polys = coords if geometry.get("type") == "MultiPolygon" else [coords]
+    for poly in polys:
+        if poly and _point_in_ring(lon, lat, poly[0]):
+            return True
+    return False
+
 
 def load_htc_union() -> list[dict]:
     """Load the HTC union roster, newest file wins."""
@@ -295,16 +341,16 @@ def match_htc_union(features: list[dict], roster: list[dict]) -> int:
     for f in features:
         c = _centroid(f["geometry"]["coordinates"])
         if c:
-            cents.append((c, f["properties"]))
+            cents.append((c, f["properties"], f["geometry"]))
 
     hits = 0
     for shop in roster:
         sx, sy = shop["longitude"], shop["latitude"]
-        best, best_d = None, float("inf")
-        for (cx, cy), props in cents:
+        best, best_d, best_geom = None, float("inf"), None
+        for (cx, cy), props, geom in cents:
             d = math.hypot((cx - sx) * _M_PER_DEG_LON, (cy - sy) * _M_PER_DEG_LAT)
             if d < best_d:
-                best_d, best = d, props
+                best_d, best, best_geom = d, props, geom
         if best is None or best_d > HTC_MATCH_METRES:
             continue
         # One building can host several shops (a hotel and its restaurant).
@@ -324,7 +370,64 @@ def match_htc_union(features: list[dict], roster: list[dict]) -> int:
         best["htc_union_status"] = shop["status"]
         best["htc_union_distance_m"] = round(best_d)
         best["htc_converted_use"] = now_converted
+        # Nearest-within-60m is not the same as right. The roster's own
+        # coordinates are approximate and Midtown blocks are dense, so the
+        # nearest building is often the one next door: the Marriott at the
+        # Brooklyn Bridge landed on 350 Jay Street, which is the municipal
+        # building, and 540 Park Avenue took The Links over Loews Regency.
+        # Whether the point falls inside the footprint is what separates the
+        # two, and it is the gate on anything downstream that acts on a match.
+        best["htc_match_basis"] = (
+            "footprint" if point_in_footprint(best_geom, sx, sy) else "proximity"
+        )
     return hits
+
+
+def apply_roster_current_use(features: list[dict]) -> int:
+    """Let a trustworthy roster match answer "what is this building now".
+
+    The current-use check asks Google, which has the coverage — 2,048 buildings
+    against the roster's 235 — but misses a building whose name gives nothing
+    away. The Brook is a private members' club at 111 East 54th Street with ten
+    Class B rooms; Google types it association_or_organization, the club rule
+    matches on names containing "club", and the building scores 91.
+
+    The union knows, because it staffs it. Where the roster calls a building a
+    Residence, Club or Shelter and its point falls inside that building, that
+    is a better answer than no answer.
+
+    Gated on containment, never proximity. Of the 38 proximity-only matches,
+    enough sit on the wrong building that acting on them would invent
+    contradictions — which is the failure this function exists to avoid, not
+    to commit in the other direction.
+    """
+    applied = 0
+    for f in features:
+        p = f["properties"]
+        if p.get("current_use_conflict"):
+            continue
+        if p.get("htc_shop_type") not in HTC_BUILDING_SHOP_TYPES:
+            continue
+        # A reversion record beats the roster. It is dated, building-specific
+        # research saying the non-hotel use ended — Row NYC was the last
+        # migrant hotel and closed in Aug 2025 — where the roster is a standing
+        # list with no end dates in it. Saying those 1,332 rooms are "already
+        # occupied" would contradict the panel's own reversion box.
+        if p.get("has_reversion"):
+            continue
+        if p.get("htc_match_basis") != "footprint":
+            continue
+        if p.get("tier") not in HTC_TRANSIENT_TIERS:
+            continue
+        shop_type = p.get("htc_shop_type", "")
+        p["current_use_conflict"] = True
+        p["current_use_source"] = "htc_roster"
+        p["current_use_label"] = HTC_SHOP_TYPE_LABELS.get(shop_type, shop_type)
+        p["current_use_name"] = p.get("htc_union_name", "")
+        p["current_use_confidence"] = "high"
+        p["current_use_basis"] = "Hotel Trades Council roster, matched inside the building footprint"
+        applied += 1
+    return applied
 
 
 def build_geojson(
@@ -518,6 +621,7 @@ def build_geojson(
             "htc_shop_type": "",
             "htc_union_status": "",
             "htc_converted_use": False,
+            "htc_match_basis": "",
             "alt_addresses": alt_addresses.get(record["bbl"], []),
             "bldgclass": record["bldgclass"],
             "unitsres": record["unitsres"],
@@ -604,6 +708,7 @@ def build_geojson(
             "current_use_confidence": record.get("current_use_confidence", ""),
             "current_use_basis": record.get("current_use_basis", ""),
             "current_use_conflict": record.get("current_use_conflict", False),
+            "current_use_source": "google" if record.get("current_use") else "",
             "current_use_occupants": record.get("current_use_occupants", []),
             "current_use_needs_review": record.get("current_use_needs_review", False),
             "current_use_checked": record.get("current_use_checked", False),
@@ -783,9 +888,14 @@ def build_geojson(
     roster = load_htc_union()
     union_hits = match_htc_union(features, roster)
     converted = sum(1 for f in features if f["properties"].get("htc_converted_use"))
+    roster_conflicts = apply_roster_current_use(features)
     if roster:
+        inside = sum(1 for f in features
+                     if f["properties"].get("htc_match_basis") == "footprint")
         print(f"HTC union roster: {len(roster)} shops, {union_hits} matched to buildings")
+        print(f"  matched inside the footprint: {inside}, on proximity alone: {union_hits - inside}")
         print(f"  covered but no longer a hotel (Residence/Club/Shelter/...): {converted}")
+        print(f"  current-use conflicts the roster caught and Google did not: {roster_conflicts}")
     else:
         print("HTC union roster: not found — run src/pull_htc_union.py")
 
