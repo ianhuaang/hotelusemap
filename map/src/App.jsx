@@ -757,8 +757,22 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           // saying the uses are several — which is why there is no line here
           // for the unclear-evidence case at all.
           const unnamed = p.current_use_name && !names.includes(p.current_use_name);
+          // The old wording — "city records show transient capacity, the
+          // building on the ground does not" — said the opposite of the
+          // finding. The rooms are there. Somebody else is running them, and
+          // that is the thing a sourcing decision turns on.
+          //
+          // Only HPD Class B is a count of transient rooms. The Est. Rooms
+          // stat falls back to a C of O figure, 15-a-floor or PLUTO dwelling
+          // units, none of which can be called Class B, so 86 of the 120
+          // conflicts say it without a number rather than say it wrongly.
+          const rooms = p.hpd_class_b > 0 ? `its ${p.hpd_class_b} Class B rooms` : "its transient rooms";
+          // The label leads, rather than "In use as <label>". The section is
+          // headed Current use, so the preamble said nothing — and the labels
+          // are noun phrases with slashes in them, so no article makes "in use
+          // as school / university" read like English.
           const conflict = p.current_use_conflict
-            ? `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${unnamed ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`
+            ? `${p.current_use_label || "Non-transient use"}${unnamed ? ` (${p.current_use_name})` : ""} — ${rooms} are entitled but already occupied.`
             : null;
           if (building.length === 0 && !conflict) return null;
           const high = p.current_use_confidence === "high";
