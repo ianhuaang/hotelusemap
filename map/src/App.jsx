@@ -756,7 +756,9 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           // it shows a building with several uses better than a sentence
           // saying the uses are several — which is why there is no line here
           // for the unclear-evidence case at all.
-          const unnamed = p.current_use_name && !names.includes(p.current_use_name);
+          const lower = names.map((n) => String(n || "").toLowerCase());
+          const unnamed = p.current_use_name
+            && !lower.includes(String(p.current_use_name).toLowerCase());
           // The old wording — "city records show transient capacity, the
           // building on the ground does not" — said the opposite of the
           // finding. The rooms are there. Somebody else is running them, and
@@ -766,13 +768,22 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           // stat falls back to a C of O figure, 15-a-floor or PLUTO dwelling
           // units, none of which can be called Class B, so 86 of the 120
           // conflicts say it without a number rather than say it wrongly.
-          const rooms = p.hpd_class_b > 0 ? `its ${p.hpd_class_b} Class B rooms` : "its transient rooms";
+          const rooms = p.hpd_class_b > 0
+            ? `its ${Number(p.hpd_class_b).toLocaleString()} Class B rooms`
+            : "its transient rooms";
           // The label leads, rather than "In use as <label>". The section is
           // headed Current use, so the preamble said nothing — and the labels
           // are noun phrases with slashes in them, so no article makes "in use
           // as school / university" read like English.
+          // Two sources answer this and they are not equally sure of
+          // themselves, so the line says which one is talking. Google reports
+          // what it found at the address; the roster reports what the union
+          // calls the building, which is a claim worth attributing.
+          const lead = p.current_use_source === "htc_roster"
+            ? `Hotel Trades Council lists it as a ${(p.current_use_label || "non-hotel").toLowerCase()}`
+            : p.current_use_label || "Non-transient use";
           const conflict = p.current_use_conflict
-            ? `${p.current_use_label || "Non-transient use"}${unnamed ? ` (${p.current_use_name})` : ""} — ${rooms} are entitled but already occupied.`
+            ? `${lead}${unnamed ? ` (${p.current_use_name})` : ""} — ${rooms} are entitled but already occupied.`
             : null;
           if (building.length === 0 && !conflict) return null;
           const high = p.current_use_confidence === "high";
