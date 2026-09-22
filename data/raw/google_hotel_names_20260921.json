@@ -1,0 +1,6827 @@
+[
+  {
+    "bbl": "3012030010",
+    "address": "1464 ATLANTIC AVE",
+    "google_name": "Hotel Mirage Brooklyn",
+    "place_id": "ChIJFREVbwBbwokRCLdopLSwbUI",
+    "types": [
+      "hotel",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1464 Atlantic Ave, Brooklyn, NY 11216, USA"
+  },
+  {
+    "bbl": "3022900010",
+    "address": "160 N 12TH ST",
+    "google_name": "Coda Williamsburg",
+    "place_id": "ChIJrY2bpJVZwokRuXtpsP1Pa_A",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "160 N 12th St, Brooklyn, NY 11249, USA"
+  },
+  {
+    "bbl": "3078930062",
+    "address": "1766 E 49TH ST",
+    "google_name": "Days Inn by Wyndham Brooklyn Marine Park",
+    "place_id": "ChIJg5MAZlpDwokRK7XFXiY6YV8",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1766 E 49th St, Brooklyn, NY 11234, USA"
+  },
+  {
+    "bbl": "3013360028",
+    "address": "1768 ATLANTIC AVE",
+    "google_name": "Atlantic Motor Inn",
+    "place_id": "ChIJwQGdv3lcwokRK2sYK1dITDE",
+    "types": [
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1768 Atlantic Ave, Brooklyn, NY 11213, USA"
+  },
+  {
+    "bbl": "3014650020",
+    "address": "1668 EASTERN PKWY",
+    "google_name": "Days Inn by Wyndham Brooklyn / Eastern Parkway",
+    "place_id": "ChIJgSUNXGdcwokRuArKNVdH1ro",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1668 Eastern Pkwy, Brooklyn, NY 11233, USA"
+  },
+  {
+    "bbl": "3031180019",
+    "address": "19 BOGART ST",
+    "google_name": "Bogart Hotel",
+    "place_id": "ChIJVe1k1gBcwokR0tMJ6GAssl4",
+    "types": [
+      "hotel",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "19 Bogart St Unit 3, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3006450014",
+    "address": "134 22ND ST",
+    "google_name": "Sleep Inn Brooklyn Near Arena",
+    "place_id": "ChIJ7SQXKelawokRm6Sv5xf8Dlc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "134 22nd St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3036730014",
+    "address": "2718 FULTON ST",
+    "google_name": "Super 8 by Wyndham Brooklyn Fulton Street",
+    "place_id": "ChIJiVMwEQBdwokRwCI3OTXreYo",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2718 Fulton St, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3041530040",
+    "address": "3192 ATLANTIC AVE",
+    "google_name": "Bkway Hotel Brooklyn",
+    "place_id": "ChIJN6vp7P9dwokRJHlQFzhj1j8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "3192 Atlantic Ave, Brooklyn, NY 11208, USA"
+  },
+  {
+    "bbl": "3037030001",
+    "address": "369 GLENMORE AVE",
+    "google_name": "Hotel 369 Brooklyn",
+    "place_id": "ChIJr4UA-HtdwokRwX6TZyYse7w",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "369 Glenmore Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3007050050",
+    "address": "457 39TH ST",
+    "google_name": "Wyndham Garden Brooklyn Sunset Park",
+    "place_id": "ChIJx_0JpsdawokRsyOO6RbwbxA",
+    "types": [
+      "hotel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "457 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3007720053",
+    "address": "247 49TH ST",
+    "google_name": "Sleep Inn",
+    "place_id": "ChIJFdAs-LBawokR2SJKw7_JmBg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "247 49th St, Brooklyn, NY 11220, USA"
+  },
+  {
+    "bbl": "3036690007",
+    "address": "51 SHEFFIELD AVE",
+    "google_name": "Ramada by Wyndham Brooklyn",
+    "place_id": "ChIJJRnLAU9cwokRzZ6usPDxjv4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "51 Sheffield Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3036690005",
+    "address": "55 SHEFFIELD AVE",
+    "google_name": "Red Roof PLUS+ Brooklyn, NY",
+    "place_id": "ChIJNTC3hEJdwokRIg1JnBL4wvI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "55 Sheffield Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3006540034",
+    "address": "764 4TH AVE",
+    "google_name": "Brooklyn Way Hotel",
+    "place_id": "ChIJ_RDSpOlawokREo6D8L5rq18",
+    "types": [
+      "hotel",
+      "lodging",
+      "association_or_organization",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "764 4th Ave, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3034890167",
+    "address": "393 ROCKAWAY AVE",
+    "google_name": "Moon Hotel Brooklyn",
+    "place_id": "ChIJ7WeiLb9dwokRCHyLuXLUUuY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "393 Rockaway Ave, Brooklyn, NY 11212, USA"
+  },
+  {
+    "bbl": "3022880024",
+    "address": "80 WYTHE AVE",
+    "google_name": "Wythe Hotel",
+    "place_id": "ChIJucbIy0JZwokRvgoW5tnNHM0",
+    "types": [
+      "hotel",
+      "french_restaurant",
+      "cocktail_bar",
+      "european_restaurant",
+      "wedding_venue",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "80 Wythe Ave, Brooklyn, NY 11249, USA"
+  },
+  {
+    "bbl": "3006720035",
+    "address": "850 4TH AVE",
+    "google_name": "GL\u014d Best Western Brooklyn Nyc",
+    "place_id": "ChIJtYApb4RbwokR_-vIw49X1b4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "850 4th Ave, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3054180038",
+    "address": "928 CONEY ISLAND AVE",
+    "google_name": "Best Western Plus Brooklyn-Prospect Park",
+    "place_id": "ChIJwbvJNoFbwokR6msOWZe3ql8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "928 Coney Island Ave, Brooklyn, NY 11230, USA"
+  },
+  {
+    "bbl": "3023030001",
+    "address": "97 WYTHE AVE",
+    "google_name": "The Hoxton, Williamsburg",
+    "place_id": "ChIJuSLgZ11ZwokRdHegOodYXOs",
+    "types": [
+      "hotel",
+      "bar",
+      "event_venue",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "97 Wythe Ave, Brooklyn, NY 11249, USA"
+  },
+  {
+    "bbl": "3015760032",
+    "address": "2473 ATLANTIC AVE",
+    "google_name": "East New York Inn",
+    "place_id": "ChIJy-XnGEVcwokRapAi1AbY9FA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2473 Atlantic Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3015860008",
+    "address": "1090 MYRTLE AVE",
+    "google_name": "Brooklyn Broadway Homeless Shelter",
+    "place_id": "ChIJj8eEOwBbwokRZJAuM5jddbs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1090 Myrtle Ave, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3031310014",
+    "address": "22 SUMNER PL",
+    "google_name": "Sumner Hotel",
+    "place_id": "ChIJs0MplflbwokRRsY2Ez1DPpw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "22 Sumner Pl, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3056220043",
+    "address": "4624 13TH AVE",
+    "google_name": "Avenue Plaza Hotel",
+    "place_id": "ChIJxT3S6SxFwokRPvS3zBMr4CE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "4624 13th Ave, Brooklyn, NY 11219, USA"
+  },
+  {
+    "bbl": "3060550021",
+    "address": "636 86TH ST",
+    "google_name": "avid hotel Brooklyn - Dyker Heights by IHG",
+    "place_id": "ChIJDySOkptFwokRhES_O0VKz0M",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "636 86th St, Brooklyn, NY 11228, USA"
+  },
+  {
+    "bbl": "3020300047",
+    "address": "143 PARK AVE",
+    "google_name": "Casa Blanca Hotel Brooklyn",
+    "place_id": "ChIJgf47UshbwokRBSOPWgTr07c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "143 Park Ave, Brooklyn, NY 11205, USA"
+  },
+  {
+    "bbl": "3007000045",
+    "address": "353 38TH ST",
+    "google_name": "Comfort Inn Sunset Park / Park Slope",
+    "place_id": "ChIJ7aK_n7hawokRnkSHGU2eQVI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "353 38th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3033730010",
+    "address": "1461 BROADWAY",
+    "google_name": "Marina Hotel Brooklyn",
+    "place_id": "ChIJrSysFfVdwokRDPJadB2D-04",
+    "types": [
+      "hotel",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1461 Broadway, Brooklyn, NY 11221, USA"
+  },
+  {
+    "bbl": "3001450026",
+    "address": "216 DUFFIELD ST",
+    "google_name": "Aloft by Marriott New York Brooklyn",
+    "place_id": "ChIJf_pNZktawokReRbW-4GgV0U",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "216 Duffield St, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3001330013",
+    "address": "125 FLATBUSH AVENUE EXT",
+    "google_name": "Hampton Inn Brooklyn/Downtown",
+    "place_id": "ChIJHZKNpkpawokR2ZDLbgRD26s",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "125 Flatbush Ave Ext, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3030370008",
+    "address": "171 BUSHWICK AVE",
+    "google_name": "Bushwick Hotel",
+    "place_id": "ChIJaTAKiVVZwokRGE8hHcZUMxA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "171 Bushwick Ave, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3009080162",
+    "address": "833 39TH ST",
+    "google_name": "Holiday Inn Express Nyc Brooklyn - Sunset Park by IHG",
+    "place_id": "ChIJl1f2bjVbwokRM149FEZ4JB8",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "inn",
+      "swimming_pool",
+      "gym",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "833 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3050890064",
+    "address": "2239 CHURCH AVE",
+    "google_name": "Sleep Inn",
+    "place_id": "ChIJA6CUCFJbwokRuu2lXxpMY60",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2239 Church Ave, Brooklyn, NY 11226, USA"
+  },
+  {
+    "bbl": "3031170042",
+    "address": "193 COOK ST",
+    "google_name": "Super 8 by Wyndham Brooklyn Williamsburg",
+    "place_id": "ChIJaVIyd8pdwokRTnvEENyux5I",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "193 Cook St, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3012020032",
+    "address": "1420 ATLANTIC AVE",
+    "google_name": "Hotel Lynx",
+    "place_id": "ChIJ7T90AYVbwokR_x7WpJCEqqk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1420 Atlantic Ave, Brooklyn, NY 11216, USA"
+  },
+  {
+    "bbl": "3001450032",
+    "address": "228 DUFFIELD ST",
+    "google_name": "Sheraton Brooklyn New York Hotel",
+    "place_id": "ChIJuw1VZ0tawokRJbjRretbzwM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "228 Duffield St, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3087960065",
+    "address": "3003 EMMONS AVE",
+    "google_name": "Best Western Plus Brooklyn Bay Hotel",
+    "place_id": "ChIJ7ZyL5nhEwokRGdTeHdoXcZ4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "3003 Emmons Ave, Brooklyn, NY 11235, USA"
+  },
+  {
+    "bbl": "3013070080",
+    "address": "169 EMPIRE BLVD",
+    "google_name": "Ramada by Wyndham Brooklyn Empire Blvd",
+    "place_id": "ChIJAbDPXnJbwokRNadui8duoA8",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "169 Empire Blvd, Brooklyn, NY 11225, USA"
+  },
+  {
+    "bbl": "3014440042",
+    "address": "1691 E NEW YORK AVE",
+    "google_name": "Days Inn by Wyndham Brooklyn Crown Heights",
+    "place_id": "ChIJ42CaTVtcwokRMKACoKEXWug",
+    "types": [
+      "hotel",
+      "inn",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1691 E New York Ave, Brooklyn, NY 11212, USA"
+  },
+  {
+    "bbl": "3004200052",
+    "address": "611 DEGRAW ST",
+    "google_name": "Essence Hotel",
+    "place_id": "ChIJW7CYCUpbwokRInf828okcC0",
+    "types": [
+      "hotel",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "611 Degraw St, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3044110024",
+    "address": "12091 FLATLANDS AVE",
+    "google_name": "Oasis Motel",
+    "place_id": "ChIJLbt2NR1dwokRjt8a4inEeGg",
+    "types": [
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "12091 Flatlands Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3004130007",
+    "address": "181 3RD AVE",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Brooklyn",
+    "place_id": "ChIJqV3RpFRawokRPr-hSqO5pmk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "181 3rd Ave, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3027410017",
+    "address": "235 MEEKER AVE",
+    "google_name": "Hotel Le Jolie - A Williamsburg Brooklyn Hotel",
+    "place_id": "ChIJD9IFbVpZwokR92FuLYKsEBw",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "235 Meeker Ave, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3004340049",
+    "address": "651 UNION ST",
+    "google_name": "The Industrialist Hotel Brooklyn",
+    "place_id": "ChIJHVuWMVVawokRlWGzWDDXa4c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "651 Union St, Brooklyn, NY 11215, USA"
+  },
+  {
+    "bbl": "3072250017",
+    "address": "2632 W 13TH ST",
+    "google_name": "Best Western Brooklyn-Coney Island Inn",
+    "place_id": "ChIJ3zy-2UxEwokRF3Xq989NCjM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2632 W 13th St, Brooklyn, NY 11223, USA"
+  },
+  {
+    "bbl": "3001207503",
+    "address": "85 FLATBUSH AVENUE EXT",
+    "google_name": "The Tillary Hotel Brooklyn",
+    "place_id": "ChIJmWCzYDVawokRMF8GPwpHxXI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "85 Flatbush Ave Ext, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3001707501",
+    "address": "140 SCHERMERHORN ST",
+    "google_name": "Hilton Brooklyn New York",
+    "place_id": "ChIJTffiLUxawokR3uAU3YD2yQ4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "140 Schermerhorn St, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3001767501",
+    "address": "85 SMITH ST",
+    "google_name": "NU Hotel Brooklyn",
+    "place_id": "ChIJd_2i1k1awokRLE53o5sdZ08",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "85 Smith St, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3023717501",
+    "address": "500 METROPOLITAN AVE",
+    "google_name": "Hotel Indigo Williamsburg - Brooklyn by IHG",
+    "place_id": "ChIJtR1RIFlZwokRT4ldQZ4zi4M",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "restaurant",
+      "food",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "500 Metropolitan Ave, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3060180001",
+    "address": "8315 4TH AVE",
+    "google_name": "Best Western Gregory Hotel",
+    "place_id": "ChIJczJJtF9FwokRGr2gdcaWUUI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "8315 4th Ave, Brooklyn, NY 11209, USA"
+  },
+  {
+    "bbl": "3035210075",
+    "address": "524 ROCKAWAY AVE",
+    "google_name": "Rockaway Hotel",
+    "place_id": "ChIJAQB8u19cwokRMgE3LViaEzk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "524 Rockaway Ave, Brooklyn, NY 11212, USA"
+  },
+  {
+    "bbl": "3009140024",
+    "address": "646 39TH ST",
+    "google_name": "King Hotel Brooklyn Sunset Park",
+    "place_id": "ChIJgzu1xzpbwokRHYE_Izt_2sI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "646 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3003990045",
+    "address": "489 BALTIC ST",
+    "google_name": "The Baltic Hotel",
+    "place_id": "ChIJq6q6DFNawokRWQnXoCXMbv4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "489 Baltic St, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3024440004",
+    "address": "353 BEDFORD AVE",
+    "google_name": "Moxy Brooklyn Williamsburg",
+    "place_id": "ChIJMUSTc99bwokRYdhLTL_58pU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "353 Bedford Ave, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3079690065",
+    "address": "5244 KINGS HWY",
+    "google_name": "Essence Hotel Brooklyn - Marine Park",
+    "place_id": "ChIJ35YtmK9cwokRoDfD7o9f2vw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "5244 Kings Hwy, Brooklyn, NY 11234, USA"
+  },
+  {
+    "bbl": "3007360044",
+    "address": "4410 3RD AVE",
+    "google_name": "Quality Inn near Sunset Park",
+    "place_id": "ChIJFXSb-rlawokROb2MyUOQI8w",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "4410 3rd Ave, Brooklyn, NY 11220, USA"
+  },
+  {
+    "bbl": "3001407501",
+    "address": "333 ADAMS ST",
+    "google_name": "New York Marriott at the Brooklyn Bridge",
+    "place_id": "ChIJlV9O0UtawokRXyLCJky7XRc",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "333 Adams St, Brooklyn, NY 11201, USA"
+  },
+  {
+    "bbl": "3007050061",
+    "address": "437 39TH ST",
+    "google_name": "Days Inn by Wyndham Brooklyn",
+    "place_id": "ChIJfYIuC8dawokRCFYfQQYTezY",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "437 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3001660040",
+    "address": "46 NEVINS ST",
+    "google_name": "EVEN Hotel Brooklyn by IHG",
+    "place_id": "ChIJGc9ew7JbwokRlin0NckKwsM",
+    "types": [
+      "fitness_center",
+      "wellness_center",
+      "hotel",
+      "gym",
+      "spa",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "46 Nevins St, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3001610061",
+    "address": "291 LIVINGSTON ST",
+    "google_name": "The Livingston - JDV by Hyatt",
+    "place_id": "ChIJkyQ1IbNbwokRLq-0NTY4dkk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "291 Livingston St, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3034130108",
+    "address": "980 WYCKOFF AVE",
+    "google_name": "Red Carpet Inn Brooklyn, NY",
+    "place_id": "ChIJpxPWwSRcwokRrGgXmdvKboI",
+    "types": [
+      "hotel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "980 Wyckoff Ave, Brooklyn, NY 11237, USA"
+  },
+  {
+    "bbl": "3009800075",
+    "address": "370 4TH AVE",
+    "google_name": "Hotel Le Bleu",
+    "place_id": "ChIJyafC7v5awokRmgKhrJt1GK0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "370 4th Ave, Brooklyn, NY 11215, USA"
+  },
+  {
+    "bbl": "3075760016",
+    "address": "2249 NOSTRAND AVE",
+    "google_name": "Ramada By Wyndham Brooklyn Near Flatbush",
+    "place_id": "ChIJiXznZq1EwokRI1Q0GtGNO9c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2249 Nostrand Ave, Brooklyn, NY 11210, USA"
+  },
+  {
+    "bbl": "3031000074",
+    "address": "179 MOORE ST",
+    "google_name": "NY Moore Hostel",
+    "place_id": "ChIJbXM8y_hbwokRpiIT0G7-Tp8",
+    "types": [
+      "hostel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "179 Moore St, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3056340006",
+    "address": "1206 48TH ST",
+    "google_name": "Park House Hotel",
+    "place_id": "ChIJ42O8QS1FwokRi1k6SsRpets",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1206 48th St, Brooklyn, NY 11219, USA"
+  },
+  {
+    "bbl": "3037540033",
+    "address": "314 PENNSYLVANIA AVE",
+    "google_name": "Super 8 by Wyndham Brooklyn Pennsylvania Ave",
+    "place_id": "ChIJNTegQlFcwokRKpgpHw6VLI4",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "314 Pennsylvania Ave, Brooklyn, NY 11207, USA"
+  },
+  {
+    "bbl": "3023527502",
+    "address": "247 METROPOLITAN AVE",
+    "google_name": "Pod Brooklyn Hotel",
+    "place_id": "ChIJbSrnK15ZwokR47Xa7Wxp5zw",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "247 Metropolitan Ave, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3004410042",
+    "address": "561 PRESIDENT ST",
+    "google_name": "TownePlace Suites by Marriott New York Brooklyn",
+    "place_id": "ChIJ32IuOFdbwokRhDP6J6Bwe8Q",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "561 President St, Brooklyn, NY 11215, USA"
+  },
+  {
+    "bbl": "3004410053",
+    "address": "529 PRESIDENT ST",
+    "google_name": "Tru by Hilton Brooklyn",
+    "place_id": "ChIJIy5VbVVawokRUjK2ZrPt9AM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "529 President St, Brooklyn, NY 11215, USA"
+  },
+  {
+    "bbl": "3022950021",
+    "address": "96 WYTHE AVE",
+    "google_name": "Arlo Williamsburg",
+    "place_id": "ChIJuSLgZ11ZwokRWNfffMrarg0",
+    "types": [
+      "hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "96 Wythe Ave, Brooklyn, NY 11249, USA"
+  },
+  {
+    "bbl": "3005040020",
+    "address": "140 HAMILTON AVE",
+    "google_name": "Brooklyn Motor Inn",
+    "place_id": "ChIJBZ9p1F9awokRPmJeI5w7ouE",
+    "types": [
+      "motel",
+      "extended_stay_hotel",
+      "inn",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "140 Hamilton Ave, Brooklyn, NY 11231, USA"
+  },
+  {
+    "bbl": "3009130019",
+    "address": "536 39TH ST",
+    "google_name": "The Vue Express @ 39th Street",
+    "place_id": "ChIJVVXBScZawokRewUmPh3cGTg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "536 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3015430007",
+    "address": "73 MOTHER GASTON BOULEVARD",
+    "google_name": "The Vue Inn Brooklyn",
+    "place_id": "ChIJj3hNmRNdwokRAxHBe_K8pZo",
+    "types": [
+      "inn",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "73 Mother Gaston Blvd, Brooklyn, NY 11233, USA"
+  },
+  {
+    "bbl": "3006420013",
+    "address": "687 3RD AVE",
+    "google_name": "Red Roof PLUS+ Brooklyn - 3rd Ave",
+    "place_id": "ChIJJUKc8BtbwokR5iZTZpxOoCw",
+    "types": [
+      "hotel",
+      "motel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "687 3rd Ave, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3069540048",
+    "address": "2586 STILLWELL AVE",
+    "google_name": "Sleep Inn Coney Island",
+    "place_id": "ChIJyezy1bJFwokRFqD4y5dSwh4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2586 Stillwell Ave, Brooklyn, NY 11223, USA"
+  },
+  {
+    "bbl": "3023237503",
+    "address": "288 N 8TH ST",
+    "google_name": "The Penny Hotel Williamsburg",
+    "place_id": "ChIJPQh1gZ9ZwokROj3tU8W2V8Q",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "288 N 8th St, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3030740023",
+    "address": "101 BOGART STREET",
+    "google_name": "Nova Hotel",
+    "place_id": "ChIJ7-04NexdwokR2l-Aw9BN4sk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "101 Bogart St, Brooklyn, NY 11206, USA"
+  },
+  {
+    "bbl": "3018840067",
+    "address": "56 FRANKLIN AVE",
+    "google_name": "Aura Hotel Brooklyn",
+    "place_id": "ChIJW_Ff9-lbwokR4wSluIZLi4c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "56 Franklin Ave, Brooklyn, NY 11205, USA"
+  },
+  {
+    "bbl": "3042580006",
+    "address": "714 CONDUIT BLVD",
+    "google_name": "Linden Motor Inn",
+    "place_id": "ChIJvcKl3JVdwokRzdB2QPwgLxw",
+    "types": [
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "714 S Conduit Blvd, Brooklyn, NY 11208, USA"
+  },
+  {
+    "bbl": "3001720024",
+    "address": "300 SCHERMERHORN ST",
+    "google_name": "Holiday Inn Brooklyn Downtown by IHG",
+    "place_id": "ChIJmSP_y7JbwokRRj_zLiH8EvE",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "inn",
+      "swimming_pool",
+      "gym",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "300 Schermerhorn St, Brooklyn, NY 11217, USA"
+  },
+  {
+    "bbl": "3005120025",
+    "address": "17 SEABRING ST",
+    "google_name": "The Lodge Red Hook",
+    "place_id": "ChIJ74XLmtFbwokRLpC56ada9Ss",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "17 Seabring St, Brooklyn, NY 11231, USA"
+  },
+  {
+    "bbl": "3018770001",
+    "address": "29 RYERSON ST",
+    "google_name": "Sela V Hotel",
+    "place_id": "ChIJ6868NMFbwokRGZaD_Y6_lT8",
+    "types": [
+      "hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "29 Ryerson St, Brooklyn, NY 11205, USA"
+  },
+  {
+    "bbl": "3074620025",
+    "address": "2646 E 18TH ST",
+    "google_name": "Sleep Inn Brooklyn - Sheepshead Bay",
+    "place_id": "ChIJ8QJf0R9FwokRIjnlJS8GBc0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2646 E 18th St, Brooklyn, NY 11235, USA"
+  },
+  {
+    "bbl": "3034890254",
+    "address": "1755 PITKIN AVE",
+    "google_name": "Rodeway Inn Brooklyn - Brownsville",
+    "place_id": "ChIJXfTbjPJdwokRLlK0Q19ElVg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1755 Pitkin Ave, Brooklyn, NY 11212, USA"
+  },
+  {
+    "bbl": "3039540045",
+    "address": "2969 ATLANTIC AVE",
+    "google_name": "Riviera Motor Inn",
+    "place_id": "ChIJ4wAtQLRdwokRWybegvmS4bw",
+    "types": [
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2969 Atlantic Ave, Brooklyn, NY 11208, USA"
+  },
+  {
+    "bbl": "3088150530",
+    "address": "3206 EMMONS AVE",
+    "google_name": "Bayview Inn Motel",
+    "place_id": "ChIJl5KWsNBDwokReyA4n6pamh0",
+    "types": [
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "3206 Emmons Ave, Brooklyn, NY 11235, USA"
+  },
+  {
+    "bbl": "3023717501",
+    "address": "500 METROPOLITAN AVE",
+    "google_name": "Hotel Indigo Williamsburg - Brooklyn by IHG",
+    "place_id": "ChIJtR1RIFlZwokRT4ldQZ4zi4M",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "restaurant",
+      "food",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "500 Metropolitan Ave, Brooklyn, NY 11211, USA"
+  },
+  {
+    "bbl": "3018650072",
+    "address": "35 HERKIMER PL",
+    "google_name": "The Bed Stuy Hotel",
+    "place_id": "ChIJhY4uttVbwokRP0NzGrFvpjw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "35 Herkimer Pl, Brooklyn, NY 11216, USA"
+  },
+  {
+    "bbl": "3009160012",
+    "address": "820 39TH ST",
+    "google_name": "Knights Inn Brooklyn Sunset Park",
+    "place_id": "ChIJpTBdEmZbwokR1kbdpmOlvhA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "820 39th St, Brooklyn, NY 11232, USA"
+  },
+  {
+    "bbl": "3046040052",
+    "address": "599 UTICA AVE",
+    "google_name": "Utica Hotel",
+    "place_id": "ChIJy5x9UoNcwokRXFBe7uCNrTc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "599 Utica Ave, Brooklyn, NY 11203, USA"
+  },
+  {
+    "bbl": "3057170013",
+    "address": "1108 60TH ST",
+    "google_name": "Umbrella Hotel Brooklyn",
+    "place_id": "ChIJg9B-jxNFwokRZYGu9pUEnDw",
+    "types": [
+      "hotel",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1108 60th St, Brooklyn, NY 11219, USA"
+  },
+  {
+    "bbl": "3022830001",
+    "address": "111 N 12TH ST",
+    "google_name": "The William Vale",
+    "place_id": "ChIJT0OO0UJZwokRDV4t1oFOrso",
+    "types": [
+      "hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "111 N 12th St, Brooklyn, NY 11249, USA"
+  },
+  {
+    "bbl": "1004097501",
+    "address": "100 ORCHARD ST",
+    "google_name": "The Historic Blue Moon Hotel",
+    "place_id": "ChIJjadrJIdZwokRg-ePuGXTdSw",
+    "types": [
+      "hotel",
+      "clothing_store",
+      "store",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "100 Orchard St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1008400001",
+    "address": "69 W 38TH ST",
+    "google_name": "The Americana Inn",
+    "place_id": "ChIJnZMMbqpZwokR24YkG4iAQUo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "69 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1000020002",
+    "address": "10 SOUTH STREET",
+    "google_name": "Casa Cipriani New York",
+    "place_id": "ChIJ0dVHoBRawokRgbrPq2vhIxc",
+    "types": [
+      "hotel",
+      "wellness_center",
+      "spa",
+      "lodging",
+      "restaurant",
+      "food",
+      "association_or_organization",
+      "point_of_interest",
+      "health",
+      "establishment"
+    ],
+    "formatted_address": "10 South St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1009980023",
+    "address": "119 W 45TH ST",
+    "google_name": "Merrion Row Hotel and Public House",
+    "place_id": "ChIJnfbJe1VYwokRclrtuzRUnOs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "119 W 45th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000390041",
+    "address": "120 WATER ST",
+    "google_name": "Hotel Indigo Nyc Downtown - Wall Street by IHG",
+    "place_id": "ChIJB7hsPRZawokRxYg4aRlPx-Q",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "120 Water St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1013040041",
+    "address": "150 E 50TH ST",
+    "google_name": "San Carlos Hotel",
+    "place_id": "ChIJ3yce1fxYwokRUCx9dU2c1MA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "150 E 50th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1000520008",
+    "address": "133 GREENWICH ST",
+    "google_name": "The Cloud One Hotel New York-Downtown",
+    "place_id": "ChIJizh4grZbwokRQ42Zyw5bHgw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "133 Greenwich St, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1008060013",
+    "address": "135 W 30TH ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/Chelsea",
+    "place_id": "ChIJFQEgD69ZwokR3_UUCqb0gTg",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "135 W 30th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1013020030",
+    "address": "145 E 47TH ST",
+    "google_name": "The Bernic Hotel New York City, Tapestry Collection by Hilton",
+    "place_id": "ChIJ_at7Qv1YwokR2qpt_r6A1IM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 - 147 E 47th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1004510039",
+    "address": "147 1ST AVE",
+    "google_name": "East Village Hotel",
+    "place_id": "ChIJ53BQpp1ZwokR4P5e0Nk5e5s",
+    "types": [
+      "extended_stay_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "147 1st Ave, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1008180076",
+    "address": "46 W 17TH ST",
+    "google_name": "Chelsea Inn Hotel",
+    "place_id": "ChIJxWJ90qJZwokRgqGGYyoL2qs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "46 West 17th Street, Between 5th and 6th Avenue, 46 W 17th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1000720007",
+    "address": "151 MAIDEN LN",
+    "google_name": "AC Hotel New York Downtown",
+    "place_id": "ChIJe7ENmD1awokRvlF2ClL9mwI",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "151 Maiden Ln, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1004790029",
+    "address": "30 KENMARE ST",
+    "google_name": "The Nolitan",
+    "place_id": "ChIJB6VxnIhZwokRJMCgC4HaAQM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "30 Kenmare St, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1008590075",
+    "address": "16 E 30TH ST",
+    "google_name": "Best Western Premier Empire State Hotel",
+    "place_id": "ChIJp3GR1qdZwokRdrnhmXsEBqE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "16 E 30th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1000790010",
+    "address": "17 JOHN STREET",
+    "google_name": "17John Hotel",
+    "place_id": "ChIJST8EMBhawokRmJFdnLmsAXI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "17 John St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1012270029",
+    "address": "201 W 79TH ST",
+    "google_name": "The Lucerne Hotel",
+    "place_id": "ChIJ19oTTvRYwokRVikZzFtQBuY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "201 W 79th St, New York, NY 10024, USA"
+  },
+  {
+    "bbl": "1007720047",
+    "address": "204 W 23RD ST",
+    "google_name": "Chelsea Savoy Hotel",
+    "place_id": "ChIJmwcyPbtZwokRqukL1h9BzK0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "204 W 23rd St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1010000001",
+    "address": "701 7TH AVE",
+    "google_name": "The Times Square EDITION",
+    "place_id": "ChIJ0zMGg5BZwokRmuMvKn7Fwz4",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "701 7th Ave, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1004277507",
+    "address": "215 CHRYSTIE ST",
+    "google_name": "PUBLIC Hotel",
+    "place_id": "ChIJYY-OM4RZwokRvA7ECx3HRZw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "215 Chrystie St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1004920025",
+    "address": "220 BOWERY",
+    "google_name": "The Nolita Express Hostel",
+    "place_id": "ChIJ6YHEEPVZwokRwv87FM-lBNo",
+    "types": [
+      "hostel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "220 Bowery, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1019317501",
+    "address": "233 W 125TH ST",
+    "google_name": "Renaissance New York Harlem Hotel",
+    "place_id": "ChIJIZMoCSz3wokRNB_09wq3BJY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "233 W 125th St, New York, NY 10027, USA"
+  },
+  {
+    "bbl": "1010217501",
+    "address": "233 W 49TH ST",
+    "google_name": "The Pearl Hotel New York",
+    "place_id": "ChIJz1fgZlZYwokRHsV8DDTh-aM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "233 W 49th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1011670055",
+    "address": "242 W 76TH ST",
+    "google_name": "The Wallace",
+    "place_id": "ChIJK0gmy4lYwokRIEXVUe5UrzE",
+    "types": [
+      "hotel",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "242 W 76th St, New York, NY 10023, USA"
+  },
+  {
+    "bbl": "1020380012",
+    "address": "75 MACOMBS PL",
+    "google_name": "Harlem Vista Hotel",
+    "place_id": "ChIJ2cvI5X_2wokRnwDcLr9L3os",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "75 Macombs Pl, New York, NY 10039, USA"
+  },
+  {
+    "bbl": "1012420039",
+    "address": "2528 BROADWAY",
+    "google_name": "Newton",
+    "place_id": "ChIJKV8nGij2wokRBbBYLAxxsyU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2528 Broadway, New York, NY 10025, USA"
+  },
+  {
+    "bbl": "1007450040",
+    "address": "300 W 22ND ST",
+    "google_name": "The Moore",
+    "place_id": "ChIJJXwYgjJZwokRBL1iCVrg9y8",
+    "types": [
+      "hotel",
+      "wine_bar",
+      "bar",
+      "coffee_shop",
+      "cafe",
+      "food_store",
+      "store",
+      "lodging",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "300 W 22nd St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1001237502",
+    "address": "27 BARCLAY ST",
+    "google_name": "Four Seasons Hotel New York Downtown",
+    "place_id": "ChIJiz9V4xhawokRorqq7eXaNxM",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "wellness_center",
+      "resort_hotel",
+      "wedding_venue",
+      "spa",
+      "event_venue",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "27 Barclay St, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1007380025",
+    "address": "317 W 14TH ST",
+    "google_name": "Chelsea Pines Inn",
+    "place_id": "ChIJnYYGU75ZwokRFQBV3A_Jlnk",
+    "types": [
+      "inn",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "317 W 14th St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1007620023",
+    "address": "321 W 38TH ST",
+    "google_name": "Hotel 38 New York City, Tapestry Collection by Hilton",
+    "place_id": "ChIJGR1-M3RZwokRn1cQSkUv7gM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "321 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010390017",
+    "address": "319 W 48TH ST",
+    "google_name": "Belvedere Hotel",
+    "place_id": "ChIJ0U-MulZYwokRAqJQCS7sUbw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "319 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008610054",
+    "address": "32 E 32ND ST",
+    "google_name": "Hotel 32 32",
+    "place_id": "ChIJffqrHqhZwokRXrmHxEOIpvk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "32 E 32nd St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1000080039",
+    "address": "32 PEARL ST",
+    "google_name": "Hampton Inn Manhattan/Downtown-Financial District",
+    "place_id": "ChIJTxnhdxRawokRh21EGO7ZEqs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "32 Pearl St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1007630060",
+    "address": "340 W 40th St",
+    "google_name": "Delta Hotels New York Times Square",
+    "place_id": "ChIJq_1_yMtZwokRpgXIRjhCx6c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "340 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1005300036",
+    "address": "338 BOWERY",
+    "google_name": "Now Now NoHo",
+    "place_id": "ChIJy7aKJYVZwokRCtv3epi2lBw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "338 Bowery, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1007630067",
+    "address": "350 W 40TH ST",
+    "google_name": "DoubleTree by Hilton Hotel New York Times Square West",
+    "place_id": "ChIJtZ84yVJYwokROvOLbnIOsi8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "350 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010007502",
+    "address": "150 W 48TH ST",
+    "google_name": "Hampton Inn by Hilton New York Times Square",
+    "place_id": "ChIJxWr-cYtZwokRHsR76Q6CPdc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "150 W 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1007610028",
+    "address": "307 W 37TH ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/Times Square West",
+    "place_id": "ChIJjZabD61ZwokRnRwUJ6aFHJo",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "307 West 37th Street (West 37th Street &, 8th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013020043",
+    "address": "148 E 48TH ST",
+    "google_name": "Residence Inn by Marriott New York Manhattan/Midtown East",
+    "place_id": "ChIJ26JjQP1YwokRm5mHF_sVyCI",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "148 E 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1007840054",
+    "address": "218 W 35TH ST",
+    "google_name": "Renaissance New York Midtown Hotel",
+    "place_id": "ChIJD4pwJaxZwokR0qqTEwVPsB0",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "218 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008650001",
+    "address": "373 5TH AVE",
+    "google_name": "U Hotel Fifth Avenue",
+    "place_id": "ChIJ9fnl56lZwokR3sfRq4PmKfk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "373 5th Ave, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1001870016",
+    "address": "377 GREENWICH ST",
+    "google_name": "The Greenwich Hotel",
+    "place_id": "ChIJTWkuhfVZwokRvaommqZ2oqA",
+    "types": [
+      "hotel",
+      "spa",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "377 Greenwich St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1009930043",
+    "address": "120 W 41ST ST",
+    "google_name": "LUMA Hotel Times Square",
+    "place_id": "ChIJKRwA36pZwokRTKRKKqL87XY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "120 W 41st St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008600037",
+    "address": "444 Park Ave S",
+    "google_name": "Hotel Park Ave NYC",
+    "place_id": "ChIJMw2d_qdZwokRuY3Q0AwaIlw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "444 Park Ave S, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1000787508",
+    "address": "1 DUTCH ST",
+    "google_name": "One Dutch Hotel",
+    "place_id": "ChIJH1NRVABbwokRd8-a3RuPjpk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1 Dutch St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1009990048",
+    "address": "132 W 47TH ST",
+    "google_name": "Sanctuary Hotel New York",
+    "place_id": "ChIJMdMjiVVYwokRqVlf2umuDqI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "132 W 47th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010180018",
+    "address": "228 W 47TH ST",
+    "google_name": "Hotel Edison",
+    "place_id": "ChIJq38lzVVYwokRDhgb0tE_sC0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "228 W 47th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010010055",
+    "address": "142 W 49TH ST",
+    "google_name": "Radio City Apartments",
+    "place_id": "ChIJAQAAAFtYwokRumD7ih9C_fg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "142 W 49th St, New York, NY 10020, USA"
+  },
+  {
+    "bbl": "1008380054",
+    "address": "4 W 37TH ST",
+    "google_name": "The Draper New York, Tapestry Collection by Hilton",
+    "place_id": "ChIJEamrNStZwokRvl4qHsje5xQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "4-6 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008370074",
+    "address": "52 W 36TH ST",
+    "google_name": "Hyatt Place New York/Midtown-South",
+    "place_id": "ChIJq7MzgKlZwokRzkp9sskfGV8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "52 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008320062",
+    "address": "30 W 31ST ST",
+    "google_name": "Hyatt Herald Square New York",
+    "place_id": "ChIJVdvEvqhZwokR1mgl1dOMO7U",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "30 W 31st St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1000400016",
+    "address": "52 WILLIAM STREET",
+    "google_name": "Radisson Hotel New York Wall Street",
+    "place_id": "ChIJ-ziaVBZawokRj7B7C4qAWPY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "52 William St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1013090044",
+    "address": "152 E 55TH ST",
+    "google_name": "Blue Angel Hotel NYC, an Ascend Collection Hotel",
+    "place_id": "ChIJt0cL3llZwokRKAzWJcNdwZE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "152 E 55th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1012710050",
+    "address": "18 W 56TH ST",
+    "google_name": "The Whitby Hotel",
+    "place_id": "ChIJzeSWP_pYwokR1RJY_nPngHY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "18 W 56th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010000064",
+    "address": "170 W 48TH ST",
+    "google_name": "voco Times Square - Broadway by IHG",
+    "place_id": "ChIJ7U7M43hZwokRmklgDjROoNE",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "gym",
+      "sports_activity_location",
+      "restaurant",
+      "food",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "170 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012727503",
+    "address": "730 5TH AVE",
+    "google_name": "Aman New York",
+    "place_id": "ChIJM-uWC9VZwokRMm_7bwjHFBg",
+    "types": [
+      "hotel",
+      "condominium_complex",
+      "spa",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "The Crown Building, 730 5th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010370034",
+    "address": "305 W 46TH ST",
+    "google_name": "Hotel Riu Plaza New York Times Square",
+    "place_id": "ChIJDwzsBVRYwokRvSHYftloJ1I",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "305 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012440033",
+    "address": "80 RIVERSIDE DR",
+    "google_name": "Riverside Tower Hotel",
+    "place_id": "ChIJ7dNP6odYwokRzsg_22RfqGI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "80 Riverside Dr, New York, NY 10024, USA"
+  },
+  {
+    "bbl": "1001367505",
+    "address": "85 W BROADWAY",
+    "google_name": "Smyth Tribeca",
+    "place_id": "ChIJ_1qwJx9awokRl0bFrNhhRBs",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "85 W Broadway, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1012350029",
+    "address": "201 W 87TH ST",
+    "google_name": "Central Park West Hostel",
+    "place_id": "ChIJWz81f4RYwokRaoWUVix3SPU",
+    "types": [
+      "hostel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "201 W 87th St, New York, NY 10024, USA"
+  },
+  {
+    "bbl": "1001960024",
+    "address": "88 WALKER ST",
+    "google_name": "Best Western Plus Soho Hotel",
+    "place_id": "ChIJT0GkB4pZwokRboWDh4z3aUE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "88 Walker St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1000390001",
+    "address": "88 WALL ST",
+    "google_name": "The Wall Street Hotel",
+    "place_id": "ChIJgdS9yu1bwokRQqyymeQoiyU",
+    "types": [
+      "hotel",
+      "banquet_hall",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "88 Wall St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1003030015",
+    "address": "93 BOWERY",
+    "google_name": "Wyndham Garden Chinatown",
+    "place_id": "ChIJCQoR-CdawokR-IYo_NWTz2s",
+    "types": [
+      "hotel",
+      "inn",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "93 Bowery, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010270063",
+    "address": "940 8TH AVE",
+    "google_name": "Nap York Sleep Station - Central Park",
+    "place_id": "ChIJWwratnNZwokRjStcBA1_iJY",
+    "types": [
+      "rest_stop",
+      "hotel",
+      "hostel",
+      "storage",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "940 8th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007367501",
+    "address": "515 9TH AVENUE",
+    "google_name": "Cassa Hotel Times Square",
+    "place_id": "ChIJG5BtVK1ZwokR9mHk8UmezSE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "515 9th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1000080051",
+    "address": "6 WATER ST",
+    "google_name": "Hilton Garden Inn NYC Financial Center/Manhattan Downtown",
+    "place_id": "ChIJt6M_eBRawokR-7Mx2YntHGk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "6 Water St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1002927502",
+    "address": "94 CANAL ST",
+    "google_name": "Canal Loft Hotel",
+    "place_id": "ChIJw76GbyhawokR1SQ66WWtH5E",
+    "types": [
+      "hotel",
+      "bed_and_breakfast",
+      "guest_house",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "94 Canal St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1007600051",
+    "address": "312 W 37TH ST",
+    "google_name": "Homewood Suites by Hilton New York/Midtown Manhattan Times Square-South, NY",
+    "place_id": "ChIJ_6umC61ZwokRUfAD4mkkMIs",
+    "types": [
+      "extended_stay_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "312 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1004177501",
+    "address": "190 ALLEN ST",
+    "google_name": "SIXTY LES Hotel",
+    "place_id": "ChIJLbf69oNZwokRiEWqaFf1FcM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "190 Allen St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1000920014",
+    "address": "49 ANN ST",
+    "google_name": "Aloft by Marriott Manhattan Downtown - Financial District",
+    "place_id": "ChIJV1SvDBhawokR7cvd4TTrcHA",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "49-53 Ann St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1008680064",
+    "address": "16 E 39TH ST",
+    "google_name": "Hyatt Centric Midtown 5th Avenue New York",
+    "place_id": "ChIJOUC8wABZwokRMd9NfbSerqs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "16 E 39th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1004250023",
+    "address": "11 RIVINGTON ST",
+    "google_name": "Off Soho Suites",
+    "place_id": "ChIJp7VyeoZZwokRWeeZAd0UlxU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "11 Rivington St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1013180029",
+    "address": "837 2ND AVE",
+    "google_name": "Little Charlie Hotel",
+    "place_id": "ChIJTS9Z_DpZwokR4G7hh20R6os",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "837 2nd Ave, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008370015",
+    "address": "45 W 35TH ST",
+    "google_name": "Kixby hotel",
+    "place_id": "ChIJs7IqeKlZwokRlpCSZp2ALCE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "45 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1011660035",
+    "address": "2130 Broadway",
+    "google_name": "Hotel Beacon",
+    "place_id": "ChIJk_trlYlYwokR_-YnHRnfqYk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2130 Broadway, New York, NY 10023, USA"
+  },
+  {
+    "bbl": "1010180006",
+    "address": "235 W 46TH ST",
+    "google_name": "Paramount Times Square - A Generator Hotel",
+    "place_id": "ChIJmzdAP1RYwokRmZAtbkFvlq4",
+    "types": [
+      "hotel",
+      "bar",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "235 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1011680056",
+    "address": "2175 BROADWAY",
+    "google_name": "Hotel Belleclaire",
+    "place_id": "ChIJZ-wCRohYwokRvnOFofo8F7A",
+    "types": [
+      "hotel",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2175 Broadway, New York, NY 10024, USA"
+  },
+  {
+    "bbl": "1012420024",
+    "address": "215 W 94TH ST",
+    "google_name": "Night Hotel Broadway",
+    "place_id": "ChIJQ1cUVOv3wokRzKlMKM3NNRo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "215 W 94th St, New York, NY 10025, USA"
+  },
+  {
+    "bbl": "1008020026",
+    "address": "125 W 26TH ST",
+    "google_name": "Holiday Inn Manhattan 6th Ave - Chelsea by IHG",
+    "place_id": "ChIJXzk5v6hZwokRIoDdundSlro",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "inn",
+      "swimming_pool",
+      "lodging",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "125 W 26th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008390027",
+    "address": "21 W 37TH ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Fifth Avenue",
+    "place_id": "ChIJu7vQO6pZwokR0H_dAkHRyXQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "21 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010070049",
+    "address": "136 W 55TH ST",
+    "google_name": "The Blakely by LuxUrban",
+    "place_id": "ChIJlQEQe1RYwokRDHQuwLVVKQc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "136 W 55th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007297506",
+    "address": "438 W 33RD ST",
+    "google_name": "Pendry Manhattan West",
+    "place_id": "ChIJx2VWm9hZwokRw1uQ1viF7Dw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "438 W 33rd St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1010350009",
+    "address": "343 W 44TH ST",
+    "google_name": "Ramada by Wyndham New York Times Square West",
+    "place_id": "ChIJXfjqkJZZwokRTwca33qw-00",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "343 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010250044",
+    "address": "230 W 54TH ST",
+    "google_name": "Ameritania Hotel at Times Square",
+    "place_id": "ChIJHUH-CPhYwokRmzMne93wopY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "230 W 54th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008280053",
+    "address": "1155 BROADWAY",
+    "google_name": "Broadway Plaza Hotel",
+    "place_id": "ChIJNSqI2KVZwokRqDfSCaCYgK4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1155 Broadway, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1002820080",
+    "address": "79 DIVISION ST",
+    "google_name": "Hotel Mimosa",
+    "place_id": "ChIJk2yujyhawokRi0qtaKeyRBM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "79 Division St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010080060",
+    "address": "160 W 56TH ST",
+    "google_name": "The Carnegie Hotel",
+    "place_id": "ChIJA-_6LfhYwokROUBMo0Hs8lk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "160 W 56th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010177501",
+    "address": "1535 BROADWAY",
+    "google_name": "New York Marriott Marquis",
+    "place_id": "ChIJiVXoAFVYwokREqPijh-d8xg",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1535 Broadway, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000550016",
+    "address": "85 WEST ST",
+    "google_name": "New York Marriott Downtown",
+    "place_id": "ChIJlYpIkBBawokRjyd8kYQpUrc",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "85 West Street at, Albany St, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1010180044",
+    "address": "224 W 47TH ST",
+    "google_name": "Cambria Hotel New York Times Square",
+    "place_id": "ChIJlRe-jlZZwokRyqLKhb_YeSI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "224 W 47th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1005940115",
+    "address": "231 HUDSON ST",
+    "google_name": "Arlo SoHo",
+    "place_id": "ChIJVTHBbqhZwokRl4ESqCTeHSQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "231 Hudson St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1008000050",
+    "address": "113 W 24TH ST",
+    "google_name": "Motto by Hilton New York City Chelsea",
+    "place_id": "ChIJq-KL4aRZwokR0kfko980E8U",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "113 W 24th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008000049",
+    "address": "112 W 25TH ST",
+    "google_name": "Renaissance New York Chelsea Hotel",
+    "place_id": "ChIJXX4aOZ1ZwokR1qF-xy_4blc",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "112 W 25th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007720064",
+    "address": "222 W 23RD ST",
+    "google_name": "The Hotel Chelsea",
+    "place_id": "ChIJZ2_TLytZwokR03K2GtOG9h8",
+    "types": [
+      "hotel",
+      "spanish_restaurant",
+      "cocktail_bar",
+      "spa",
+      "lodging",
+      "european_restaurant",
+      "event_venue",
+      "bar",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "222 W 23rd St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1012600010",
+    "address": "55 W 44TH ST",
+    "google_name": "City Club Hotel",
+    "place_id": "ChIJTzk87v9YwokR2exR3ZVeQRg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "55 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1003040016",
+    "address": "125 BOWERY",
+    "google_name": "CityNest New York",
+    "place_id": "ChIJ5357EjxZwokRQ6J2D3g1d74",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "125 Bowery, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010007501",
+    "address": "145 W 47TH ST",
+    "google_name": "Hotel Riu Plaza Manhattan Times Square",
+    "place_id": "ChIJNcZg81VYwokRIcQV-JL4Ewc",
+    "types": [
+      "hotel",
+      "breakfast_restaurant",
+      "lodging",
+      "bar",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 W 47th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000560001",
+    "address": "140 WASHINGTON ST",
+    "google_name": "Club Quarters Hotel World Trade Center, New York",
+    "place_id": "ChIJ9TRDoBBawokR5gdcflPqvjE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "140 Washington St, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1012677502",
+    "address": "11 W 51ST ST",
+    "google_name": "The Jewel Hotel, New York",
+    "place_id": "ChIJNUB2OPlYwokRA7Xe8PHIZEg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "11 W 51st St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012997501",
+    "address": "128 E 45TH ST",
+    "google_name": "Club Quarters Hotel Grand Central, New York",
+    "place_id": "ChIJobQtYwJZwokRSkKFrVxEGik",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "128 E 45th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1007600018",
+    "address": "343 W 36TH ST",
+    "google_name": "voco Times Square South New York by IHG",
+    "place_id": "ChIJl64LeK1ZwokR7u2JvudWqgM",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "swimming_pool",
+      "lodging",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "restaurant",
+      "food",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "343 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008040022",
+    "address": "123 W 28TH ST",
+    "google_name": "Cambria Hotel New York - Chelsea",
+    "place_id": "ChIJrRHMfq9ZwokRNaSdL_tQarc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "123 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1000530038",
+    "address": "100 GREENWICH ST",
+    "google_name": "Courtyard by Marriott New York World Trade Center Area",
+    "place_id": "ChIJdZHivRxbwokRw9xGzLgj2es",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "100 Greenwich St, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1000167512",
+    "address": "102 N END AVE",
+    "google_name": "Conrad New York Downtown",
+    "place_id": "ChIJ-8HrdxtawokREfw5AkGs_Os",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "102 N End Ave, New York, NY 10282, USA"
+  },
+  {
+    "bbl": "1004610003",
+    "address": "25 COOPER SQ",
+    "google_name": "The Standard, East Village",
+    "place_id": "ChIJgWmjF5tZwokRiP8Uj3l8gXE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "25 Cooper Sq, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1019297504",
+    "address": "2296 FREDERICK DOUGLASS BLVD",
+    "google_name": "Aloft by Marriott Harlem",
+    "place_id": "ChIJ67XxORP2wokR_aG7N_4gWRw",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2296 Frederick Douglass Blvd, New York, NY 10027, USA"
+  },
+  {
+    "bbl": "1001070038",
+    "address": "33 PECK SLIP",
+    "google_name": "33 Hotel New York City Seaport",
+    "place_id": "ChIJofRpC1lbwokR8F7WQw6KpV8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "33 Peck Slip, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1002330002",
+    "address": "9 CROSBY ST",
+    "google_name": "NOMO SOHO",
+    "place_id": "ChIJM8mGj4lZwokRSbZBvNOVNKM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "9 Crosby St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1008670055",
+    "address": "22 E 38TH ST",
+    "google_name": "Hotel NH Collection New York Madison Avenue",
+    "place_id": "ChIJ00Iw0gBZwokRPcEnWA-nhJE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "22 E 38th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1012750044",
+    "address": "52 E 41ST ST",
+    "google_name": "Eurostars The Chemists' Club Hotel",
+    "place_id": "ChIJ3TH9CwFZwokRB7gdOhj0exc",
+    "types": [
+      "hotel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "52 E 41st St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1004960001",
+    "address": "79 CROSBY ST",
+    "google_name": "Crosby Street Hotel",
+    "place_id": "ChIJpYIgKY9ZwokRMt2wXGRZ1fg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "79 Crosby St, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1008340011",
+    "address": "49 W 32ND ST",
+    "google_name": "Martinique New York on Broadway, Curio Collection by Hilton",
+    "place_id": "ChIJB4phUWpZwokRAnRxYaGq2DU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "49 W 32nd St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007407502",
+    "address": "355 W 16TH ST",
+    "google_name": "Dream Downtown, by Hyatt",
+    "place_id": "ChIJ__zF2L5ZwokRMbXNYfOoiX8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "355 W 16th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1010140058",
+    "address": "270 W 43RD ST",
+    "google_name": "The Westin New York at Times Square",
+    "place_id": "ChIJheoaY1NYwokRpkXrShShXe8",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "270 W 43rd St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010117501",
+    "address": "160 CENTRAL PARK S",
+    "google_name": "JW Marriott Essex House New York",
+    "place_id": "ChIJtVazIfdYwokRgdtzmjoI1zQ",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "160 Central Park S, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008820001",
+    "address": "365 PARK AVE S",
+    "google_name": "Hotel Giraffe by Library Hotel Collection",
+    "place_id": "ChIJPS6wE6dZwokR9SZxhHay_FI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "365 Park Ave S, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1012810061",
+    "address": "16 E 46TH ST",
+    "google_name": "The Gotham Hotel NY",
+    "place_id": "ChIJk_AcE_5YwokR7431QLgRGAM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "16 E 46th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1013240034",
+    "address": "230 E 51ST ST",
+    "google_name": "Pod 51",
+    "place_id": "ChIJ61dEHeNYwokR7ZRDdDhMsys",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "230 E 51st St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1008530001",
+    "address": "5 MADISON AVE",
+    "google_name": "The New York EDITION",
+    "place_id": "ChIJY8Z4tKZZwokRjgZpfMYMV44",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "5 Madison Ave, New York, NY 10010, USA"
+  },
+  {
+    "bbl": "1012630055",
+    "address": "32 W 48TH ST",
+    "google_name": "Kimpton Era Midtown New York",
+    "place_id": "ChIJY2DPjVdZwokRYp3WxyI4vMg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "32 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1003060029",
+    "address": "79 ELDRIDGE ST",
+    "google_name": "Days Inn by Wyndham New York Chinatown",
+    "place_id": "ChIJ0QnwY6pZwokRAN8ucy8bXXc",
+    "types": [
+      "hotel",
+      "motel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "79 Eldridge St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1007340007",
+    "address": "449 W 36TH ST",
+    "google_name": "Casamia 36 Hotel",
+    "place_id": "ChIJmSfUtM9ZwokRBOJ-q3zGWxI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "449 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007590026",
+    "address": "321 W 35TH ST",
+    "google_name": "EVEN Hotel New York - Times Square South by IHG",
+    "place_id": "ChIJs7KKkK1ZwokRr0u0PJsZNJ4",
+    "types": [
+      "fitness_center",
+      "wellness_center",
+      "gym",
+      "spa",
+      "hotel",
+      "sports_activity_location",
+      "lodging",
+      "point_of_interest",
+      "health",
+      "establishment"
+    ],
+    "formatted_address": "321 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1013187502",
+    "address": "221 E 44TH ST",
+    "google_name": "EVEN Hotel New York - Midtown East by IHG",
+    "place_id": "ChIJxWdiwwJZwokRWbr59FIxWhU",
+    "types": [
+      "fitness_center",
+      "wellness_center",
+      "spa",
+      "hotel",
+      "lodging",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "221 E 44th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008370067",
+    "address": "38 W 36TH ST",
+    "google_name": "Executive Hotel Le Soleil New York",
+    "place_id": "ChIJoaGfh6lZwokRvDNWPqHDgQc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "38 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008010071",
+    "address": "152 W 26TH ST",
+    "google_name": "Hilton New York Fashion District",
+    "place_id": "ChIJB7VeR6VZwokRjvql6CK49FM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "152 W 26th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008370006",
+    "address": "63 W 35TH ST",
+    "google_name": "Hilton Garden Inn New York/West 35th Street",
+    "place_id": "ChIJq0GzZKlZwokRKu6tu8pJ6Cg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "63 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1002110029",
+    "address": "370 CANAL ST",
+    "google_name": "Sheraton Tribeca New York Hotel",
+    "place_id": "ChIJ53en5IpZwokR3FOXk9Da3gY",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "370 Canal St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1007570017",
+    "address": "325 W 33RD ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Midtown Manhattan/Penn Station",
+    "place_id": "ChIJ8yCgBrJZwokRL09ISkkQwBs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "325 W 33rd St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008040020",
+    "address": "127 W 28TH ST",
+    "google_name": "Hotel Hayden",
+    "place_id": "ChIJCZTGeK9ZwokR_50__x4o8Is",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "127 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008600061",
+    "address": "131 MADISON AVE",
+    "google_name": "Hotel AKA NoMad",
+    "place_id": "ChIJv6KqDahZwokRhKsCVGiUoJg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "131 Madison Ave, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1000370013",
+    "address": "129 FRONT ST",
+    "google_name": "Eurostars Wall Street",
+    "place_id": "ChIJ7xcL8z1awokRPFmLkB9tXHc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "129 Front St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1006280004",
+    "address": "18 9TH AVE",
+    "google_name": "Gansevoort Meatpacking NYC",
+    "place_id": "ChIJE02ojL9ZwokROU4RMbSR_HI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "18 9th Ave, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1006450011",
+    "address": "848 WASHINGTON ST",
+    "google_name": "The Standard, High Line",
+    "place_id": "ChIJN-93ZsBZwokRKqmdupb-XFA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "848 Washington St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1007630054",
+    "address": "326 W 40TH ST",
+    "google_name": "Four Points by Sheraton Midtown - Times Square",
+    "place_id": "ChIJU_0s01JYwokRvTNwLmqQDEY",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "326 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007630056",
+    "address": "330 W 40TH ST",
+    "google_name": "Fairfield by Marriott New York Manhattan Times Square",
+    "place_id": "ChIJYwxW1VJYwokRTZu3DY8tRwI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "330 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1000680028",
+    "address": "15 GOLD ST",
+    "google_name": "Gild Hall, A Thompson Hotel, by Hyatt",
+    "place_id": "ChIJNfKP5xdawokRyCFSWap_ogE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "15 Gold St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1010760051",
+    "address": "538 W 48TH ST",
+    "google_name": "Holiday Inn Express Manhattan Midtown West by IHG",
+    "place_id": "ChIJcfmS1FFYwokR98RN442V41c",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "inn",
+      "swimming_pool",
+      "lodging",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "538 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008430039",
+    "address": "16 E 16TH ST",
+    "google_name": "The Twenty Two New York",
+    "place_id": "ChIJE1hgNQBZwokR99qCvqXTmIQ",
+    "types": [
+      "hotel",
+      "bar",
+      "association_or_organization",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "16 E 16th St, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1010267501",
+    "address": "1717 BROADWAY",
+    "google_name": "Courtyard by Marriott New York Manhattan/Central Park",
+    "place_id": "ChIJRcRPCPhYwokR4TR-cHYsphI",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1717 Broadway, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010267501",
+    "address": "1717 BROADWAY",
+    "google_name": "Courtyard by Marriott New York Manhattan/Central Park",
+    "place_id": "ChIJRcRPCPhYwokR4TR-cHYsphI",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1717 Broadway, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008150020",
+    "address": "114 W 40TH ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/Times Square",
+    "place_id": "ChIJo4xy46pZwokRJbPmZ5BUBS4",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "114 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008407502",
+    "address": "25 W 38TH ST",
+    "google_name": "Hotel Hendricks",
+    "place_id": "ChIJj8uptF9ZwokRcuCp2Bh0wXk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "25 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1000390038",
+    "address": "126 WATER ST",
+    "google_name": "Holiday Inn Express New York City-Wall Street, an IHG Hotel",
+    "place_id": "ChIJuydjIhZawokRG1-vnBMShEw",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "126 Water St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1007630012",
+    "address": "343 W 39TH ST",
+    "google_name": "Holiday Inn Express New York City Times Square by IHG",
+    "place_id": "ChIJ3-T6NK1ZwokR6wU9jhUJk3c",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "swimming_pool",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "343 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1012720026",
+    "address": "15 W 56TH ST",
+    "google_name": "Chambers Hotel New York",
+    "place_id": "ChIJxfoeGvpYwokRz30b1_ccQOE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "15 W 56th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007630013",
+    "address": "339 W 39TH ST",
+    "google_name": "Candlewood Suites New York City- Times Square by IHG",
+    "place_id": "ChIJG5JhL61ZwokRnJIYIY4nbVg",
+    "types": [
+      "extended_stay_hotel",
+      "business_center",
+      "fitness_center",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "hotel",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "339 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1002820023",
+    "address": "95 HENRY ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Downtown East",
+    "place_id": "ChIJMfwrwihawokR67IhRCN0xX8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "95 Henry St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1008307502",
+    "address": "1 W 28TH ST",
+    "google_name": "The Fifth Avenue Hotel",
+    "place_id": "ChIJ4dl6S5lZwokRb4ibeAxtTjI",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "1 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1000640001",
+    "address": "51 NASSAU ST",
+    "google_name": "Holiday Inn New York City - Wall Street by IHG",
+    "place_id": "ChIJPTJohhdawokR5-M2cwZ2WDo",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "inn",
+      "swimming_pool",
+      "gym",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "51 Nassau St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1005640045",
+    "address": "134 4TH AVE",
+    "google_name": "Hyatt Union Square New York",
+    "place_id": "ChIJZQhAJJlZwokRyL7BAxqSduI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "134 4th Ave, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1000690053",
+    "address": "5 PLATT ST",
+    "google_name": "Little Something Hotel NYC",
+    "place_id": "ChIJs0691DZbwokRUAYhulwk0FQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "5 Platt St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1000890003",
+    "address": "26 ANN ST",
+    "google_name": "Moxy NYC Downtown",
+    "place_id": "ChIJuShHLQRbwokRcNUNxb5Yp54",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "26 Ann St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1013250050",
+    "address": "206 E 52ND ST",
+    "google_name": "Hilton Garden Inn New York/Manhattan-Midtown East",
+    "place_id": "ChIJSbZuFONYwokRTIi00ahZP74",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "206 E 52nd St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1004880003",
+    "address": "58 THOMPSON ST",
+    "google_name": "The Manner",
+    "place_id": "ChIJoQx_SPxZwokRL34SHZ4JHKY",
+    "types": [
+      "resort_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "58 Thompson St, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1007630047",
+    "address": "310 W 40TH ST",
+    "google_name": "Aliz Hotel Times Square",
+    "place_id": "ChIJ--6X1axZwokRNXavsXTLvD4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "310 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007780057",
+    "address": "232 W 29TH ST",
+    "google_name": "Holiday Inn Express Nyc Chelsea - Nomad Area by IHG",
+    "place_id": "ChIJXzk5v6hZwokR6aBXNc1gjQU",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "swimming_pool",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "232 W 29th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007630014",
+    "address": "337 W 39TH ST",
+    "google_name": "Hampton Inn Manhattan/Times Square South",
+    "place_id": "ChIJiePzNq1ZwokRWlec_8oT1JU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "337 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013037502",
+    "address": "517 LEXINGTON AVE",
+    "google_name": "Hotel 48LEX New York",
+    "place_id": "ChIJ6aeZFv1YwokRQ2S6JcGP0_k",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "517 Lexington Ave, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1007990046",
+    "address": "108 W 24TH ST",
+    "google_name": "Hampton Inn Manhattan-Chelsea",
+    "place_id": "ChIJTzYJ56RZwokRNxDpngJ0fh0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "108 W 24th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1008060052",
+    "address": "116 W 31ST ST",
+    "google_name": "Hampton Inn Manhattan-Madison Square Garden Area",
+    "place_id": "ChIJuyEmPa9ZwokRE0zkFnH6YDk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "116 W 31st St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007850023",
+    "address": "235 W 35TH ST",
+    "google_name": "Henn na Hotel New York",
+    "place_id": "ChIJzSDK_B5ZwokRNkcNswsMwcQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "235 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1010230018",
+    "address": "226 W 52ND ST",
+    "google_name": "M Social Hotel New York Times Square",
+    "place_id": "ChIJbzKQslxZwokRQ--58R-Xr7o",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "226 W 52nd St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1013340005",
+    "address": "304 E 42ND ST",
+    "google_name": "Westgate New York Grand Central",
+    "place_id": "ChIJmUUN_JhZwokRj9ZS2apT8Po",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "304 E 42nd St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1001367505",
+    "address": "85 W BROADWAY",
+    "google_name": "Smyth Tribeca",
+    "place_id": "ChIJ_1qwJx9awokRl0bFrNhhRBs",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "85 W Broadway, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1008360065",
+    "address": "42 W 35TH ST",
+    "google_name": "The Gregorian Hotel",
+    "place_id": "ChIJaXHpdqlZwokRZa-gPKDxyv0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "42 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1009980047",
+    "address": "130 W 46TH ST",
+    "google_name": "The Muse New York",
+    "place_id": "ChIJCSBig1VYwokRGLqXYWMv74w",
+    "types": [
+      "hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "130 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1009947503",
+    "address": "136 W 42ND ST",
+    "google_name": "Hilton Garden Inn New York/Times Square Central",
+    "place_id": "ChIJ7cZO06pZwokR0RzfCc1M114",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "136 W 42nd St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010340037",
+    "address": "300 W 44TH ST",
+    "google_name": "InterContinental New York Times Square by IHG",
+    "place_id": "ChIJmR9pnVNYwokRqHaZ7QNK4fE",
+    "types": [
+      "hotel",
+      "massage_spa",
+      "resort_hotel",
+      "wedding_venue",
+      "convention_center",
+      "massage",
+      "spa",
+      "event_venue",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "300 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008300054",
+    "address": "20 W 29TH ST",
+    "google_name": "Ace Hotel New York",
+    "place_id": "ChIJT2h1HKZZwokR_Nwoxn8RfU0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "20 W 29th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1002270052",
+    "address": "27 GRAND ST",
+    "google_name": "ModernHaus SoHo",
+    "place_id": "ChIJq9ZiaYtZwokRK60-dYxlsLo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "27 Grand St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1008580045",
+    "address": "420 PARK AVE S",
+    "google_name": "Royalton Park Avenue",
+    "place_id": "ChIJr50LlKdZwokR0W52Jm0beso",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "420 Park Ave S, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1015717501",
+    "address": "410 E 92ND ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/Upper East Side",
+    "place_id": "ChIJ8chHwq9YwokRcIXTNY1pbCU",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "410 E 92nd St, New York, NY 10128, USA"
+  },
+  {
+    "bbl": "1009970010",
+    "address": "145 W 44TH ST",
+    "google_name": "Millennium Hotel Broadway Times Square",
+    "place_id": "ChIJZzUSDFVYwokR4lM11cyBpxE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010277501",
+    "address": "201 W 55TH ST",
+    "google_name": "Westhouse Hotel New York",
+    "place_id": "ChIJq05aJPhYwokRAj0fuEBVFoY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "201 W 55th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012740011",
+    "address": "36 CENTRAL PARK S",
+    "google_name": "Park Lane Hotel New York",
+    "place_id": "ChIJmU5P6vBYwokRO73p8vAMXUE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "36 Central Park S South, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1013077501",
+    "address": "866 3RD AVE",
+    "google_name": "Courtyard by Marriott New York Manhattan/Midtown East",
+    "place_id": "ChIJB1QFaONYwokRd566RKNxjbM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "866 3rd Ave, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1010090044",
+    "address": "120 W 57TH ST",
+    "google_name": "Le M\u00e9ridien New York, Central Park",
+    "place_id": "ChIJgTazuRBZwokRDWNqwscD_Qk",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "120 W 57th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010427501",
+    "address": "851 8TH AVE",
+    "google_name": "Romer Hell's Kitchen, neighborhood hotel",
+    "place_id": "ChIJwXfsrldYwokR_gi9Y1q0f2Q",
+    "types": [
+      "hotel",
+      "american_restaurant",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "851 8th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010200046",
+    "address": "1605 BROADWAY",
+    "google_name": "Hyatt Regency Times Square",
+    "place_id": "ChIJ8V7ocFZYwokRm0YcfLQtkzU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1605 Broadway, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1009970017",
+    "address": "133 W 44TH ST",
+    "google_name": "Millennium Premier New York Times Square",
+    "place_id": "ChIJg56VbFVYwokRWbuhFlj0ZEY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "133 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012710019",
+    "address": "33 W 55TH ST",
+    "google_name": "Shoreham Hotel",
+    "place_id": "ChIJt76oPPpYwokRR4Vj9oMB7EA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "33 W 55th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010230029",
+    "address": "790 7TH AVE",
+    "google_name": "The Manhattan at Times Square Hotel",
+    "place_id": "ChIJw_JUgvhYwokRIgBAxZdF4eA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "790 7th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012860021",
+    "address": "455 MADISON AVE",
+    "google_name": "Lotte New York Palace",
+    "place_id": "ChIJu6kY43RawokRnmczCmSH-_s",
+    "types": [
+      "hotel",
+      "spa",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "455 Madison Ave, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1011680044",
+    "address": "2178 BROADWAY",
+    "google_name": "Arthouse Hotel New York City",
+    "place_id": "ChIJAQAAAIVYwokRgjSEms1j39E",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2178 Broadway at, W 77th St, New York, NY 10024, USA"
+  },
+  {
+    "bbl": "1000800004",
+    "address": "55 CHURCH ST",
+    "google_name": "M Social Hotel New York Downtown",
+    "place_id": "ChIJh-L3uxlawokRDwLmkKwLIvY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "55 Church St, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1000647502",
+    "address": "170 BROADWAY",
+    "google_name": "Residence Inn by Marriott New York Downtown Manhattan/World Trade Center Area",
+    "place_id": "ChIJE1b91RlawokRoKQ8l9Y6-co",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "170 Broadway, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1012600007",
+    "address": "59 W 44TH ST",
+    "google_name": "The Algonquin Hotel Times Square, Autograph Collection",
+    "place_id": "ChIJeZdX8v9YwokRPnmkPLcQ7-A",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "59 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010167501",
+    "address": "700 8TH AVE",
+    "google_name": "ROW NYC",
+    "place_id": "ChIJUUgge1RYwokRYPkWTLt7MSE",
+    "types": [
+      "hotel",
+      "lounge_bar",
+      "bar",
+      "night_club",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "700 8th Ave, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010037501",
+    "address": "152 W 51ST ST",
+    "google_name": "The Michelangelo New York - Starhotels Collezione",
+    "place_id": "ChIJb2q-m_hYwokRFLZdzzJP3mo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "152 W 51st St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1004277507",
+    "address": "215 CHRYSTIE ST",
+    "google_name": "PUBLIC Hotel",
+    "place_id": "ChIJYY-OM4RZwokRvA7ECx3HRZw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "215 Chrystie St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010207501",
+    "address": "790 8TH AVE",
+    "google_name": "Kimpton Theta New York - Times Square by IHG",
+    "place_id": "ChIJF7SBgaJZwokR3zna0VgcbHI",
+    "types": [
+      "hotel",
+      "resort_hotel",
+      "business_center",
+      "massage_spa",
+      "spa",
+      "massage",
+      "wedding_venue",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "790 8th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007580037",
+    "address": "481 8TH AVE",
+    "google_name": "The New Yorker Hotel",
+    "place_id": "ChIJKxW9qbVZwokRdp--o2I-RTE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "481 8th Ave, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1010277501",
+    "address": "870 7TH AVE",
+    "google_name": "Park Central Hotel New York",
+    "place_id": "ChIJjUGQIPhYwokRHeD9KPkNSfE",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "870 7th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1013110058",
+    "address": "130 E 57TH ST",
+    "google_name": "Hotel 57",
+    "place_id": "ChIJxRSyBOVYwokRVV4NWXvL8H8",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "130 E 57th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1009947502",
+    "address": "6 TIMES SQ",
+    "google_name": "The Knickerbocker",
+    "place_id": "ChIJHW6u1FRYwokRg9rrxRT-DP8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "6 Times Sq, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1013110005",
+    "address": "111 E 56TH ST",
+    "google_name": "The Lombardy",
+    "place_id": "ChIJLxY62ORYwokRCrCLXz44VAo",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "apartment_building",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "111 E 56th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1010190055",
+    "address": "234 W 48TH ST",
+    "google_name": "The Gallivant Times Square",
+    "place_id": "ChIJJYb2gVZYwokRACPvkxjVzxw",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "234 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010090037",
+    "address": "102 W 57TH ST",
+    "google_name": "Hilton Club West 57th Street New York",
+    "place_id": "ChIJ8dMVWPdYwokRaeji99j9uIw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "102 W 57th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012837501",
+    "address": "12 E 48TH ST",
+    "google_name": "Hilton Club The Central at 5th New York",
+    "place_id": "ChIJH6Iyfv5YwokR4RVETVETZlM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "12 E 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1010107508",
+    "address": "101 W 57TH ST",
+    "google_name": "Hilton Club The Quin New York",
+    "place_id": "ChIJ698lVPdYwokRKFk9Px12FQk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "101 W 57th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1010130012",
+    "address": "234 W 42ND ST",
+    "google_name": "Hilton New York Times Square",
+    "place_id": "ChIJ7yGup1RYwokRnGBh8EluQWs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "234 W 42nd St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008390033",
+    "address": "11 W 37TH ST",
+    "google_name": "Wingate by Wyndham New York Midtown South/5th Ave",
+    "place_id": "ChIJP5ZvbiZZwokR4pgae_Glkw0",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "11 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008407504",
+    "address": "30 W 39TH ST",
+    "google_name": "Grayson Hotel - The Unbound Collection by Hyatt",
+    "place_id": "ChIJE-y9fvRZwokRGIvIPB1eBIk",
+    "types": [
+      "resort_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "30 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1012937501",
+    "address": "57 E 57TH ST",
+    "google_name": "Four Seasons Hotel New York",
+    "place_id": "ChIJ68J3tfpYwokR2HaRoBcB4xg",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "resort_hotel",
+      "wedding_venue",
+      "spa",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "57 E 57th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1002240032",
+    "address": "456 GREENWICH ST",
+    "google_name": "Fouquet's New York",
+    "place_id": "ChIJ2WPuSHVZwokRsWWXSptB01A",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "456 Greenwich St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1009960009",
+    "address": "147 W 43RD ST",
+    "google_name": "Casablanca Hotel",
+    "place_id": "ChIJZ6wMJFVYwokRfoSIFactWm0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "147 W 43rd St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010760055",
+    "address": "544 W 48TH ST",
+    "google_name": "Hotel Five44",
+    "place_id": "ChIJC2VPK1BYwokRTSbC6VfFOKw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "544 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000110029",
+    "address": "11 STONE ST",
+    "google_name": "The FIDI Hotel",
+    "place_id": "ChIJuVPTi7hbwokRUiGVOj3OoRY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "11 Stone St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1012990023",
+    "address": "141 E 44TH ST",
+    "google_name": "Fitzpatrick Grand Central",
+    "place_id": "ChIJMTryXgJZwokRvBURd2YnuhU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "141 E 44th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1001640009",
+    "address": "52 MULBERRY ST",
+    "google_name": "Hotel Mulberry",
+    "place_id": "ChIJGcnS2CZawokR2T8vG-n1_5k",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "52 Mulberry St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1007380028",
+    "address": "309 WEST 14TH STREET",
+    "google_name": "Hotel 309",
+    "place_id": "ChIJMRX2Ub5ZwokROCYDU6a83k0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "309 W 14th St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1010010006",
+    "address": "159 W 48TH ST",
+    "google_name": "Hard Rock Hotel New York",
+    "place_id": "ChIJjXMc60FZwokR1UaXTvtlLks",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "159 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1007400001",
+    "address": "363 W 16TH ST",
+    "google_name": "The Maritime Hotel",
+    "place_id": "ChIJPTCEJr9ZwokROGgsXOTMZms",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "363 W 16th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1007330060",
+    "address": "442 W 36TH ST",
+    "google_name": "HUDSON RIVER HOTEL",
+    "place_id": "ChIJV3lB4rJZwokRZ_Epke8d0mQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "442 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1009980015",
+    "address": "135 W 45TH ST",
+    "google_name": "Hyatt Centric Times Square New York",
+    "place_id": "ChIJldZjdlVYwokRT_yKDywRlaw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "135 W 45th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012800030",
+    "address": "109 E 42ND ST",
+    "google_name": "Hyatt Grand Central New York",
+    "place_id": "ChIJsS1xLQJZwokRGfXJPMwXA1A",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "at Grand Central Terminal, 109 E 42nd St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1012760001",
+    "address": "485 5TH AVE",
+    "google_name": "Andaz 5th Avenue, by Hyatt",
+    "place_id": "ChIJ8-Y8XgBZwokRsEH1qIwmChU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "485 5th Ave, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008370072",
+    "address": "50 W 36TH ST",
+    "google_name": "Best Western Premier Herald Square",
+    "place_id": "ChIJFahlKqpZwokR6jIG71kYsYo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "50 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013030014",
+    "address": "111 E 48TH ST",
+    "google_name": "InterContinental New York Barclay by IHG",
+    "place_id": "ChIJd0IHD_1YwokRDNtaRxktO4M",
+    "types": [
+      "hotel",
+      "massage_spa",
+      "resort_hotel",
+      "wedding_venue",
+      "convention_center",
+      "massage",
+      "spa",
+      "event_venue",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "111 E 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1007620038",
+    "address": "585 8TH AVE",
+    "google_name": "Holiday Inn New York City - Times Square by IHG",
+    "place_id": "ChIJD8ij36xZwokRH1qsGSZYcmU",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "swimming_pool",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "585 8th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008020061",
+    "address": "132 W 27TH ST",
+    "google_name": "INNSiDE by Meli\u00e1 New York NOMAD",
+    "place_id": "ChIJxSG_b6VZwokRI4BZTxqjQFI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "132 W 27th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1013750067",
+    "address": "2 E 61ST ST",
+    "google_name": "The Pierre, A Taj Hotel, New York",
+    "place_id": "ChIJBxesOvBYwokR519Koj1ulDY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "2 E 61st St, New York, NY 10065, USA"
+  },
+  {
+    "bbl": "1012600012",
+    "address": "49 W 44TH ST",
+    "google_name": "The Iroquois New York",
+    "place_id": "ChIJcRWp7_9YwokRxz99Wmr_Zhc",
+    "types": [
+      "hotel",
+      "bar",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "49 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010497501",
+    "address": "80 COLUMBUS CIR",
+    "google_name": "Mandarin Oriental, New York",
+    "place_id": "ChIJL83lHfZYwokRnd7wA8PLD1E",
+    "types": [
+      "hotel",
+      "catering_service",
+      "banquet_hall",
+      "food_delivery",
+      "spa",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "food",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "80 Columbus Cir, New York, NY 10023, USA"
+  },
+  {
+    "bbl": "1002090024",
+    "address": "120 LAFAYETTE ST",
+    "google_name": "JGSTAY - Soho",
+    "place_id": "ChIJE1WY94lZwokRnUOIFqWJPzQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "120 Lafayette St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1010370035",
+    "address": "765 8TH AVE",
+    "google_name": "JGSTAY - Times Square",
+    "place_id": "ChIJ7TjhG1RYwokRDNI9soVWHig",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "765 8th Ave, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1010370035",
+    "address": "765 8TH AVE",
+    "google_name": "JGSTAY - Times Square",
+    "place_id": "ChIJ7TjhG1RYwokRDNI9soVWHig",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "765 8th Ave, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008040032",
+    "address": "105 W 28TH ST",
+    "google_name": "Moxy NYC Chelsea",
+    "place_id": "ChIJnZ6IScZZwokR6bdW6qeMr24",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "105 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008127501",
+    "address": "485 7TH AVE",
+    "google_name": "Moxy NYC Times Square",
+    "place_id": "ChIJl5pBc6xZwokREydr2Z5oIAM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "485 7th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1005560016",
+    "address": "112 E 11TH ST",
+    "google_name": "Moxy NYC East Village",
+    "place_id": "ChIJZ8wZIDX3wokRYfKHk8nI41Q",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "112 E 11th St, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1004230009",
+    "address": "145 BOWERY",
+    "google_name": "Moxy NYC Lower East Side",
+    "place_id": "ChIJlXfpN5hZwokRCd7TRlAjEM0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 Bowery, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1002020023",
+    "address": "50 BOWERY",
+    "google_name": "Hotel 50 Bowery - JDV by Hyatt",
+    "place_id": "ChIJ2313uydawokRsS853z2RTXc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "50 Bowery, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1013110052",
+    "address": "687 LEXINGTON AVE",
+    "google_name": "Fitzpatrick Manhattan Hotel",
+    "place_id": "ChIJm41mHeVYwokRxiuLqdYBIJw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "687 Lexington Ave, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1018410041",
+    "address": "36 W 106TH ST",
+    "google_name": "Jazz on The Park Hostel",
+    "place_id": "ChIJl4z0ZyL2wokRhpZ5rNVeqRQ",
+    "types": [
+      "hostel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "36 W 106th St, New York, NY 10025, USA"
+  },
+  {
+    "bbl": "1013050028",
+    "address": "145 E 50TH ST",
+    "google_name": "The Kimberly Hotel",
+    "place_id": "ChIJL9YF0_xYwokRhTL1rNk1wME",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 E 50th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1008680036",
+    "address": "70 PARK AVE",
+    "google_name": "Kimpton Ashbel New York - Park Avenue",
+    "place_id": "ChIJRdP4LAFZwokREI3Jz0wW-ZY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "70 Park Ave, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1008670042",
+    "address": "66 PARK AVE",
+    "google_name": "The Kitano Hotel New York",
+    "place_id": "ChIJuVfl1AZZwokRkFnqI4l6_EU",
+    "types": [
+      "hotel",
+      "lodging",
+      "bar",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "66 Park Ave, E 38th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1004150077",
+    "address": "120 ALLEN ST",
+    "google_name": "Kasa Lantern Lower East Side",
+    "place_id": "ChIJm4nJ54ZZwokRpv7TlRUlFyA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "120 Allen St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1000417504",
+    "address": "70 PINE ST",
+    "google_name": "Mint House 70 Pine by Kasa",
+    "place_id": "ChIJYx0fjb5bwokRupaGiGkD1Os",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "70 Pine St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1012600014",
+    "address": "45 W 44TH ST",
+    "google_name": "Sofitel New York",
+    "place_id": "ChIJ5Zpl7_9YwokRFePhP7971nc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "45 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000690001",
+    "address": "215 PEARL ST",
+    "google_name": "Courtyard by Marriott New York Downtown Manhattan/Financial District",
+    "place_id": "ChIJzy-FYj1awokRyFLWweRgl7o",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "215 Pearl St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1000690030",
+    "address": "6 PLATT ST",
+    "google_name": "Four Points by Sheraton New York Downtown",
+    "place_id": "ChIJRSCYYT1awokRviir9Iw_Cqo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "6 Platt St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1013020051",
+    "address": "511 LEXINGTON AVE",
+    "google_name": "The Lexington Hotel, Autograph Collection",
+    "place_id": "ChIJt4TrE_1YwokRVedrKxaqYoo",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "511 Lexington Avenue at, E 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008317503",
+    "address": "1227 BROADWAY",
+    "google_name": "Virgin Hotels New York City",
+    "place_id": "ChIJ4zLglElZwokR7tWZPZGVsLY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1227 Broadway, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008330028",
+    "address": "19 W 31ST ST",
+    "google_name": "Life Hotel New York",
+    "place_id": "ChIJ5_uwwKhZwokRykJmdId_ffw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "19 W 31st St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1013760036",
+    "address": "540 PARK AVE",
+    "google_name": "Loews Regency New York",
+    "place_id": "ChIJC0Xwu-9YwokRDQBat_jlgQ4",
+    "types": [
+      "hotel",
+      "spa",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "540 Park Ave, New York, NY 10065, USA"
+  },
+  {
+    "bbl": "1013770047",
+    "address": "28 E 63RD ST",
+    "google_name": "The Lowell Hotel",
+    "place_id": "ChIJb9nOTe5YwokR5og3CprlOX4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "28 E 63rd St, New York, NY 10065, USA"
+  },
+  {
+    "bbl": "1007590055",
+    "address": "320 W 36TH ST",
+    "google_name": "Crowne Plaza HY36 Midtown Manhattan",
+    "place_id": "ChIJaRfHm61ZwokRvEDFJxP97LU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "320 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008000071",
+    "address": "160 W 25TH ST",
+    "google_name": "The Chelsean New York Hotel",
+    "place_id": "ChIJ-eArMKVZwokRnKTYspOYmuE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "160 W 25th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1002740024",
+    "address": "154 MADISON ST",
+    "google_name": "Madison LES Hotel",
+    "place_id": "ChIJH2m3zShawokRXyUcpf6ipa0",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "154 Madison St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1008400016",
+    "address": "45 W 38TH ST",
+    "google_name": "Archer Hotel New York",
+    "place_id": "ChIJk6v9Q6pZwokR6FX8G2VNVeg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "45 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013920017",
+    "address": "25 E 77TH ST",
+    "google_name": "The Mark Hotel",
+    "place_id": "ChIJXYOiRJRYwokRm1i3c9R6WDA",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "25 E 77th St, New York, NY 10075, USA"
+  },
+  {
+    "bbl": "1005720045",
+    "address": "5 W 8TH ST",
+    "google_name": "The Marlton Hotel",
+    "place_id": "ChIJuac4MpdZwokRPSTvSd3DmME",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "5 W 8th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1008390024",
+    "address": "25 W 37TH ST",
+    "google_name": "SpringHill Suites by Marriott New York Midtown Manhattan/Fifth Avenue",
+    "place_id": "ChIJ79ykPapZwokRwqBwCrWPPWw",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "25 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008397503",
+    "address": "33 W 37TH ST",
+    "google_name": "Marriott Vacation Club, New York City",
+    "place_id": "ChIJ99uOO6pZwokRC-Wu97dR770",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "33 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010200057",
+    "address": "242 W 49TH ST",
+    "google_name": "Mayfair Hotel, an Ascend Collection Hotel",
+    "place_id": "ChIJ6e5bleJYwokRg_-2VNt78MM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "242 W 49th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012590011",
+    "address": "44 W 44TH ST",
+    "google_name": "Royalton New York",
+    "place_id": "ChIJpSMN7_9YwokRkCnu6yqV-Rk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "44 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1005130035",
+    "address": "147 MERCER ST",
+    "google_name": "(The Mercer)",
+    "place_id": "ChIJzyx3-o5ZwokR9DTHgZ521n8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "147 Mercer St, New York, NY 10012, USA"
+  },
+  {
+    "bbl": "1008040024",
+    "address": "121 W 28TH ST",
+    "google_name": "Hilton Garden Inn New York/Manhattan-Chelsea",
+    "place_id": "ChIJ0xgafK9ZwokRixdC-73WCX4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "121 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008790023",
+    "address": "23 LEXINGTON AVE",
+    "google_name": "Freehand New York",
+    "place_id": "ChIJv7gx-A5ZwokRkVouRSbPtJU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "23 Lexington Ave, New York, NY 10010, USA"
+  },
+  {
+    "bbl": "1012750006",
+    "address": "3 E 40TH ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/Fifth Avenue",
+    "place_id": "ChIJzT6g9gBZwokRXCp_-VjhYMk",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "3 E 40th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1013150044",
+    "address": "212 E 42ND ST",
+    "google_name": "The Westin New York Grand Central",
+    "place_id": "ChIJTQ_vCwNZwokRuxUsMUImL5M",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "212 E 42nd St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008040054",
+    "address": "128 W 29TH ST",
+    "google_name": "DoubleTree by Hilton Hotel New York City - Chelsea",
+    "place_id": "ChIJ1-macK9ZwokRQAbWUXznXjA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "128 W 29th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008370009",
+    "address": "59 W 35TH ST",
+    "google_name": "Hampton Inn Manhattan-35th St/Empire State Bldg",
+    "place_id": "ChIJj3HneqlZwokRSLaBk4rvMcw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "59 W 35th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008320066",
+    "address": "38 W 31ST ST",
+    "google_name": "31 Street Broadway Hotel",
+    "place_id": "ChIJ15MMyYBZwokRRDnCWcAzD8s",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "38 W 31st St #110, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007540036",
+    "address": "303 W 30TH ST",
+    "google_name": "Midtown West Hotel",
+    "place_id": "ChIJD_Ek0rFZwokR_3Qz04htsfQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "303 W 30th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1021550026",
+    "address": "505 W 181ST ST",
+    "google_name": "Hotel Moca NYC",
+    "place_id": "ChIJ00jtbEz1wokRL45koPYmEWc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "505 W 181st St, New York, NY 10033, USA"
+  },
+  {
+    "bbl": "1008870088",
+    "address": "114 E 32ND ST",
+    "google_name": "The Marmara Park Avenue",
+    "place_id": "ChIJ8_fA4AdZwokRtVMX4Yv9niQ",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "apartment_building",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "114 E 32nd St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1008320044",
+    "address": "292 5TH AVE",
+    "google_name": "Le M\u00e9ridien New York, Fifth Avenue",
+    "place_id": "ChIJM21sj6hZwokRgkZ1St_SacY",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "292 5th Ave, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1009190042",
+    "address": "222 E 39TH ST",
+    "google_name": "Nester Finn Grand Central",
+    "place_id": "ChIJpTvzOc9ZwokRyEVr0OrRZ2c",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "222 E 39th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1010340044",
+    "address": "324 W 44TH ST",
+    "google_name": "TownePlace Suites by Marriott New York Manhattan/Times Square",
+    "place_id": "ChIJN2YVmVNYwokR-3okpM8e5E4",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "324 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1007530033",
+    "address": "305 W 29TH ST",
+    "google_name": "Lamartine Chelsea",
+    "place_id": "ChIJxYXHll9ZwokRGtFpcgVAB74",
+    "types": [
+      "hostel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "305 W 29th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008570007",
+    "address": "7 E 27TH ST",
+    "google_name": "The Evelyn",
+    "place_id": "ChIJH4GkW6ZZwokR9TZqm6sXzXQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "bar",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "7 E 27th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1002940007",
+    "address": "9 ORCHARD ST",
+    "google_name": "Nine Orchard",
+    "place_id": "ChIJDZ0L0SFbwokR65niy5wals0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "9 Orchard St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1004710055",
+    "address": "196 GRAND ST",
+    "google_name": "NobleDEN Hotel",
+    "place_id": "ChIJ51nrRYhZwokRJNjqTsFLYvM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "196 Grand St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1007990063",
+    "address": "140 W 24TH ST",
+    "google_name": "Hyatt Place New York / Chelsea",
+    "place_id": "ChIJpdEP16RZwokRd4vwElvwd8I",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "140 W 24th St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1007590061",
+    "address": "338 W 36TH ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Times Square South",
+    "place_id": "ChIJlbHUnK1ZwokRcw6o9PU70AU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "338 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010007502",
+    "address": "150 W 48TH ST",
+    "google_name": "Hampton Inn by Hilton New York Times Square",
+    "place_id": "ChIJxWr-cYtZwokRHsR76Q6CPdc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "150 W 48th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1010260012",
+    "address": "237 W 54TH ST",
+    "google_name": "Hilton Garden Inn New York/Central Park South-Midtown West",
+    "place_id": "ChIJ7QDN4ldYwokRqgAOsPXeQFI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "237 W 54th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1013100012",
+    "address": "127 E 55TH ST",
+    "google_name": "Concorde Hotel New York",
+    "place_id": "ChIJbaeIxeRYwokRfTvUB5Gdy1I",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "127 E 55th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1012610054",
+    "address": "30 W 46TH ST",
+    "google_name": "Hilton Garden Inn New York Times Square North",
+    "place_id": "ChIJC-00bnxZwokRPQ5bi0H41H4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "30 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008637501",
+    "address": "45 E 33RD ST",
+    "google_name": "Hilton Garden Inn New York/Midtown Park Ave",
+    "place_id": "ChIJm3WzjwdZwokRvy13roQxKVQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "45 E 33rd St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1006420001",
+    "address": "113 JANE ST",
+    "google_name": "West Village Eurohostel",
+    "place_id": "ChIJ3-_GiepZwokR2DsMVRBZURU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "113 Jane St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1007600020",
+    "address": "337 W 36TH ST",
+    "google_name": "Staypineapple, An Artful Hotel, Midtown New York",
+    "place_id": "ChIJq6oOd61ZwokRYLmMUZxbrFg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "337 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007880009",
+    "address": "273 W 38TH ST",
+    "google_name": "Doxie Hotel",
+    "place_id": "ChIJTYU7yQRZwokRDUg1_CXZEBQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "273 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1012880011",
+    "address": "21 E 52ND ST",
+    "google_name": "Omni Berkshire Place",
+    "place_id": "ChIJI3SRhvtYwokR8s2C4Ady-nA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "21 E 52nd St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1008390067",
+    "address": "36 W 38TH ST",
+    "google_name": "ARIYA Hotel New York Times Square",
+    "place_id": "ChIJn-uLptBZwokRiJHlzLe7whI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "36 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1002940007",
+    "address": "9 ORCHARD ST",
+    "google_name": "Nine Orchard",
+    "place_id": "ChIJDZ0L0SFbwokR65niy5wals0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "9 Orchard St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010210050",
+    "address": "218 W 50TH ST",
+    "google_name": "citizenM New York Times Square",
+    "place_id": "ChIJD7NlQVZYwokRUIDluhjtu94",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "218 W 50th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1004250004",
+    "address": "189 BOWERY",
+    "google_name": "citizenM New York Bowery",
+    "place_id": "ChIJxwvJP4ZZwokRl6cJe-ZyZN4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "189 Bowery, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1001460023",
+    "address": "130 DUANE ST",
+    "google_name": "Duane Street Hotel Tribeca, Belvilla District 6 Formerly Sonder",
+    "place_id": "ChIJ7UBKbh9awokRsLNXAfxLoHs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "130 Duane St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1008387501",
+    "address": "400 5TH AVE",
+    "google_name": "The Langham, New York, Fifth Avenue",
+    "place_id": "ChIJMYIE-KlZwokRt7ks1WKMXNU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "400 5th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007890069",
+    "address": "260 W 40TH ST",
+    "google_name": "AC Hotel New York Times Square",
+    "place_id": "ChIJuT3vtqxZwokRdJL8AuaLEKo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "260 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010120042",
+    "address": "220 W 41ST ST",
+    "google_name": "Hampton Inn Manhattan/Times Square Central",
+    "place_id": "ChIJHYYyVKtZwokRsVzuLJDLJW8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "220 W 41st St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012700038",
+    "address": "700 5TH AVE",
+    "google_name": "The Peninsula New York",
+    "place_id": "ChIJ57WmTfpYwokRZAuLuP6R_E0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "700 5th Ave, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007620061",
+    "address": "338 WEST 39 STREET",
+    "google_name": "Pestana CR7 Times Square",
+    "place_id": "ChIJm5r74EFZwokRRwkkpA-LPKI",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "gym",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "Class B, 338 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008690025",
+    "address": "23 E 39TH ST",
+    "google_name": "Pestana Park Avenue",
+    "place_id": "ChIJEwvvu7JZwokR_YvlIa0z4Wc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "Class B, 23 E 39th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1008030062",
+    "address": "140 W 28TH ST",
+    "google_name": "TownePlace Suites by Marriott New York Manhattan/Chelsea",
+    "place_id": "ChIJyUNdhq9ZwokRGrhMz-Qoii4",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "140 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008410071",
+    "address": "40 W 40TH ST",
+    "google_name": "Bryant Park Hotel",
+    "place_id": "ChIJvbGg56pZwokRXbiknwoJA6Q",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "40 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010107506",
+    "address": "153 W 57TH ST",
+    "google_name": "Park Hyatt New York",
+    "place_id": "ChIJpQr2a_dYwokRoYDzhaXxroc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "153 W 57th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1000370008",
+    "address": "110 WALL ST",
+    "google_name": "Placemakr Wall Street",
+    "place_id": "ChIJ57T6p3ZbwokRrb4GP4OgrL8",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "apartment_building",
+      "real_estate_agency",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "110 Wall St, New York, NY 10005, USA"
+  },
+  {
+    "bbl": "1008950034",
+    "address": "145 E 39TH ST",
+    "google_name": "Pod 39",
+    "place_id": "ChIJkRO8-ANZwokRsnWy3do8Pw0",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "145 East 39th Street (between 3rd Ave &, Lexington Ave, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1010517503",
+    "address": "400 W 42ND ST",
+    "google_name": "Pod Times Square",
+    "place_id": "ChIJnzd-8lJYwokRoEmCF0KSNQc",
+    "types": [
+      "hotel",
+      "extended_stay_hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "400 W 42nd St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012620009",
+    "address": "59 W 46TH ST",
+    "google_name": "The Hotel @ Times Square",
+    "place_id": "ChIJ96Uaof9YwokRqS9Eb-rsPyg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "59 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000100033",
+    "address": "8 STONE ST",
+    "google_name": "DoubleTree by Hilton New York Downtown",
+    "place_id": "ChIJ0fci9hNawokRJVR9hdTAt80",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "8 Stone St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1012907502",
+    "address": "2 E 55TH ST",
+    "google_name": "The St. Regis New York",
+    "place_id": "ChIJT_kaUvpYwokRJ-Sl4G4kZ_Q",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "Two E 55th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1007620006",
+    "address": "351 W 38TH ST",
+    "google_name": "Arlo Midtown",
+    "place_id": "ChIJPdlXuCNZwokRIkjiqBl58Wk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "351 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008950079",
+    "address": "118 E 40TH ST",
+    "google_name": "The Renwick Hotel",
+    "place_id": "ChIJm2elWwFZwokRuQe6cS9Jdks",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "118 E 40th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1007320070",
+    "address": "446 10TH AVE",
+    "google_name": "Four Points by Sheraton Manhattan Midtown West",
+    "place_id": "ChIJQz22DrNZwokRxpCwJD8DTu0",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "Entrance on corner of 35th St, 444 10th Ave, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008030049",
+    "address": "116 W 28TH ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Chelsea",
+    "place_id": "ChIJgXlbh6VZwokRbhvJi3Dvi2o",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "116 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007630028",
+    "address": "311 W 39TH ST",
+    "google_name": "Element by Marriott New York Times Square West",
+    "place_id": "ChIJCQeW2KxZwokRcFA1jngEs_8",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "Between 8th And 9th Avenue, 311 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013170019",
+    "address": "231 E 43RD ST",
+    "google_name": "Hampton Inn Manhattan Grand Central",
+    "place_id": "ChIJXWOUJgNZwokR0VrAkVbSZkM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "231 E 43rd St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1008030058",
+    "address": "132 W 28TH ST",
+    "google_name": "Aloft by Marriott New York Chelsea",
+    "place_id": "ChIJ--JGEMRZwokRKyAbP5umuGY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "132 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1004160058",
+    "address": "163 ORCHARD ST",
+    "google_name": "Orchard Street Hotel",
+    "place_id": "ChIJQwElq4ZZwokRUBB32g_IfQk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "163 Orchard St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1004110041",
+    "address": "136 LUDLOW ST",
+    "google_name": "The Redford Hotel",
+    "place_id": "ChIJI-vVRYFZwokRoc8kQXbTOP8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "136 Ludlow St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1008300073",
+    "address": "44 W 29TH ST",
+    "google_name": "Made Hotel",
+    "place_id": "ChIJAQAsWK9ZwokRVNJ_cGoFFIE",
+    "types": [
+      "hotel",
+      "bar",
+      "event_venue",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "44 W 29th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1004220047",
+    "address": "135 E HOUSTON ST",
+    "google_name": "The Gatsby Hotel",
+    "place_id": "ChIJXTkwaYRZwokRGW_jzjR1LhM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "135 E Houston St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1012610029",
+    "address": "15 W 45TH ST",
+    "google_name": "Citadines Connect Fifth Avenue New York",
+    "place_id": "ChIJ1bNjtf9YwokRrW4zPS-kWto",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "15 W 45th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008370078",
+    "address": "60 W 36TH ST",
+    "google_name": "Holiday Inn Express Manhattan Times Square South by IHG",
+    "place_id": "ChIJNz28f6lZwokRG7XqHzfM0Us",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "inn",
+      "swimming_pool",
+      "gym",
+      "sports_activity_location",
+      "lodging",
+      "health",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "60 W 36th St., New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1019660077",
+    "address": "412 W 126TH ST",
+    "google_name": "The George Manhattan, Tapestry Collection by Hilton",
+    "place_id": "ChIJ4V0KcGv2wokRfTdY9odZdBE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "412 W 126th St, Harlem, NY 10027, USA"
+  },
+  {
+    "bbl": "1010860050",
+    "address": "538 W 58TH ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Central Park",
+    "place_id": "ChIJuQaU8FtYwokRxZqPOaDW-Mw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "538 W 58th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007630065",
+    "address": "342 W 40TH ST",
+    "google_name": "Distrikt Hotel New York City, Tapestry Collection by Hilton",
+    "place_id": "ChIJ8cSQzFJYwokR582FK5BKsZk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "342 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008400006",
+    "address": "63 W 38TH ST",
+    "google_name": "Refinery Hotel",
+    "place_id": "ChIJl6r9TqpZwokRqsh-zI3NRs0",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "63 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1004917503",
+    "address": "246 SPRING ST",
+    "google_name": "The Dominick",
+    "place_id": "ChIJazM5w4xZwokRr28B0Zb4tCE",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "spa",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "246 Spring St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1003480036",
+    "address": "150 DELANCEY ST",
+    "google_name": "Holiday Inn Nyc - Lower East Side by IHG",
+    "place_id": "ChIJM36R_oBZwokRJLeeu_r-7R8",
+    "types": [
+      "hotel",
+      "business_center",
+      "fitness_center",
+      "swimming_pool",
+      "gym",
+      "inn",
+      "sports_activity_location",
+      "lodging",
+      "service",
+      "health",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "150 Delancey St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1008800009",
+    "address": "111 E 24TH ST",
+    "google_name": "SpringHill Suites by Marriott New York Midtown Manhattan/Park Avenue",
+    "place_id": "ChIJz1JSMqdZwokRntImh6cnTvA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "111 E 24th St, New York, NY 10010, USA"
+  },
+  {
+    "bbl": "1010180016",
+    "address": "223 W 46TH ST",
+    "google_name": "SpringHill Suites by Marriott New York Manhattan Times Square",
+    "place_id": "ChIJPUN9cldZwokRseJVK1GV5fg",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "223 W 46th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000720012",
+    "address": "161 FRONT ST",
+    "google_name": "Fairfield by Marriott Inn & Suites New York Manhattan/Financial District",
+    "place_id": "ChIJ-cLamD1awokRhIfng6G7DqA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "161 Front St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1009980026",
+    "address": "109 W 45TH ST",
+    "google_name": "Hotel St. James",
+    "place_id": "ChIJaz7WYlVYwokR5RBlzAiHxpw",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "109 W 45th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1009970019",
+    "address": "123 W 44TH ST",
+    "google_name": "AKA Times Square",
+    "place_id": "ChIJDUW-a1VYwokR6L1u9X92HSM",
+    "types": [
+      "extended_stay_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "123 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1012730060",
+    "address": "42 W 58TH ST",
+    "google_name": "AKA Central Park",
+    "place_id": "ChIJ9XkMovBYwokRRuMiMP7-IuM",
+    "types": [
+      "extended_stay_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "42 W 58th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1012700001",
+    "address": "65 W 54TH ST",
+    "google_name": "Warwick New York",
+    "place_id": "ChIJFVWAmflYwokRSGrDEu4bnyc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "65 W 54th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1007600058",
+    "address": "326 W 37TH ST",
+    "google_name": "Hilton Garden Inn New York Times Square South",
+    "place_id": "ChIJ4USMc61ZwokR0Wgx1gcmg-s",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "326 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1010050001",
+    "address": "811 7TH AVE",
+    "google_name": "Sheraton New York Times Square Hotel",
+    "place_id": "ChIJw_JUgvhYwokR91EMxVDhB8M",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "811 7th Avenue, W 53rd St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1002270028",
+    "address": "310 W BROADWAY",
+    "google_name": "Soho Grand Hotel",
+    "place_id": "ChIJH8Pll4pZwokR8v9iZ3fgZ-Q",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "310 W Broadway, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1005800063",
+    "address": "181 VARICK ST",
+    "google_name": "Courtyard by Marriott New York Manhattan/SoHo",
+    "place_id": "ChIJT0DdRo1ZwokRkufwSD-TdGM",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "181 Varick St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1006467503",
+    "address": "29 9TH AVE",
+    "google_name": "Soho House New York",
+    "place_id": "ChIJQy-Jj79ZwokRBqj3oqd0q7c",
+    "types": [
+      "hotel",
+      "association_or_organization",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "29-35 9th Ave, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1005800015",
+    "address": "66 CHARLTON ST",
+    "google_name": "Four Points by Sheraton Manhattan SoHo Village",
+    "place_id": "ChIJ0f8UMY1ZwokRb9wR5codn2g",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "66 Charlton St, New York, NY 10014, USA"
+  },
+  {
+    "bbl": "1002340011",
+    "address": "159 GRAND ST",
+    "google_name": "Solita Soho Hotel",
+    "place_id": "ChIJtRQRo4lZwokRcr3b1ZW0L3o",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "159 Grand St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1013050020",
+    "address": "125 E 50TH ST",
+    "google_name": "The Benjamin Royal Sonesta New York",
+    "place_id": "ChIJX_6A2_xYwokRk-yELy8LRSE",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "125 E 50th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1013050033",
+    "address": "155 E 50TH ST",
+    "google_name": "The Fifty Sonesta Hotel New York",
+    "place_id": "ChIJS-P2K-NYwokReedP72Q0NlA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "155 E 50th St, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1014190010",
+    "address": "215 E 64TH ST",
+    "google_name": "The Gardens Sonesta ES Suites New York",
+    "place_id": "ChIJ9dPN_OhYwokRRKPwdsxuno8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "215 E 64th St, New York, NY 10065, USA"
+  },
+  {
+    "bbl": "1008930025",
+    "address": "303 LEXINGTON AVE",
+    "google_name": "The Shelburne Sonesta New York",
+    "place_id": "ChIJCdj3vAZZwokRC6_23bTOr5s",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "303 Lexington Ave, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1008610052",
+    "address": "34 E 32ND ST",
+    "google_name": "HGU New York",
+    "place_id": "ChIJy-SaHKhZwokRIvt41JMmfIY",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "34 E 32nd St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1008040020",
+    "address": "127 W 28TH ST",
+    "google_name": "Hotel Hayden",
+    "place_id": "ChIJCZTGeK9ZwokR_50__x4o8Is",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "127 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008340016",
+    "address": "43 W 32ND ST",
+    "google_name": "Hotel Stanford",
+    "place_id": "ChIJoS_d36hZwokRtJmqzJNEsrs",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "43 W 32nd St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1010187501",
+    "address": "1567 BROADWAY",
+    "google_name": "W New York - Times Square",
+    "place_id": "ChIJfVrZy1VYwokRJ3yWvZD0IYU",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "1567 Broadway, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008730001",
+    "address": "201 PARK AVE S",
+    "google_name": "W New York \u2013 Union Square",
+    "place_id": "ChIJpX1_-aFZwokRnSNMK95ppp4",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "lodging",
+      "event_venue",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "201 Park Ave S, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1008260055",
+    "address": "18 W 25TH ST",
+    "google_name": "Heritage Hotel New York City",
+    "place_id": "ChIJr9hyM6RZwokRUxI8r-vIktM",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "18 W 25th St, New York, NY 10010, USA"
+  },
+  {
+    "bbl": "1013900057",
+    "address": "20 E 76TH ST",
+    "google_name": "The Surrey, A Corinthia Hotel",
+    "place_id": "ChIJCcAxi5RYwokRUyhXQvDUJsY",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "20 E 76th St, New York, NY 10021, USA"
+  },
+  {
+    "bbl": "1007600039",
+    "address": "525 8TH AVE",
+    "google_name": "DoubleTree by Hilton New York Times Square South",
+    "place_id": "ChIJ0dDaiSVZwokRFvvj-kauGmI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "525 8th Ave, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1007620067",
+    "address": "350 W 39TH ST",
+    "google_name": "Hyatt Place New York City / Times Square",
+    "place_id": "ChIJM_my671ZwokRyGPQqhdoTys",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "350 W 39th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1009997501",
+    "address": "1568 BROADWAY",
+    "google_name": "Tempo by Hilton New York Times Square",
+    "place_id": "ChIJKYQAHH9ZwokRcv2MnQjbDno",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1568 Broadway, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1000650024",
+    "address": "24 JOHN ST",
+    "google_name": "Artezen Hotel",
+    "place_id": "ChIJ70OoKBhawokR-EiajauOCns",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "24 John St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1004580006",
+    "address": "335 BOWERY",
+    "google_name": "The Bowery Hotel",
+    "place_id": "ChIJqzkICohZwokR456MkSkZnLU",
+    "types": [
+      "hotel",
+      "lounge_bar",
+      "night_club",
+      "european_restaurant",
+      "wedding_venue",
+      "italian_restaurant",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "service",
+      "event_venue",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "335 Bowery, New York, NY 10003, USA"
+  },
+  {
+    "bbl": "1013910021",
+    "address": "35 E 76TH ST",
+    "google_name": "The Carlyle, A Rosewood Hotel",
+    "place_id": "ChIJEQ6D9pRYwokR5TXzH7ACo7I",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "35 E 76th St, New York, NY 10021, USA"
+  },
+  {
+    "bbl": "1004100048",
+    "address": "107 RIVINGTON ST",
+    "google_name": "Hotel on Rivington",
+    "place_id": "ChIJAZJEOIFZwokRW2wqvoRYkM8",
+    "types": [
+      "hotel",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "107 Rivington St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1007187502",
+    "address": "180 10TH AVE",
+    "google_name": "The High Line Hotel",
+    "place_id": "ChIJ-1XDX7hZwokRHLjn63mDetU",
+    "types": [
+      "hotel",
+      "banquet_hall",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "180 10th Ave, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1000290043",
+    "address": "9 S WILLIAM ST",
+    "google_name": "The Wall Street Inn",
+    "place_id": "ChIJ_7B6nRZawokRRg3UBR5XohI",
+    "types": [
+      "hotel",
+      "inn",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "9 S William St, New York, NY 10004, USA"
+  },
+  {
+    "bbl": "1007460060",
+    "address": "332 W 23RD ST",
+    "google_name": "The Leo House",
+    "place_id": "ChIJp8v1MLpZwokRrCh4faGuWi0",
+    "types": [
+      "hotel",
+      "bed_and_breakfast",
+      "hostel",
+      "guest_house",
+      "lodging",
+      "association_or_organization",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "332 W 23rd St, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1003030035",
+    "address": "125 CANAL ST",
+    "google_name": "The Leon Hotel",
+    "place_id": "ChIJARle5ydawokRY-2v6RClKzk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "125 Canal St, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "1010277501",
+    "address": "200 W 56TH ST",
+    "google_name": "The Manhattan Club",
+    "place_id": "ChIJtxZJIPhYwokR61Ynm-nHnnk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "200 W 56th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008307503",
+    "address": "25 W 28TH ST",
+    "google_name": "The Ritz-Carlton New York, NoMad",
+    "place_id": "ChIJZSWtT1NZwokRHh_3WWnggZE",
+    "types": [
+      "hotel",
+      "wedding_venue",
+      "event_venue",
+      "lodging",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "25 W 28th St, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1013740001",
+    "address": "781 5TH AVE",
+    "google_name": "The Sherry-Netherland",
+    "place_id": "ChIJxd6mE_BYwokR9x3fxAYpcRU",
+    "types": [
+      "hotel",
+      "historical_landmark",
+      "historical_place",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "781 5th Ave, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1010090019",
+    "address": "119 W 56TH ST",
+    "google_name": "Thompson Central Park New York, by Hyatt",
+    "place_id": "ChIJwfFb4flYwokRa1Y4QKuhSwE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "119 W 56th St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008587503",
+    "address": "22 E 29TH ST",
+    "google_name": "Hotel Seville NoMad - The Unbound Collection by Hyatt",
+    "place_id": "ChIJFUaOyqdZwokRlFzEZ5UygAY",
+    "types": [
+      "resort_hotel",
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "22 E 29th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1000907503",
+    "address": "123 NASSAU ST",
+    "google_name": "The Beekman, A Thompson Hotel, by Hyatt",
+    "place_id": "ChIJq6r-exhawokRKgBzzPkn57U",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "123 Nassau St, New York, NY 10038, USA"
+  },
+  {
+    "bbl": "1012677501",
+    "address": "25 W 51ST ST",
+    "google_name": "DoubleTree by Hilton New York Midtown Fifth Ave",
+    "place_id": "ChIJQ0FSM2pZwokRweYpG3MqALE",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "25 W 51st St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1008290050",
+    "address": "1170 BROADWAY",
+    "google_name": "The Ned NoMad",
+    "place_id": "ChIJWxHBP2JZwokRAAym2RpX-OQ",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "1170 Broadway, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1008680051",
+    "address": "24 E 39TH ST",
+    "google_name": "The William Hotel Midtown",
+    "place_id": "ChIJj-PB2ABZwokRKSEZAe4fF9k",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "24 E 39th St, New York, NY 10016, USA"
+  },
+  {
+    "bbl": "1002390029",
+    "address": "106 BOWERY",
+    "google_name": "U.S. Pacific Hotel",
+    "place_id": "ChIJWfX_BYhZwokRqo5pp7vdw-8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "106 Bowery, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1001450012",
+    "address": "95 W BROADWAY",
+    "google_name": "The Frederick Hotel",
+    "place_id": "ChIJYSjtGB9awokRvtwfGw4UEpc",
+    "types": [
+      "hotel",
+      "european_restaurant",
+      "italian_restaurant",
+      "restaurant",
+      "food",
+      "lodging",
+      "bar",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "95 W Broadway, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1000530037",
+    "address": "102 GREENWICH ST",
+    "google_name": "Tribeca Hotel FiDi",
+    "place_id": "ChIJtaWvov1bwokR75NrSLOYIy8",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "102 Greenwich St, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1000190024",
+    "address": "50 TRINITY PL",
+    "google_name": "Hotel Indigo NYC Financial District, an IHG Hotel",
+    "place_id": "ChIJjWNX1xBawokR8OVQF6j8NEk",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "50 Trinity Pl, New York, NY 10006, USA"
+  },
+  {
+    "bbl": "1010760051",
+    "address": "538 W 48TH ST",
+    "google_name": "Holiday Inn Express Manhattan Midtown West by IHG",
+    "place_id": "ChIJcfmS1FFYwokR98RN442V41c",
+    "types": [
+      "hotel",
+      "fitness_center",
+      "business_center",
+      "inn",
+      "swimming_pool",
+      "lodging",
+      "gym",
+      "sports_activity_location",
+      "health",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "538 W 48th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1008387502",
+    "address": "60 W 37TH ST",
+    "google_name": "Embassy Suites by Hilton New York Manhattan Times Square",
+    "place_id": "ChIJr3ytMqpZwokR5c8zqnn6yfU",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "60 W 37th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1008417501",
+    "address": "18 W 40TH ST",
+    "google_name": "Park Terrace Hotel",
+    "place_id": "ChIJ5_Ogf6pZwokRO-nqYjYXkOo",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "18 W 40th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1006980047",
+    "address": "518 W 27TH ST",
+    "google_name": "Hotel Alameda",
+    "place_id": "ChIJLS7K_7ZZwokR8b4MjGtTK08",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "518 W 27th St Lower Level, New York, NY 10001, USA"
+  },
+  {
+    "bbl": "1007620016",
+    "address": "333 W 38TH ST",
+    "google_name": "La Quinta Inn & Suites by Wyndham Times Square South",
+    "place_id": "ChIJM3IUOK1ZwokRmgyn41pFrtE",
+    "types": [
+      "hotel",
+      "inn",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "333 W 38th St, New York, NY 10018, USA"
+  },
+  {
+    "bbl": "1013047501",
+    "address": "301 PARK AVE",
+    "google_name": "Waldorf Astoria New York",
+    "place_id": "ChIJTzi6VfxYwokRDtjrgLbTvH4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "301 Park Ave, New York, NY 10022, USA"
+  },
+  {
+    "bbl": "1001950007",
+    "address": "77 WALKER ST",
+    "google_name": "Walker Hotel Tribeca",
+    "place_id": "ChIJ1YUKoCBawokR5wfkM635e6o",
+    "types": [
+      "hotel",
+      "lodging",
+      "american_restaurant",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "77 Walker St, New York, NY 10013, USA"
+  },
+  {
+    "bbl": "1001370010",
+    "address": "86 Warren Street",
+    "google_name": "Warren Street Hotel",
+    "place_id": "ChIJM_E9jHdbwokRol-zqevjY1o",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "86 Warren St, New York, NY 10007, USA"
+  },
+  {
+    "bbl": "1010410044",
+    "address": "318 W 51ST ST",
+    "google_name": "Washington Jefferson Hotel",
+    "place_id": "ChIJmZ57HFdYwokRzZhnLwoZMf4",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "318 W 51st St, New York, NY 10019, USA"
+  },
+  {
+    "bbl": "1005537501",
+    "address": "103 WAVERLY PL",
+    "google_name": "Washington Square Hotel",
+    "place_id": "ChIJs_xsNJFZwokRhqdldztPi2U",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "103 Waverly Pl, New York, NY 10011, USA"
+  },
+  {
+    "bbl": "1010340037",
+    "address": "300 W 44TH ST",
+    "google_name": "InterContinental New York Times Square by IHG",
+    "place_id": "ChIJmR9pnVNYwokRqHaZ7QNK4fE",
+    "types": [
+      "hotel",
+      "massage_spa",
+      "resort_hotel",
+      "wedding_venue",
+      "convention_center",
+      "massage",
+      "spa",
+      "event_venue",
+      "lodging",
+      "restaurant",
+      "food",
+      "point_of_interest",
+      "service",
+      "establishment"
+    ],
+    "formatted_address": "300 W 44th St, New York, NY 10036, USA"
+  },
+  {
+    "bbl": "1013197503",
+    "address": "205 E 45TH ST",
+    "google_name": "Club Wyndham Midtown 45",
+    "place_id": "ChIJiW0WvwJZwokRIWyzCvo3o5k",
+    "types": [
+      "resort_hotel",
+      "real_estate_agency",
+      "travel_agency",
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "205 E 45th St, New York, NY 10017, USA"
+  },
+  {
+    "bbl": "1003040004",
+    "address": "101 BOWERY",
+    "google_name": "101 HOTEL Manhattan New York City",
+    "place_id": "ChIJMfnDLQBZwokRFPBrhsI3-nA",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "101 Bowery, New York, NY 10002, USA"
+  },
+  {
+    "bbl": "4004180024",
+    "address": "29-21 41 AVENUE",
+    "google_name": "Hilton Garden Inn Long Island City New York",
+    "place_id": "ChIJS4xTOtVYwokRCuB6Za-l44s",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "29-21 41st Ave, Long Island City, NY 11101, USA"
+  },
+  {
+    "bbl": "4003860033",
+    "address": "27-05 39th Avenue",
+    "google_name": "Vista LIC Hotel, Premier Collection by Best Western",
+    "place_id": "ChIJL6qKtCxfwokRmTHEIBQgqKM",
+    "types": [
+      "hotel",
+      "lodging",
+      "service",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "27-05 39th Ave, Long Island City, NY 11101, USA"
+  },
+  {
+    "bbl": "4000960010",
+    "address": "2632 SKILLMAN AVE",
+    "google_name": "Feather Factory Hotel Queens NY",
+    "place_id": "ChIJffXi9StZwokRhAf3Lp6dMzI",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "Queens County, Skillman Ave, Long Island City, NY 11101, USA"
+  }
+]

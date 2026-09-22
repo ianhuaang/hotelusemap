@@ -1,0 +1,56 @@
+[
+  {
+    "bbl": "4004020025",
+    "address": "40-03 29 STREET",
+    "google_name": "Verve Hotel, an Ascend Hotel Collection Member",
+    "place_id": "ChIJ8XDoSStfwokRokHK7TgDnms",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "40-03 29th St, Long Island City, NY 11101, USA"
+  },
+  {
+    "bbl": "4004020028",
+    "address": "29-14 40 AVENUE",
+    "google_name": "Microtel Inn by Wyndham Long Island City",
+    "place_id": "ChIJFzj6f4lfwokR-0MNxB24yOU",
+    "types": [
+      "hotel",
+      "inn",
+      "motel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "29-12 40th Ave, Astoria, NY 11101, USA"
+  },
+  {
+    "bbl": "4004740001",
+    "address": "38-78 11TH STREET",
+    "google_name": "Hampton Inn by Hilton Long Island City New York",
+    "place_id": "ChIJa47d7LBZwokRq5AfLgzwDVc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "38-04 11th St, Long Island City, NY 11101, USA"
+  },
+  {
+    "bbl": "4004740056",
+    "address": "38-60 11 STREET",
+    "google_name": "Hampton Inn by Hilton Long Island City New York",
+    "place_id": "ChIJa47d7LBZwokRq5AfLgzwDVc",
+    "types": [
+      "hotel",
+      "lodging",
+      "point_of_interest",
+      "establishment"
+    ],
+    "formatted_address": "38-04 11th St, Long Island City, NY 11101, USA"
+  }
+]

@@ -28,3 +28,10 @@ map/dist/
 # of candidates, and once because the cache was deleted during a two-building
 # test and had never been committed. Roughly $85 of Places calls each time.
 !data/raw/google_current_use_cache.json
+
+# The verified hotel names too. These carry the address each one matched, so a
+# wrong match can be found later — the August files did not, which is why they
+# were left out and have now been deleted rather than committed. 576 verified
+# names between these and the sweep.
+!data/raw/google_hotel_names_[0-9]*.json
+!data/raw/google_hclass_hotels_[0-9]*.json
