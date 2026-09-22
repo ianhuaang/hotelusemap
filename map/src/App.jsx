@@ -890,71 +890,83 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           if (p.is_landmark) {
             considerations.push({
               text: `LPC Individual Landmark${p.landmark_name ? ` — ${p.landmark_name}` : ""}`,
+              kind: "legal",
               severity: "medium",
             });
           }
           if (p.historic_district) {
             considerations.push({
               text: `Historic District — ${p.historic_district}`,
+              kind: "legal",
               severity: "medium",
             });
           }
           if (p.is_condo) {
             considerations.push({
               text: "Condominium (condo billing lot) — requires board approval or commercial condo owner negotiation",
+              kind: "operational",
               severity: "medium",
             });
           }
           if (p.ecb_illegal_transient > 0) {
             considerations.push({
               text: `${p.ecb_illegal_transient} open DOB violation${p.ecb_illegal_transient === 1 ? "" : "s"} under §28-210.3 — permanent dwelling offered or used for other than permanent residential purpose. This is the statute cited against illegal hotels, so somebody has already been running transient stays here without authority.`,
+              kind: "legal",
               severity: "high",
             });
           }
           if (p.fisp_applicable) {
             considerations.push({
               text: `Over six storeys — subject to the facade inspection programme (Local Law 11 / FISP). Inspection and filing every five years, and an unsafe finding carries a repair deadline. A recurring cost, not a one-off.`,
+              kind: "operational",
               severity: "low",
             });
           }
           if (p.safe_hotels_large_hotel) {
             considerations.push({
               text: `${p.safe_hotels_guest_rooms} guest rooms — over 400 makes this a "large hotel" under the Safe Hotels Act: core staff must be employed directly, and a security guard must be on duty continuously. Roughly 4-5 FTE of fixed cover before occupancy.`,
+              kind: "operational",
               severity: "high",
             });
           } else if (p.safe_hotels_direct_employment) {
             considerations.push({
               text: `${p.safe_hotels_guest_rooms} guest rooms — at 100 or more, the Safe Hotels Act requires housekeeping, front desk and front service staff to be employed directly rather than subcontracted. Re-underwrite labor before pricing.`,
+              kind: "operational",
               severity: "high",
             });
           }
           if (p.reversion_unverified) {
             considerations.push({
               text: "Reversion window unverified — no record shows transient use here before the December 9, 2021 special-permit cutoff. Without that, re-establishing hotel use may require a special permit rather than being as-of-right.",
+              kind: "legal",
               severity: "high",
             });
           }
           if (p.htc_converted_use) {
             considerations.push({
               text: `Union shop under a Hotel Trades Council contract, listed as ${p.htc_shop_type.toLowerCase()} rather than a hotel. The agreement can survive a conversion or a change of operator, so labor obligations may attach before any deal is signed.`,
+              kind: "operational",
               severity: "high",
             });
           }
           if (p.current_use_needs_review) {
             considerations.push({
               text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
+              kind: "legal",
               severity: "medium",
             });
           }
           if (p.current_use_conflict) {
             considerations.push({
               text: `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${p.current_use_name ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`,
+              kind: "legal",
               severity: p.current_use_confidence === "high" ? "high" : "medium",
             });
           }
           if (p.zoning_hotel_permitted === "not_permitted") {
             considerations.push({
               text: `Residential zoning (${p.zonedist1 || "unknown"}) — hotel use not permitted for new operators, but existing Class B rooms are grandfathered`,
+              kind: "legal",
               severity: "medium",
             });
           }
@@ -970,23 +982,37 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                   ? b.replace("rent stabilization obligations restrict use changes", "applies to residential units, Class B transient rooms unaffected")
                   : b,
                 severity: isResidentialRestriction ? "low" : "high",
+                kind: "legal",
               });
             });
           }
           if (considerations.length === 0) return null;
+          // Two questions, not one. Whether the law allows transient use here
+          // is separate from what it costs to run — a condo board, a union
+          // contract and a facade cycle are all reasons a lawful building is
+          // still hard, and reading them in one list made everything look
+          // like the same kind of problem.
+          const groups = [
+            ["Legal", considerations.filter((c) => c.kind !== "operational")],
+            ["Operational", considerations.filter((c) => c.kind === "operational")],
+          ].filter(([, items]) => items.length > 0);
           return (
-            <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Policy Considerations</div>
-              <div className="space-y-1">
-                {considerations.map((c, i) => (
-                  <div key={i} className="flex items-start gap-1.5">
-                    <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
-                      c.severity === "high" ? "bg-red-500" : c.severity === "medium" ? "bg-amber-500" : "bg-gray-400"
-                    }`} />
-                    <span className={`text-[11px] ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
+            <div className="space-y-3">
+              {groups.map(([label, items]) => (
+                <div key={label}>
+                  <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">{label}</div>
+                  <div className="space-y-1">
+                    {items.map((c, i) => (
+                      <div key={i} className="flex items-start gap-1.5">
+                        <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
+                          c.severity === "high" ? "bg-red-500" : c.severity === "medium" ? "bg-amber-500" : "bg-gray-400"
+                        }`} />
+                        <span className={`text-[11px] ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           );
         })()}
@@ -3179,15 +3205,7 @@ export default function App() {
   const [showKasa, setShowKasa] = useState(false);
   const [distressOnly, setDistressOnly] = useState(false);
   const [noOperatorOnly, setNoOperatorOnly] = useState(false);
-  // Off by default. The filter itself is unchanged — a condominium is harder
-  // to operate whatever rooms are in it, transient ones included. What
-  // changed is that it used to hide 386 buildings and now hides 1,814, so
-  // leaving it on meant the tool opened showing 31% of its own data and
-  // 28,343 Class B rooms sat behind a checkbox nobody had ticked.
-  //
-  // The panel says condominium on the building itself. Better to show the
-  // building and the difficulty together than to remove it quietly.
-  const [hideCondos, setHideCondos] = useState(false);
+  const [hideCondos, setHideCondos] = useState(true);
   // SRO / dormitory / hostel stock is hidden by default: it scores well on Class B
   // rooms but sits in a different regulatory and operating world.
   const [hideRestricted, setHideRestricted] = useState(true);
