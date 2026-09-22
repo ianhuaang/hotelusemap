@@ -73,6 +73,21 @@ function buildOpacityExpr() {
   ];
 }
 
+// Bullet rows, kept to one set of numbers because three copies drifted.
+//
+// The panel's bullet text is 11px with no line-height set, so it inherits and
+// lands on a 16px line box. Centring a mark on that line is arithmetic: a 6px
+// dot needs (16-6)/2 = 5px above it, a 10px swatch needs 3px. Every one of
+// them carried mt-0.5, which is 2px, so the dots sat high.
+//
+// The glyph column needs a width of its own. A tick, a warning triangle and a
+// bullet are different widths at 10px, so without one the text started at a
+// different x on every row and the left edge came out ragged.
+const BULLET_TEXT = "text-[11px] leading-[16px]";
+const BULLET_DOT = "shrink-0 w-1.5 h-1.5 rounded-full mt-[5px]";
+const BULLET_SWATCH = "shrink-0 w-2.5 h-2.5 rounded-sm mt-[3px]";
+const BULLET_ICON = "shrink-0 w-3 text-center text-[10px] leading-[16px]";
+
 const CLUSTER_ZOOM_THRESHOLD = 14; // below this: clusters; above: footprints
 
 
@@ -812,8 +827,8 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
               )}
               {conflict && (
                 <div className="flex items-start gap-1.5 mt-1.5">
-                  <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${high ? "bg-red-500" : "bg-amber-500"}`} />
-                  <span className={`text-[11px] ${high ? "text-red-700" : "text-gray-600"}`}>{conflict}</span>
+                  <span className={`${BULLET_DOT} ${high ? "bg-red-500" : "bg-amber-500"}`} />
+                  <span className={`${BULLET_TEXT} ${high ? "text-red-700" : "text-gray-600"}`}>{conflict}</span>
                 </div>
               )}
             </div>
@@ -869,12 +884,12 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
               }
               return items.map((item, i) => (
                 <div key={i} className="flex items-start gap-1.5">
-                  <span className={`mt-0.5 shrink-0 text-[10px] ${
+                  <span className={`${BULLET_ICON} ${
                     item.icon === "check" ? "text-emerald-600" : item.icon === "warn" ? "text-amber-600" : "text-gray-400"
                   }`}>
                     {item.icon === "check" ? "✓" : item.icon === "warn" ? "⚠" : "•"}
                   </span>
-                  <span className="text-[11px] text-gray-700">{item.text}</span>
+                  <span className={`${BULLET_TEXT} text-gray-700`}>{item.text}</span>
                 </div>
               ));
             })()}
@@ -1030,10 +1045,10 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                   <div className="space-y-1">
                     {items.map((c, i) => (
                       <div key={i} className="flex items-start gap-1.5">
-                        <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${
+                        <span className={`${BULLET_DOT} ${
                           c.severity === "high" ? "bg-red-500" : c.severity === "medium" ? "bg-amber-500" : "bg-gray-400"
                         }`} />
-                        <span className={`text-[11px] ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
+                        <span className={`${BULLET_TEXT} ${c.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{c.text}</span>
                       </div>
                     ))}
                   </div>
@@ -3082,15 +3097,15 @@ function MethodologyView({ features, onDrillDown, onSelectFeature }) {
           <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Segments</div>
           <div className="space-y-2 text-[11px] text-gray-600">
             <div className="flex items-start gap-2">
-              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#8b5cf6" }} />
+              <span className={BULLET_SWATCH} style={{ background: "#8b5cf6" }} />
               <div><strong className="text-gray-800">Class B, no operator</strong> — Almost always HPD-registered Class B (transient) rooms where no hotel operator surfaced via DCWP licence, Google Places or an operator-name match. Absence of evidence, not proof the building is idle: most carry a managing agent, and an operator running 30-day stays leaves no public record at all. A few qualify instead on DOB R-1 occupancy or a hotel building class. The primary sourcing targets.</div>
             </div>
             <div className="flex items-start gap-2">
-              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#16a34a" }} />
+              <span className={BULLET_SWATCH} style={{ background: "#16a34a" }} />
               <div><strong className="text-gray-800">Active hotel</strong> — Buildings with an identified hotel operator via DCWP license, Google Places, or operator name keywords. Already has a hotel operator in place.</div>
             </div>
             <div className="flex items-start gap-2">
-              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ background: "#f59e0b" }} />
+              <span className={BULLET_SWATCH} style={{ background: "#f59e0b" }} />
               <div><strong className="text-gray-800">Partial signal</strong> — Building class suggests mixed use (RM, RC, etc.) but no confirmed transient rooms from HPD or DOB. May have transient capacity — needs manual verification.</div>
             </div>
           </div>
