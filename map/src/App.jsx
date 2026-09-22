@@ -776,6 +776,19 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
             : null;
           if (building.length === 0 && !conflict) return null;
           const high = p.current_use_confidence === "high";
+          // A lone name answers nothing — "The Brook" could be a hotel, a club
+          // or a restaurant, and 59% of the buildings that list occupants list
+          // exactly one. Google's own type for it is the only thing on hand
+          // that says which, so it rides along. Only when there is one name
+          // and no conflict line: several names already describe a mixed-use
+          // building, and a conflict line names the use itself.
+          const parts = [];
+          if (!conflict && building.length === 1 && building[0].type) {
+            parts.push(String(building[0].type).replace(/_/g, " "));
+          }
+          if (occ.length > building.length) {
+            parts.push(`plus ${occ.length - building.length} ground-floor tenants`);
+          }
           return (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
               <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current use</div>
@@ -783,7 +796,7 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                 <div className="text-[11px] text-gray-700">
                   <span className="text-gray-500">At this address: </span>
                   {names.join(", ")}
-                  {occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""}
+                  {parts.length > 0 ? ` (${parts.join(", ")})` : ""}
                 </div>
               )}
               {conflict && (
