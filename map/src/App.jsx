@@ -741,26 +741,58 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           );
         })()}
 
+        {/* What is actually in the building. Kept out of Legal Feasibility on
+            purpose: who Google finds at the address describes the building,
+            it does not decide whether the law permits transient use here, and
+            filing it under a feasibility heading made a description read as a
+            verdict. Neutral grey for the same reason — this section informs a
+            judgement rather than delivering one. */}
+        {(() => {
+          const occ = parseJsonProp(p.current_use_occupants) || [];
+          const building = occ.filter((o) => o.use !== "ground_floor_tenant");
+          const notes = [];
+          if (p.current_use_conflict) {
+            notes.push({
+              severity: p.current_use_confidence === "high" ? "high" : "medium",
+              text: `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${p.current_use_name ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`,
+            });
+          }
+          if (p.current_use_needs_review) {
+            notes.push({
+              severity: "medium",
+              text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
+            });
+          }
+          if (building.length === 0 && notes.length === 0) return null;
+          return (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current use</div>
+              {building.length > 0 && (
+                <div className="text-[11px] text-gray-700 mb-1.5">
+                  <span className="text-gray-500">At this address: </span>
+                  {building.map((o) => o.name).join(", ")}
+                  {occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""}
+                </div>
+              )}
+              <div className="space-y-1">
+                {notes.map((n, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className={`mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full ${n.severity === "high" ? "bg-red-500" : "bg-amber-500"}`} />
+                    <span className={`text-[11px] ${n.severity === "high" ? "text-red-700" : "text-gray-600"}`}>{n.text}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="text-[10px] text-gray-400 mt-1.5">What is operating here, from Google. City records describe what the building is permitted to be.</div>
+            </div>
+          );
+        })()}
+
         {/* Legal Feasibility */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
           <div className="text-xs font-semibold text-emerald-700 uppercase tracking-wide mb-2">Legal Feasibility</div>
           <div className="space-y-1.5">
             {(() => {
               const items = [];
-              {
-                // Who Google finds at the address, in full. One classification
-                // is a guess; the list is the evidence behind it, and answers
-                // "what is this building now" on its own terms.
-                const occ = parseJsonProp(p.current_use_occupants) || [];
-                const building = occ.filter((o) => o.use !== "ground_floor_tenant");
-                if (building.length > 0) {
-                  items.push({
-                    icon: p.current_use_conflict ? "warn" : "info",
-                    text: `At this address: ${building.map((o) => o.name).join(", ")}`
-                      + (occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""),
-                  });
-                }
-              }
               const bldg = (p.bldgclass || "").toUpperCase();
               const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
               if (isHotelClass) {
@@ -921,20 +953,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
               severity: "high",
             });
           }
-          if (p.current_use_needs_review) {
-            considerations.push({
-              text: "Google finds more than one building-level use at this address, so what the building is today is genuinely unclear from the public record. Worth a look before it goes on a list.",
-              kind: "legal",
-              severity: "medium",
-            });
-          }
-          if (p.current_use_conflict) {
-            considerations.push({
-              text: `In use as ${(p.current_use_label || "a non-transient use").toLowerCase()}${p.current_use_name ? ` (${p.current_use_name})` : ""} — city records show transient capacity, the building on the ground does not. Confirm before sourcing.`,
-              kind: "legal",
-              severity: p.current_use_confidence === "high" ? "high" : "medium",
-            });
-          }
           if (p.zoning_hotel_permitted === "not_permitted") {
             considerations.push({
               text: `Residential zoning (${p.zonedist1 || "unknown"}) — hotel use not permitted for new operators, but existing Class B rooms are grandfathered`,
@@ -964,8 +982,11 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           // contract and a facade cycle are all reasons a lawful building is
           // still hard, and reading them in one list made everything look
           // like the same kind of problem.
+          //
+          // What the building currently is answers neither, so it is not here
+          // at all — it has its own section above.
           const groups = [
-            ["Legal", considerations.filter((c) => c.kind !== "operational")],
+            ["Legal", considerations.filter((c) => c.kind === "legal")],
             ["Operational", considerations.filter((c) => c.kind === "operational")],
           ].filter(([, items]) => items.length > 0);
           return (
