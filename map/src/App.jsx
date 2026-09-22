@@ -747,16 +747,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
           <div className="space-y-1.5">
             {(() => {
               const items = [];
-              // What the building is today, ahead of what its records permit.
-              // City data describes entitlement; this describes occupancy.
-              if (p.current_use_checked && p.current_use && p.current_use !== "unknown") {
-                const who = p.current_use_name ? ` — ${p.current_use_name}` : "";
-                const conf = p.current_use_confidence === "high" ? "" : ` (${p.current_use_confidence} confidence, verify)`;
-                items.push({
-                  icon: p.current_use_conflict ? "warn" : "info",
-                  text: `Currently: ${p.current_use_label}${who}${conf}`,
-                });
-              }
               {
                 // Who Google finds at the address, in full. One classification
                 // is a guess; the list is the evidence behind it, and answers
@@ -770,24 +760,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                       + (occ.length > building.length ? ` (plus ${occ.length - building.length} ground-floor tenants)` : ""),
                   });
                 }
-              }
-              if (p.safe_hotels_guest_rooms > 0 && p.safe_hotels_room_basis !== "floor_estimate") {
-                // Guest rooms as the Act counts them — transient only. Shown
-                // separately from Est. Rooms, which counts the whole building.
-                items.push({
-                  icon: p.safe_hotels_direct_employment ? "warn" : "check",
-                  text: `${p.safe_hotels_guest_rooms} guest rooms under the Safe Hotels Act${p.safe_hotels_direct_employment ? "" : " — under the 100-room staffing threshold"}`,
-                });
-              }
-              if (p.htc_union) {
-                // Straight from the Hotel Trades Council's own roster, matched
-                // on coordinates. shop_type is what the union calls the
-                // building now, so a Residence or a Club here is a former
-                // hotel whose contract outlived the conversion.
-                items.push({
-                  icon: p.htc_converted_use ? "warn" : "info",
-                  text: `Hotel Trades Council union shop — ${p.htc_shop_type}${p.htc_union_name ? ` (${p.htc_union_name})` : ""}`,
-                });
               }
               const bldg = (p.bldgclass || "").toUpperCase();
               const isHotelClass = bldg.startsWith("H") && bldg !== "HR" && bldg !== "H8";
