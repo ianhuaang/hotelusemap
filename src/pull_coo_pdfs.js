@@ -47,16 +47,21 @@ const OUT_DIR = path.join(__dirname, "..", "data", "raw", "coo_pdfs");
 const LISTING = (bin) =>
   `https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=${bin}`;
 // BIS is a shared public system. One building at a time, with a pause.
-const DELAY_MS = 2500;
+//
+// 2500ms is not enough at volume: a 129-building run served 76 buildings and
+// was then 403'd for the remaining 53 without recovering. Akamai is counting,
+// so --delay raises the pause and a run is best kept under ~75 buildings.
+let DELAY_MS = 2500;
 
 function parseArgs(argv) {
-  const out = { bins: [], limit: Infinity, latest: 0 };
+  const out = { bins: [], limit: Infinity, latest: 0, delay: 0 };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === "--bins") out.bins = argv[++i].split(",").map((s) => s.trim()).filter(Boolean);
     else if (argv[i] === "--file") {
       const raw = JSON.parse(fs.readFileSync(argv[++i], "utf8"));
       out.bins = (Array.isArray(raw) ? raw : raw.bins || []).map(String);
     } else if (argv[i] === "--limit") out.limit = Number(argv[++i]);
+    else if (argv[i] === "--delay") out.delay = Number(argv[++i]);
     else if (argv[i] === "--latest") {
       const n = Number(argv[i + 1]);
       out.latest = Number.isFinite(n) && n > 0 ? (i++, n) : 1;
@@ -134,7 +139,8 @@ async function pullOne(page, bin, latest) {
 
 async function main() {
   const { chromium } = require("playwright");
-  const { bins, limit, latest } = parseArgs(process.argv);
+  const { bins, limit, latest, delay } = parseArgs(process.argv);
+  if (delay) DELAY_MS = delay;
   if (!bins.length) {
     console.error("usage: node src/pull_coo_pdfs.js --bins <BIN,BIN> | --file <json>");
     process.exit(1);
