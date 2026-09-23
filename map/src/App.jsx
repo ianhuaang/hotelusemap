@@ -271,11 +271,21 @@ const CSV_COLUMNS = [
   { key: "tier", label: "Tier" },
   { key: "confidence", label: "Confidence" },
   { key: "bldgclass", label: "Building Class" },
-  { key: "unitsres", label: "Residential Units" },
-  { key: "unitstotal", label: "Total Units" },
+  // Three agencies count this building three ways and none of them is wrong,
+  // so the labels carry their source. "Total Units" beside "HPD Class A/B"
+  // reads as arithmetic that should reconcile, and it never will: PLUTO is a
+  // Department of Finance tax record where a hotel is one commercial
+  // establishment, so 269 of 555 hotel-class buildings report 0 or 1 total
+  // units against hundreds of rooms. 37-02 10 Street says 1 against 381.
+  { key: "unitsres", label: "PLUTO Residential Units" },
+  { key: "unitstotal", label: "PLUTO Total Units (tax lot)" },
   { key: "numfloors", label: "Floors" },
-  { key: "hpd_class_a", label: "HPD Class A" },
-  { key: "hpd_class_b", label: "HPD Class B" },
+  { key: "hpd_class_a", label: "HPD Class A (permanent)" },
+  { key: "hpd_class_b", label: "HPD Class B (transient)" },
+  // What DOB approved, which differs from what HPD has registered on 36% of
+  // buildings — registration drifts from approval, and the gap is worth
+  // seeing. 237 Madison registers 157 against a certificate approving 107.
+  { key: "coo_dwelling_units", label: "C of O Dwelling Units (DOB approved)" },
   { key: "zonedist1", label: "Zoning" },
   { key: "ownername", label: "Owner" },
   { key: "owner_portfolio_size", label: "Owner Portfolio Size" },
@@ -313,6 +323,27 @@ const CSV_COLUMNS = [
   { key: "mortgage_approaching_maturity", label: "Mortgage Maturing" },
   { key: "reason_codes", label: "Reason Codes" },
 ];
+
+// Alt addresses arrive as spelling variants of the same place: 35-02 37
+// Avenue lists "37-06 36 STREET", "37-06 36TH STREET", "37-6 36TH STREET" and
+// "3706 36TH STREET", which is one address written four ways. Dedupe on a
+// normalised key — ordinal suffixes dropped, punctuation and leading zeros
+// removed — and show the first spelling of each.
+function distinctAddresses(list, exclude) {
+  const key = (s) => String(s || "").toUpperCase()
+    .replace(/(\d)(ST|ND|RD|TH)\b/g, "$1")
+    .replace(/[^A-Z0-9]/g, "")
+    .replace(/\b0+(\d)/g, "$1");
+  const skip = new Set([key(exclude)]);
+  const out = [];
+  for (const a of list || []) {
+    const k = key(a);
+    if (!a || !k || skip.has(k)) continue;
+    skip.add(k);
+    out.push(a);
+  }
+  return out;
+}
 
 function parseJsonProp(val) {
   if (typeof val === "string") {
@@ -833,9 +864,44 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
             ? `Hotel Trades Council lists it as a ${(p.current_use_label || "non-hotel").toLowerCase()}`
             : p.current_use_label || "Non-transient use";
           const conflict = p.current_use_conflict
-            ? `${lead}${unnamed ? ` (${p.current_use_name})` : ""} — ${rooms} are entitled but already occupied.`
+            ? (p.hpd_class_b > 0
+                ? `${lead}${unnamed ? ` (${p.current_use_name})` : ""} — ${rooms} are entitled but already occupied.`
+                // No Class B registered: the building reached this tier on its
+                // building class alone, so there are no entitled rooms to be
+                // occupied and claiming otherwise is simply false.
+                : `${lead}${unnamed ? ` (${p.current_use_name})` : ""} — no transient rooms are registered here, and the building is in other use.`)
             : null;
-          if (building.length === 0 && !conflict) return null;
+          // An unchecked building and a clean one used to render identically —
+          // no section at all — and that silence reads as "nothing found"
+          // when it means "we never established it". 34% of the transient
+          // segment is in this state, so it says so. 83% of them carry more
+          // than one address, which is usually why: 35-02 37 Avenue is filed
+          // with the city as 37-06 36 Street.
+          const groundOnly = occ.filter((o) => o.use === "ground_floor_tenant");
+          if (building.length === 0 && !conflict && groundOnly.length > 0) {
+            return (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current use</div>
+                <div className={BULLET_TEXT + " text-gray-600"}>
+                  <span className="text-gray-500">Ground floor: </span>
+                  {groundOnly.map((t) => t.name).join(", ")}
+                </div>
+                <div className={BULLET_TEXT + " text-gray-500 mt-1"}>What occupies the rest of the building is not established.</div>
+              </div>
+            );
+          }
+          if (building.length === 0 && !conflict) {
+            const alts = distinctAddresses(parseJsonProp(p.alt_addresses), p.address);
+            return (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Current use</div>
+                <div className={BULLET_TEXT + " text-gray-600"}>Not established — no occupant matched this address.</div>
+                {alts.length > 0 && (
+                  <div className={BULLET_TEXT + " text-gray-500 mt-1"}>Also filed as {alts.join(", ")}.</div>
+                )}
+              </div>
+            );
+          }
           const high = p.current_use_confidence === "high";
           // A lone name answers nothing — "The Brook" could be a hotel, a club
           // or a restaurant, and 59% of the buildings that list occupants list
