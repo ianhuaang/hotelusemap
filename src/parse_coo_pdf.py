@@ -121,10 +121,25 @@ def parse(path: Path) -> dict:
         kind = ("transient" if any(k in upper for k in TRANSIENT_MARKS)
                 else "residential" if any(k in upper for k in RESIDENTIAL_MARKS)
                 else "other")
+        # The numeric column is not reliably the dwelling-unit count — it
+        # reports 9 units for a lobby, 27 for a gym and 53 for a lounge, which
+        # is the column to its left bleeding across in the extracted text. The
+        # description is trustworthy and states the count outright: "EIGHT (8)
+        # CLASS A HOTEL ROOMS". Read that instead, and only where the row
+        # actually describes somewhere people sleep.
+        described = None
+        # HOTEL alone counts: one floor reads "EIGHT (8) CLASS A HOTEL" without
+        # the word rooms. Safe because the count must be a bare parenthesised
+        # number, and the accessory rows carry "(NAMED FLOOR:005)" instead.
+        if re.search(r"\b(ROOM|APARTMENT|DWELLING|UNIT|SUITE|HOTEL|SRO|ROOMING)", desc, re.I):
+            m = re.search(r"\((\d{1,3})\)", desc)
+            if m:
+                described = int(m.group(1))
         rows.append({
             "floor": floor,
             "occupancy_load": None if load == "OG" else int(load),
-            "dwelling_units": int(units) if units else None,
+            "units_described": described,
+            "units_column_raw": int(units) if units else None,
             "use_group": ug,
             "kind": kind,
             "description": desc.strip()[:120],
@@ -133,6 +148,10 @@ def parse(path: Path) -> dict:
     # Contiguity is asked of the numbered floors only; a cellar or a roof tank
     # room says nothing about whether the rooms can be run as a block.
     numbered = [r for r in rows if r["floor"].isdigit()]
+    sleeping = [r for r in rows if r["units_described"]]
+    rooms_by_kind = {}
+    for r in sleeping:
+        rooms_by_kind[r["kind"]] = rooms_by_kind.get(r["kind"], 0) + r["units_described"]
     t_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "transient"})
     r_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "residential"})
     contiguous = (len(t_floors) <= 1) or (t_floors == list(range(t_floors[0], t_floors[-1] + 1)))
@@ -150,6 +169,7 @@ def parse(path: Path) -> dict:
         "readable": True,
         **header,
         "use_groups": sorted(use_groups),
+        "rooms_described": rooms_by_kind,
         "rows": len(rows),
         "transient_floors": t_floors,
         "residential_floors": r_floors,
