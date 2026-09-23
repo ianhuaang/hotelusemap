@@ -706,7 +706,11 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
     <div className="fixed top-4 right-4 w-96 max-h-[calc(100vh-2rem)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-200 z-20">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900 truncate pr-2">{p.hotel_name || p.address}</h2>
+          {/* Wraps rather than truncates. When a building has no hotel name
+              this line IS the address, and "61 CHRYST…" is not an address —
+              the buttons beside it are shrink-0 and take a fixed ~200px of a
+              384px panel, so truncation started almost immediately. */}
+          <h2 className="text-lg font-semibold text-gray-900 leading-snug break-words pr-2">{p.hotel_name || p.address}</h2>
           {p.hotel_name && <div className="text-xs text-gray-500 mt-0.5">{p.address}</div>}
           {p.neighborhood && <div className="text-xs text-gray-400 mt-0.5">{p.neighborhood}</div>}
         </div>
