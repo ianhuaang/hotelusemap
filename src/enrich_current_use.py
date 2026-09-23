@@ -284,8 +284,24 @@ def _house_number(text: str) -> str:
     return m.group(1) if m else ""
 
 
-def address_match(query_addr: str, result_addr: str) -> str:
-    """high / medium / low confidence that the result is the same building."""
+def address_match(query_addr, result_addr: str) -> str:
+    """high / medium / low confidence that the result is the same building.
+
+    query_addr may be a list. A building is often known by more than one
+    address and the city files it under whichever it likes: 35-02 37 Avenue is
+    37-06 36 Street to DOB, so a business standing in it and formatted under
+    36 Street failed the street test and was thrown out. Matching against every
+    known address fixes that; the best result wins.
+    """
+    if isinstance(query_addr, (list, tuple, set)):
+        ranks = {"high": 0, "medium": 1, "low": 2}
+        best = "low"
+        for one in query_addr:
+            got = address_match(one, result_addr)
+            if ranks[got] < ranks[best]:
+                best = got
+        return best
+
     q_num, r_num = _house_number(query_addr), _house_number(result_addr)
     q_street = _normalize_street(query_addr)
     r_street = _normalize_street(result_addr)
@@ -428,7 +444,7 @@ _USE_PRIORITY = {
 }
 
 
-def candidates(address: str, lat: float, lon: float, footprint: list = None) -> list[dict]:
+def candidates(address, lat: float, lon: float, footprint: list = None) -> list[dict]:
     """Every address-verified occupant, classified but not yet ranked.
 
     Split from the ranking so the cache can hold candidates rather than a
@@ -525,6 +541,22 @@ def rank_candidates(scored: list[dict], places_seen: int = 0) -> dict | None:
 
 # --- Driver -----------------------------------------------------------------
 
+def load_alt_addresses() -> dict:
+    """BBL -> every address the building is filed under.
+
+    Produced by pull_alt_addresses.py, which is already in the refresh
+    sequence, and read by build_geojson for display. This step never looked at
+    it, which is why 539 buildings — 83% of them carrying more than one
+    address — came back with no occupant at all.
+    """
+    files = sorted(DATA_PROCESSED.glob("alt_addresses_*.json"), reverse=True)
+    if not files:
+        print("  no alt_addresses file — run src/pull_alt_addresses.py first, "
+              "or buildings filed under a second address will not resolve")
+        return {}
+    return json.loads(files[0].read_text())
+
+
 def load_buildings() -> list[dict]:
     """Buildings with geometry, since the lookup now needs coordinates.
 
@@ -599,9 +631,12 @@ def main() -> None:
     if not API_KEY:
         sys.exit("Set GOOGLE_API_KEY")
 
+    alt_addresses = load_alt_addresses()
+
     results, new, hits, misses = [], 0, 0, 0
     for i, rec in enumerate(targets):
         bbl, addr = rec["bbl"], rec.get("address", "")
+        known = [addr] + [a for a in alt_addresses.get(bbl, []) if a and a != addr]
         if not addr:
             continue
         key = f"{bbl}|{addr}"
@@ -614,7 +649,7 @@ def main() -> None:
             if args.limit and new >= args.limit:
                 break
             try:
-                scored = candidates(addr, rec["lat"], rec["lon"], rec.get("footprint"))
+                scored = candidates(known, rec["lat"], rec["lon"], rec.get("footprint"))
             except Exception as e:
                 print(f"  ERROR {addr}: {e}")
                 continue
