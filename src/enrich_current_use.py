@@ -196,6 +196,16 @@ TENANT_TYPES = frozenset({
     "fitness_center", "beauty_salon", "hair_salon", "nail_salon", "spa",
     "bank", "atm", "parking", "gas_station", "real_estate_agency",
     "insurance_agency", "travel_agency", "laundry", "night_club", "liquor_store",
+    # Street furniture and landmarks stand near a building, not in it. Matching
+    # against every alternate address let these through — a Citi Bike dock
+    # outside 35-02 37 Avenue became the building's use, and bus stops, a
+    # skate park and the Wall of New Amsterdam did the same elsewhere. They
+    # were never suppressed before because the stricter address test happened
+    # to reject them for the wrong reason.
+    "tourist_attraction", "historical_landmark", "cultural_landmark", "landmark",
+    "monument", "sculpture", "park", "plaza", "skateboard_park", "dog_park",
+    "bus_stop", "transit_station", "train_station", "subway_station",
+    "light_rail_station", "bike_sharing_station", "bicycle_rental",
     # Practitioners rent a suite; they do not define the building.
     "health", "doctor", "dentist", "dental_clinic", "physiotherapist", "medical_lab",
     "wellness_center", "chiropractor", "psychologist", "veterinary_care",
@@ -644,7 +654,22 @@ def main() -> None:
         # The cache holds candidates, never the verdict. Ranking is applied on
         # every run, so changing how the winner is chosen costs nothing.
         if key in cache:
-            scored = cache[key]
+            # Re-classify on read. The cache is meant to hold candidates rather
+            # than verdicts, but classification was being baked in at write
+            # time, so a change to TYPE_RULES or TENANT_TYPES reached only
+            # buildings that had never been looked up. Suppressing Citi Bike
+            # docks and bus stops changed nothing until this did. The cached
+            # fields carry primary_type and types, so it costs no API call.
+            scored = [dict(c) for c in cache[key]]
+            for c in scored:
+                use, label, conf, basis = classify({
+                    "displayName": {"text": c.get("google_name", "")},
+                    "types": c.get("types") or [],
+                    "primaryType": c.get("primary_type") or "",
+                    "primaryTypeDisplayName": {"text": c.get("primary_type_display", "")},
+                })
+                c["current_use"], c["current_use_label"] = use, label
+                c["use_confidence"], c["basis"] = conf, basis
         else:
             if args.limit and new >= args.limit:
                 break
