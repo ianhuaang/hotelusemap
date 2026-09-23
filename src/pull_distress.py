@@ -40,6 +40,12 @@ BBL_CHUNK = 100
 TODAY = date.today().strftime("%Y%m%d")
 
 
+# Ordering on a column with ties is still undefined paging. inspectiondate
+# has thousands of rows per value, and the server breaks those ties however it
+# likes on each request, so $offset walks a set that reshuffles underneath it
+# exactly as if there were no order at all: 128,059 duplicates out of 275,113
+# HPD violation rows, and as many rows never returned. :id is the tiebreaker
+# that makes the sort total.
 def _fetch_all(dataset_id, params_base, label="records"):
     """Generic Socrata paginated fetch."""
     ctx = ssl.create_default_context(cafile=certifi.where())
@@ -163,7 +169,7 @@ def pull_hpd_violations() -> Path:
             {
                 "$select": select,
                 "$where": "violationstatus='Open' AND boroid IN ('1','3','4')",
-                "$order": "inspectiondate DESC",
+                "$order": "inspectiondate DESC, :id",
             },
             label="HPD violations",
         )
@@ -207,7 +213,7 @@ def pull_ecb_violations() -> Path:
                 "infraction_code1,section_law_description1"
             ),
             "$where": "ecb_violation_status='ACTIVE' AND boro IN ('1','3','4')",
-            "$order": "issue_date DESC",
+            "$order": "issue_date DESC, :id",
         },
         label="ECB violations",
     )
@@ -238,7 +244,7 @@ def pull_tax_liens() -> Path:
         {
             "$select": "borough,block,lot,cycle,tax_class_code,building_class,water_debt_only",
             "$where": "borough IN ('1','3','4')",
-            "$order": "borough,block,lot",
+            "$order": "borough,block,lot,:id",
         },
         label="tax liens",
     )
@@ -276,7 +282,7 @@ def pull_lis_pendens() -> Path:
         {
             "$select": "document_id,doc_type,document_date,recorded_datetime,document_amt",
             "$where": f"doc_type IN ('LTPA','JUDG') AND recorded_datetime>'{cutoff}' AND recorded_borough IN ('1','3','4')",
-            "$order": "recorded_datetime DESC",
+            "$order": "recorded_datetime DESC, :id",
         },
         label="distress filings (master)",
     )
