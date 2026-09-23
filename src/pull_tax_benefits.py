@@ -67,7 +67,14 @@ def pull_tax_benefits() -> Path:
             "$select": select,
             "$where": where,
             "$limit": BATCH_SIZE,
+            # Socrata paging is undefined without an order. The C of O pull
+            # ran this way for months and came back with 34,126 duplicate rows
+            # out of 121,577, silently dropping as many it never saw, while
+            # the totals reconciled against DOB's own count. No damage is
+            # detectable in this dataset's output today, which is luck rather
+            # than safety.
             "$offset": offset,
+            "$order": ":id",
         })
         url = f"{SOCRATA_BASE_URL}/{DATASET_ID}.json?{params}"
         req = urllib.request.Request(url, headers=SOCRATA_HEADERS)

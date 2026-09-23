@@ -34,7 +34,13 @@ def _fetch_all(dataset_id, params_base, label="records"):
     all_rows = []
     offset = 0
     while True:
-        params = {**params_base, "$limit": BATCH_SIZE, "$offset": offset}
+        # Socrata paging is undefined without an order. The C of O pull
+        # ran this way for months and came back with 34,126 duplicate rows
+        # out of 121,577, silently dropping as many it never saw, while
+        # the totals reconciled against DOB's own count. No damage is
+        # detectable in this dataset's output today, which is luck rather
+        # than safety.
+        params = {**params_base, "$limit": BATCH_SIZE, "$offset": offset, "$order": ":id"}
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{urllib.parse.urlencode(params)}"
         req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
         for attempt in range(3):
