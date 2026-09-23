@@ -42,6 +42,44 @@ TRANSIENT_MARKS = ("J-1", "HOTEL", "TRANSIENT")
 RESIDENTIAL_MARKS = ("J-2", "RESIDENTIAL", "APARTMENT", "DWELLING")
 
 
+def _feed_latest() -> dict:
+    """Newest C of O issue date per BIN, from the Socrata feed.
+
+    BIS only serves legacy certificates. A building whose current certificate
+    was filed through DOB NOW — which blocks automated access entirely — gives
+    up its superseded ones instead, and they can be a decade out of date and
+    describe a different building. 37-02 10 Street returns a 2014 certificate
+    for an automobile repair shop; the 381-room hotel standing there now was
+    certified in 2022 and is only in DOB NOW.
+
+    65% of what we parse has been superseded, so every record says so.
+    """
+    import glob
+    files = sorted(DATA_RAW.glob("coo_*.json"), reverse=True)
+    files = [f for f in files if f.name != "coo_pdfs"]
+    if not files:
+        return {}
+    rows = json.loads(files[0].read_text())
+    rows = rows if isinstance(rows, list) else rows.get("data", [])
+    out = {}
+    for r in rows:
+        b, d = str(r.get("bin") or ""), _parse_date(r.get("issue_date"))
+        if b and d and (b not in out or d > out[b]):
+            out[b] = d
+    return out
+
+
+def _parse_date(s):
+    from datetime import datetime
+    s = (s or "").strip()[:10]
+    for fmt in ("%Y-%m-%d", "%m/%d/%y", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            pass
+    return None
+
+
 def parse(path: Path) -> dict:
     try:
         import pypdf
@@ -123,6 +161,22 @@ def parse(path: Path) -> dict:
     }
 
 
+def annotate_currency(results: list, feed: dict) -> None:
+    """Mark each parsed certificate against the newest one on file."""
+    for r in results:
+        if not r.get("readable"):
+            continue
+        newest = feed.get(r.get("bin") or "")
+        mine = _parse_date(r.get("effective_date"))
+        if not newest or not mine:
+            r["is_current"] = None
+            continue
+        gap = (newest - mine).days
+        r["newest_filed"] = newest.date().isoformat()
+        r["years_superseded"] = round(gap / 365.25, 1)
+        r["is_current"] = gap <= 365
+
+
 def main() -> None:
     args = sys.argv[1:]
     if not args:
@@ -143,6 +197,8 @@ def main() -> None:
                 for f in r["floors"][:40]:
                     print(f"    {f['floor']:>4}  UG {f['use_group']:<8} {f['kind']:<11} {f['description'][:60]}")
 
+    annotate_currency(out, _feed_latest())
+
     if len(paths) > 1:
         dest = DATA_PROCESSED / "coo_parsed.json"
         dest.write_text(json.dumps(out, indent=2))
@@ -153,6 +209,9 @@ def main() -> None:
         print(f"  sharing only the lobby (normal, not a problem): {len(lobby)}")
         split = [r for r in out if r.get("readable") and not r.get("transient_contiguous")]
         print(f"  with non-contiguous transient floors: {len(split)}")
+        superseded = [r for r in out if r.get("is_current") is False]
+        print(f"  SUPERSEDED by a newer filing: {len(superseded)} — BIS serves "
+              f"legacy certificates only, so a DOB NOW-era building gives up its old ones")
 
 
 if __name__ == "__main__":
