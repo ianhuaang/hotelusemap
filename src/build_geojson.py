@@ -491,7 +491,14 @@ def build_geojson(
 
     # Drop non-target buildings (dorms, shelters, HDFCs, garages, vacant land, etc.)
     pre_inst = len(pipeline)
-    pipeline = [r for r in pipeline if not _is_non_target(r)]
+    # A reversion candidate is exempt here as it is from the zoning and special
+    # permit filters. The Stewart Hotel closed in 2022 and its owner is now
+    # BG Stewart Housing Development Fund Corporation, so the HDFC test fired
+    # and removed 620 Class B rooms from the map — but that ownership is the
+    # consequence of the reversion, not a reason to hide it. The legend said
+    # six tracked and the map carried five.
+    pipeline = [r for r in pipeline
+                if r["bbl"] in POST_2021_REVERSIONS or not _is_non_target(r)]
     print(f"Non-target filter: {pre_inst} -> {len(pipeline)} (removed {pre_inst - len(pipeline)} non-target buildings)")
 
     # Drop non-residential buildings with no units and no hotel signals
