@@ -99,6 +99,14 @@ def parse(path: Path) -> dict:
     r_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "residential"})
     contiguous = (len(t_floors) <= 1) or (t_floors == list(range(t_floors[0], t_floors[-1] + 1)))
 
+    shared = sorted(set(t_floors) & set(r_floors))
+    # A hotel lobby beside a residential lobby on the ground floor is how a
+    # mixed building is supposed to work, and 24 of 41 certificates share
+    # exactly that and nothing else. Counting it as interleaving turned 6 real
+    # problems into 14 flags. Sharing a *guest* floor is the thing that stops
+    # you keying, cleaning and fire-separating a block.
+    shared_guest = [f for f in shared if f > 1]
+
     return {
         "file": path.name,
         "readable": True,
@@ -107,7 +115,9 @@ def parse(path: Path) -> dict:
         "rows": len(rows),
         "transient_floors": t_floors,
         "residential_floors": r_floors,
-        "shared_floors": sorted(set(t_floors) & set(r_floors)),
+        "shared_floors": shared,
+        "shared_guest_floors": shared_guest,
+        "lobby_shared_only": bool(shared) and not shared_guest,
         "transient_contiguous": contiguous,
         "floors": rows,
     }
@@ -137,8 +147,10 @@ def main() -> None:
         dest = DATA_PROCESSED / "coo_parsed.json"
         dest.write_text(json.dumps(out, indent=2))
         print(f"{readable} of {len(paths)} certificates parsed -> {dest}")
-        mixed = [r for r in out if r.get("readable") and r.get("shared_floors")]
-        print(f"  with transient and residential on the same floor: {len(mixed)}")
+        mixed = [r for r in out if r.get("readable") and r.get("shared_guest_floors")]
+        lobby = [r for r in out if r.get("readable") and r.get("lobby_shared_only")]
+        print(f"  sharing a guest floor with permanent residents: {len(mixed)}")
+        print(f"  sharing only the lobby (normal, not a problem): {len(lobby)}")
         split = [r for r in out if r.get("readable") and not r.get("transient_contiguous")]
         print(f"  with non-contiguous transient floors: {len(split)}")
 
