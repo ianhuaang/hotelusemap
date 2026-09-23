@@ -59,6 +59,13 @@ def _fetch_paginated(dataset_id: str, columns: list[str], where: str, ctx) -> li
             "$where": where,
             "$limit": BATCH_SIZE,
             "$offset": offset,
+            # Socrata pages are unordered unless you say otherwise, so $offset
+            # walks a set that reshuffles between requests: rows come back
+            # twice and others never come back at all. A 121,577-row pull
+            # carried 34,126 duplicates and silently dropped a matching number
+            # — 333 West 57 Street lost a certificate it has held since 2019,
+            # and the totals still reconciled, which is what made it invisible.
+            "$order": ":id",
         })
         url = f"{SOCRATA_BASE_URL}/{dataset_id}.json?{params}"
         req = urllib.request.Request(url, headers=SOCRATA_HEADERS)
