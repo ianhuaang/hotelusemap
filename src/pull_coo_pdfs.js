@@ -37,7 +37,7 @@
  * Usage:
  *   npx playwright install chromium     # once; the repo has the package, not the browser
  *   node src/pull_coo_pdfs.js --bins 1088437,1023455
- *   node src/pull_coo_pdfs.js --file data/processed/coo_pdf_targets.json
+ *   node src/pull_coo_pdfs.js --file data/processed/coo_pdf_targets.json --latest 2
  */
 
 const fs = require("fs");
@@ -50,18 +50,48 @@ const LISTING = (bin) =>
 const DELAY_MS = 2500;
 
 function parseArgs(argv) {
-  const out = { bins: [], limit: Infinity };
+  const out = { bins: [], limit: Infinity, latest: 0 };
   for (let i = 2; i < argv.length; i++) {
     if (argv[i] === "--bins") out.bins = argv[++i].split(",").map((s) => s.trim()).filter(Boolean);
     else if (argv[i] === "--file") {
       const raw = JSON.parse(fs.readFileSync(argv[++i], "utf8"));
       out.bins = (Array.isArray(raw) ? raw : raw.bins || []).map(String);
     } else if (argv[i] === "--limit") out.limit = Number(argv[++i]);
+    else if (argv[i] === "--latest") {
+      const n = Number(argv[i + 1]);
+      out.latest = Number.isFinite(n) && n > 0 ? (i++, n) : 1;
+    }
   }
   return out;
 }
 
-async function pullOne(page, bin) {
+/**
+ * Narrow a building's certificates to the most recent few.
+ *
+ * A building carries its whole history here — 84 documents for 560 10 Avenue
+ * alone — and only the current certificate governs. Across 129 buildings the
+ * full history is roughly 6,500 files.
+ *
+ * Two id spaces. DOB NOW documents look like 104844581-41 and their suffix is
+ * monotonic with effective date, checked against 34 parsed certificates for
+ * one BIN running 2013 to 2021. Legacy BIS documents look like M000082568 and
+ * sort on their own number. DOB NOW is preferred where a building has both:
+ * those are the ones carrying a text layer, so a scan is a last resort rather
+ * than a coin toss.
+ */
+function mostRecent(docs, n) {
+  const now = docs.map((d) => ({ d, m: /^(\d+)-(\d+)/.exec(d) })).filter((x) => x.m);
+  const pool = now.length
+    ? now.sort((a, b) => Number(a.m[2]) - Number(b.m[2])).map((x) => x.d)
+    : docs.slice().sort((a, b) => {
+        const na = Number((/(\d+)/.exec(a) || [0, 0])[1]);
+        const nb = Number((/(\d+)/.exec(b) || [0, 0])[1]);
+        return na - nb;
+      });
+  return pool.slice(-n);
+}
+
+async function pullOne(page, bin, latest) {
   const saved = [];
   const res = await page.goto(LISTING(bin), { waitUntil: "domcontentloaded", timeout: 45000 }).catch(() => null);
   if (!res || res.status() !== 200) return { bin, error: `listing ${res ? res.status() : "no response"}`, saved };
@@ -71,7 +101,8 @@ async function pullOne(page, bin) {
     fs_.map((f) => f.id.replace("form_cofo_pdf_view_", "")));
   if (!docs.length) return { bin, error: "no certificates listed", saved };
 
-  for (const doc of docs) {
+  const wanted = latest ? mostRecent(docs, latest) : docs;
+  for (const doc of wanted) {
     const target = path.join(OUT_DIR, `${bin}_${doc}`);
     if (fs.existsSync(target)) { saved.push({ doc, skipped: true }); continue; }
 
@@ -103,7 +134,7 @@ async function pullOne(page, bin) {
 
 async function main() {
   const { chromium } = require("playwright");
-  const { bins, limit } = parseArgs(process.argv);
+  const { bins, limit, latest } = parseArgs(process.argv);
   if (!bins.length) {
     console.error("usage: node src/pull_coo_pdfs.js --bins <BIN,BIN> | --file <json>");
     process.exit(1);
@@ -120,7 +151,7 @@ async function main() {
   const results = [];
   const todo = bins.slice(0, limit);
   for (const [i, bin] of todo.entries()) {
-    const r = await pullOne(page, bin);
+    const r = await pullOne(page, bin, latest);
     const ok = r.saved.filter((s) => s.bytes).length;
     const skip = r.saved.filter((s) => s.skipped).length;
     console.log(`  [${i + 1}/${todo.length}] BIN ${bin}: ${ok} saved, ${skip} already had${r.error ? ` — ${r.error}` : ""}`);
