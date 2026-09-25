@@ -101,6 +101,23 @@ function drawPin(ctx, x, y, label, color) {
   ctx.restore();
 }
 
+// A cleared drawing buffer reads as one flat colour. A real basemap never
+// does — positron is pale, but it still carries roads, water and labels. So
+// if every sample matches, the read failed and the cover should say so rather
+// than print an empty rectangle and call it a map.
+function assertNotBlank(ctx, w, h) {
+  let first = null;
+  for (let i = 1; i < 8; i++) {
+    for (let j = 1; j < 8; j++) {
+      const d = ctx.getImageData(Math.floor((w * i) / 8), Math.floor((h * j) / 8), 1, 1).data;
+      const px = `${d[0]},${d[1]},${d[2]},${d[3]}`;
+      if (first === null) first = px;
+      else if (px !== first) return;
+    }
+  }
+  throw new Error("map drawing buffer came back empty");
+}
+
 async function captureMapImage(points, widthPx, heightPx) {
   const container = document.createElement("div");
   container.setAttribute("aria-hidden", "true");
@@ -116,8 +133,13 @@ async function captureMapImage(points, widthPx, heightPx) {
       // The export is print, not screen: render at 2x regardless of the
       // monitor so the image lands near 300dpi in the page.
       pixelRatio: 2,
-      // Without this the WebGL drawing buffer is cleared before we can read it.
-      preserveDrawingBuffer: true,
+      // preserveDrawingBuffer has to go here. maplibre v5 moved it off the
+      // top-level options and ignores it there silently, which leaves the
+      // browser free to clear the buffer before we read it — the map then
+      // exports as a blank rectangle with the pins floating on white.
+      // Headless Chromium hides this: SwiftShader keeps the buffer either
+      // way, so it only shows up on a real GPU.
+      canvasContextAttributes: { preserveDrawingBuffer: true, antialias: true },
       attributionControl: false,
       interactive: false,
       fadeDuration: 0,
@@ -154,6 +176,7 @@ async function captureMapImage(points, widthPx, heightPx) {
     out.height = src.height;
     const ctx = out.getContext("2d");
     ctx.drawImage(src, 0, 0);
+    assertNotBlank(ctx, out.width, out.height);
     // Draw in CSS pixels; map.project() returns them.
     ctx.scale(src.width / widthPx, src.height / heightPx);
     // North to south, so where pins collide the nearer one sits in front —
