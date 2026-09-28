@@ -336,7 +336,15 @@ def _point_in_ring(x: float, y: float, ring: list) -> bool:
 
 
 def point_in_footprint(geometry: dict, lon: float, lat: float) -> bool:
-    """Is this coordinate inside the building itself?"""
+    """Is this coordinate inside the building itself?
+
+    False for anything that is not an area. Buildings DOB has no footprint for
+    carry a Point or no geometry at all, and neither has an inside — a Point's
+    coordinates are two floats, which this read as a ring and tried to take the
+    length of.
+    """
+    if not geometry or geometry.get("type") not in ("Polygon", "MultiPolygon"):
+        return False
     coords = geometry.get("coordinates") or []
     polys = coords if geometry.get("type") == "MultiPolygon" else [coords]
     for poly in polys:
@@ -353,10 +361,22 @@ def load_htc_union() -> list[dict]:
     return json.loads(files[0].read_text())
 
 
-def _centroid(coordinates: list) -> tuple[float, float] | None:
-    """Mean vertex of a MultiPolygon ring set."""
+def _centroid(geometry) -> tuple[float, float] | None:
+    """A representative point for a feature's geometry, whatever shape it is.
+
+    Takes the geometry rather than its coordinates because there are three
+    cases now: a MultiPolygon footprint, a Point for a building DOB has no
+    footprint for, and null for one that could not be placed at all. The last
+    two arrived with the footprint-less buildings and crashed this on a
+    NoneType subscript.
+    """
+    if not geometry:
+        return None
+    if geometry.get("type") == "Point":
+        lon, lat = geometry.get("coordinates") or (None, None)
+        return (lon, lat) if lon is not None else None
     xs, ys, n = 0.0, 0.0, 0
-    for poly in coordinates:
+    for poly in geometry.get("coordinates") or []:
         for ring in poly:
             for pt in ring:
                 xs += pt[0]
@@ -377,7 +397,7 @@ def match_htc_union(features: list[dict], roster: list[dict]) -> int:
 
     cents = []
     for f in features:
-        c = _centroid(f["geometry"]["coordinates"])
+        c = _centroid(f.get("geometry"))
         if c:
             cents.append((c, f["properties"], f["geometry"]))
 
@@ -568,6 +588,58 @@ def complete_reason_codes(features):
         raise SystemExit(1)
     print(f"Reason codes agree with their fields on all {len(features)} buildings.")
     return added
+
+
+def place_without_footprints(dropped, best_by_bbl):
+    """Give a point to buildings DOB has no footprint for, so they exist at all.
+
+    A record with no footprint was dropped outright, because there was no shape
+    to draw. That silently removed 35 buildings from the map and the table
+    alike, 11 of them legal_transient, including Hotel Beacon and its 320
+    registered Class B rooms -- a building ground_truth.csv names as a
+    canonical positive.
+
+    They are injected here with a synthetic footprint rather than built
+    separately, so they pass through the identical property pipeline below and
+    differ only in geometry.
+
+    GeoSearch is asked for the address, and its answer is only trusted when the
+    BBL it returns matches the BBL we asked about. A geocoder that resolves
+    "2126 Broadway" to a neighbouring lot would otherwise put a pin on the
+    wrong building, and a confident pin in the wrong place is worse than no pin
+    -- those keep a null geometry, which is valid GeoJSON, invisible to the map
+    and still present for the table.
+    """
+    if not dropped:
+        return
+    from src import geocoder
+
+    placed = unplaceable = 0
+    for record in dropped:
+        record["_no_footprint"] = True
+        address = (record.get("address") or "").strip()
+        result = None
+        if address:
+            try:
+                result = geocoder.geocode(f"{address}, New York, NY")
+            except Exception as e:                       # noqa: BLE001
+                print(f"  geocode failed for {address}: {e}")
+        trustworthy = result and str(result.bbl or "") == str(record["bbl"])
+        if trustworthy:
+            record["_location_precision"] = "approximate"
+            geom = {"type": "Point", "coordinates": [result.lon, result.lat]}
+            placed += 1
+        else:
+            # Kept, not dropped. The table is where these still have to appear.
+            record["_location_precision"] = "unplaceable"
+            geom = None
+            unplaceable += 1
+        best_by_bbl[record["bbl"]] = (
+            record,
+            {"the_geom": geom, "bin": "", "height_roof": None, "construction_year": None},
+        )
+    print(f"No DOB footprint: {len(dropped)} buildings kept anyway "
+          f"({placed} placed by geocode, {unplaceable} with no trustworthy location)")
 
 
 def report_contact_coverage(features):
@@ -821,11 +893,17 @@ def build_geojson(
             for k in ("bin", "height_roof", "construction_year"):
                 merged[k] = fp.get(k)
 
+    place_without_footprints(dropped_no_geometry, best_by_bbl)
+
     features = []
     for record, fp in best_by_bbl.values():
         properties = {
             "bbl": record["bbl"],
             "address": record["address"],
+            # True where DOB has no footprint for this lot, so the map draws a
+            # point at a geocoded address instead of the building's outline.
+            "no_footprint": bool(record.get("_no_footprint")),
+            "location_precision": record.get("_location_precision", "footprint"),
             # Hotel Trades Council roster; filled in by match_htc_union below.
             "htc_union": False,
             "htc_union_name": "",
@@ -1137,8 +1215,8 @@ def build_geojson(
     outpath.write_text(json.dumps(geojson))
     if dropped_no_geometry:
         lost = [r for r in dropped_no_geometry if r.get("tier") == "legal_transient"]
-        print(f"No DOB footprint, so not drawn: {len(dropped_no_geometry)} buildings "
-              f"({len(lost)} of them legal_transient)")
+        print(f"No DOB footprint: {len(dropped_no_geometry)} buildings, drawn as "
+              f"points at a geocoded address ({len(lost)} of them legal_transient)")
         for r in sorted(lost, key=lambda r: -(r.get("hpd_class_b") or 0))[:5]:
             print(f"  {r['bbl']}  {r.get('address', '')[:34]:36} "
                   f"Class B {r.get('hpd_class_b') or 0}")

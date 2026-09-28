@@ -222,3 +222,45 @@ def test_the_free_sources_cover_most_of_the_map(by_bbl):
     covered = sum(1 for p in by_bbl.values() if p.get("has_free_contact"))
     share = covered / len(by_bbl)
     assert share > 0.80, f"only {share:.0%} of buildings have a free contact"
+
+
+# --- buildings DOB has no footprint for --------------------------------------
+
+def test_a_building_without_a_footprint_is_still_published(by_bbl):
+    """They were dropped outright for having no shape to draw.
+
+    35 buildings, 11 of them legal_transient, including Hotel Beacon and its
+    320 registered Class B rooms — a building ground_truth.csv names as a
+    canonical positive. The map and the table both lost them silently.
+    """
+    nofp = [p for p in by_bbl.values() if p.get("no_footprint")]
+    assert len(nofp) > 20, f"only {len(nofp)} footprint-less buildings — the injection has broken"
+    assert any(p.get("tier") == TIER_LEGAL_TRANSIENT for p in nofp)
+
+
+def test_every_building_says_how_precisely_it_is_located(by_bbl):
+    for bbl, p in by_bbl.items():
+        prec = p.get("location_precision")
+        assert prec in ("footprint", "approximate", "unplaceable"), f"{bbl}: {prec}"
+        # The two must agree: a building with a real footprint is not approximate,
+        # and one without a footprint must not claim to have one.
+        assert (prec == "footprint") != bool(p.get("no_footprint")), bbl
+
+
+def test_a_pin_is_only_dropped_where_the_geocode_is_trustworthy(build):
+    """Geometry matches the claim, feature by feature.
+
+    GeoSearch resolving an address to a neighbouring lot would put a confident
+    pin on the wrong building, which is worse than no pin. Anything it could
+    not confirm carries a null geometry — valid GeoJSON, invisible to the map,
+    still present for the table.
+    """
+    for f in build["features"]:
+        p, geom = f["properties"], f.get("geometry")
+        prec = p.get("location_precision")
+        if prec == "approximate":
+            assert geom and geom.get("type") == "Point", f"{p['bbl']} is approximate with no point"
+        elif prec == "unplaceable":
+            assert geom is None, f"{p['bbl']} is unplaceable yet carries geometry"
+        else:
+            assert geom and geom.get("type") in ("Polygon", "MultiPolygon"), p["bbl"]
