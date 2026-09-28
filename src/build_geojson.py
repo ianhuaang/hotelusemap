@@ -85,36 +85,64 @@ MANUAL_BRANDED_BBLS = {
 }
 
 
+# Hotels that closed after the 9 Dec 2021 special-permit cutoff, which the panel
+# draws in red as a reversion opportunity.
+#
+# All of this was hand-typed prose with no source, presented as established.
+# Cross-checking against the DOF sale and ACRIS deed this pipeline already pulls
+# found one figure simply wrong: 371 7th Avenue was written as $255M where the
+# city records $260M.
+#
+# Each entry now says what would corroborate it. `sale_price` is the figure city
+# records must show; the build compares it to the DOF sale on the record and
+# marks the entry verified or not, every run. Entries claiming only a closure
+# carry None -- a hotel closing is not a recorded transaction, nothing here can
+# confirm it, and the panel must stop implying otherwise.
 POST_2021_REVERSIONS = {
     "1001060017": {
         "former_hotel": "Hampton Inn Manhattan-Seaport",
         "closure_year": 2023,
         "note": "Sold Dec 2023 to Slate Property Group for $24.1M. Hotel closed prior to sale.",
+        "sale_price": 24_125_000,
+        "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
     },
     "1008940071": {
         "former_hotel": "W New York - The Court (St. Giles)",
         "closure_year": 2020,
         "note": "Closed during pandemic ~2020. Sold Jan 2023 for $50M. Currently migrant shelter.",
+        "sale_price": 50_000_000,
+        "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
     },
     "1013190034": {
         "former_hotel": "AKA United Nations",
         "closure_year": 2024,
+        # The only sale on record is unit-sized, consistent with a condo
+        # conversion and not evidence of one.
         "note": "Converted to The Perrie condominiums (~95 units). Post-2021 conversion.",
+        "sale_price": None,
+        "source": None,
     },
     "1008060076": {
         "former_hotel": "Stewart Hotel",
         "closure_year": 2022,
-        "note": "Closed 2022, used as migrant shelter. Acquired by Slate + Breaking Ground Dec 2025 for $255M. Converting to 579 affordable apartments.",
+        # Was "$255M"; city records say $260M.
+        "note": "Closed 2022, used as migrant shelter. Acquired Dec 2025 for $260M per city records. Reported as a Slate + Breaking Ground purchase converting to 579 affordable apartments.",
+        "sale_price": 260_000_000,
+        "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
     },
     "1010167501": {
         "former_hotel": "Row NYC",
         "closure_year": 2025,
         "note": "Last NYC migrant hotel, closed Aug 2025. 1,332 rooms. Conversion status TBD — may reopen as hotel or convert to residential.",
+        "sale_price": None,
+        "source": None,
     },
     "1010487502": {
         "former_hotel": "Hudson Hotel",
         "closure_year": 2020,
         "note": "Closed Nov 2020 during COVID. 959 rooms. Slated for conversion to 438 below-market apartments.",
+        "sale_price": None,
+        "source": None,
     },
 }
 
@@ -166,7 +194,16 @@ FLEX_OPERATORS = (
 def _current_flex_operator(record: dict) -> str:
     """Name of a flex-stay operator running this building now, if any."""
     hotel = (record.get("hotel_name") or "").strip()
-    operator = (record.get("operator_name") or "").strip()
+    # operator_name is only evidence of the present when something in the
+    # present produced it. enrich.py falls back to the prior-operator ground
+    # truth when Google, DCWP and HPD all come up empty, stamping
+    # operator_source "ground_truth" -- a record that a flex company USED to be
+    # here. Reading that name back turned every departure into an arrival, and
+    # is why 20 Broad Street reported Sonder as operating months after they
+    # left. Google's own sweep of that address finds Los Tacos, Blue Bottle and
+    # PLG, and no Sonder.
+    operator = "" if record.get("operator_source") == "ground_truth" else \
+        (record.get("operator_name") or "").strip()
     # These two are usually the same string; only join when they differ.
     name = hotel if hotel.lower() == operator.lower() else " / ".join(x for x in (hotel, operator) if x)
     return name if any(op in name.lower() for op in FLEX_OPERATORS) else ""
@@ -533,6 +570,26 @@ def complete_reason_codes(features):
     return added
 
 
+def check_no_laundered_operators(features):
+    """Refuse to publish a departure dressed up as a current operator.
+
+    operator_name falls back to the prior-operator ground truth, which records
+    that a flex company has LEFT. Reading it back as current is what had Sonder
+    running 20 Broad Street months after they had gone -- and the file said
+    "ground_truth" about it, which is the most convincing a wrong record gets.
+    """
+    bad = [f["properties"] for f in features
+           if f["properties"].get("flex_op_status") == "current"
+           and f["properties"].get("operator_source") == "ground_truth"]
+    if bad:
+        print("::error title=Prior operator reported as current::")
+        for p in bad:
+            print(f"  {p.get('address')} — {p.get('flex_op_name')}")
+        raise SystemExit(1)
+    current = sum(1 for f in features if f["properties"].get("flex_op_status") == "current")
+    print(f"Flex operators: {current} current, each with present-tense evidence.")
+
+
 def build_geojson(
     pipeline_path: Path = None,
     footprints_path: Path = None,
@@ -887,8 +944,22 @@ def build_geojson(
 
         reversion_info = POST_2021_REVERSIONS.get(record["bbl"])
         if reversion_info:
-            properties["reversion"] = reversion_info
+            # Checked against the record every run rather than asserted once.
+            # The figure that was wrong stayed wrong for as long as nobody
+            # re-read it.
+            claimed = reversion_info.get("sale_price")
+            actual = record.get("last_sale_price")
+            verified = bool(claimed and actual and abs(int(actual) - claimed) <= 1000)
+            properties["reversion"] = {
+                **reversion_info,
+                "verified": verified,
+                "verified_against": (
+                    f"DOF sale {record.get('last_sale_date')} of ${int(actual):,}"
+                    if verified and actual else None
+                ),
+            }
             properties["has_reversion"] = True
+            properties["reversion_unverified"] = not verified
 
         if record.get("class_b_split"):
             properties["class_b_split"] = record["class_b_split"]
@@ -986,6 +1057,7 @@ def build_geojson(
         print("HTC union roster: not found — run src/pull_htc_union.py")
 
     complete_reason_codes(features)
+    check_no_laundered_operators(features)
 
     # Per collection, not per feature. Every building in a build reads the same
     # pull of the same source, so stamping 2,592 features with 22 dates each
