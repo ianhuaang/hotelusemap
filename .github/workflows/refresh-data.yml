@@ -35,7 +35,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python dependencies
-        run: pip install certifi
+        run: pip install certifi pytest
 
       # Every pull carries continue-on-error so a single flaky source doesn't
       # abort the run — one run then tells us everything that broke instead of
@@ -70,6 +70,13 @@ jobs:
             exit 1
           fi
           echo "No undefined names."
+
+      # Alongside the undefined-name check and for the same reason: seconds, and
+      # before anything is fetched. These need no pulls -- they are the rules the
+      # pipeline must hold whatever the data says. A run that would publish a
+      # dormitory scored as a hotel should not spend two hours first.
+      - name: Check pipeline invariants
+        run: python -m pytest tests/test_invariants.py -q
 
       - name: Check the Socrata token
         run: |
@@ -300,6 +307,17 @@ jobs:
 
       - name: Build GeoJSON
         run: python src/build_geojson.py
+
+      # Between building and publishing on purpose. These read the artifact
+      # itself -- ground-truth buildings, reason codes against their fields, no
+      # departure reported as a current operator -- so a failure withholds the
+      # file rather than reporting a problem after it has shipped.
+      #
+      # The suite they replace had been dead for months: it imported two tier
+      # constants config.py no longer defines, so it failed at collection, and
+      # nothing ran it to find out.
+      - name: Check the build against ground truth
+        run: python -m pytest tests/test_ground_truth.py -q
 
       # The map lives in ianhuaang/kasa-sourcing now, not here. Publishing into
       # this repo would refresh a file nothing reads, so push straight to the

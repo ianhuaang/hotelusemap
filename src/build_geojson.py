@@ -712,10 +712,16 @@ def build_geojson(
     matched = 0
     unmatched_pipeline = 0
 
+    dropped_no_geometry = []
     for bbl, record in pipe_by_bbl.items():
         fps = fp_by_bbl.get(bbl, [])
         if not fps:
+            # Dropped for want of a shape to draw. Recorded rather than only
+            # counted: 27 of these are legal_transient, and one is Hotel Beacon
+            # with 320 Class B rooms -- a building ground_truth.csv names as a
+            # canonical positive. A number on its own never made that visible.
             unmatched_pipeline += 1
+            dropped_no_geometry.append(record)
             continue
 
         matched += 1
@@ -1086,6 +1092,16 @@ def build_geojson(
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
     outpath = DATA_PROCESSED / f"buildings_{TODAY}.geojson"
     outpath.write_text(json.dumps(geojson))
+    if dropped_no_geometry:
+        lost = [r for r in dropped_no_geometry if r.get("tier") == "legal_transient"]
+        print(f"No DOB footprint, so not drawn: {len(dropped_no_geometry)} buildings "
+              f"({len(lost)} of them legal_transient)")
+        for r in sorted(lost, key=lambda r: -(r.get("hpd_class_b") or 0))[:5]:
+            print(f"  {r['bbl']}  {r.get('address', '')[:34]:36} "
+                  f"Class B {r.get('hpd_class_b') or 0}")
+        if len(lost) > 5:
+            print(f"  ...and {len(lost) - 5} more")
+
     print(f"Built GeoJSON: {len(features)} features ({matched} BBLs matched, {unmatched_pipeline} unmatched)")
     return outpath
 
