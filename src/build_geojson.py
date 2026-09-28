@@ -826,38 +826,28 @@ def build_geojson(
         else:
             properties["segment"] = "unknown"
 
-        # Deal sub-scores (each 0-100, combined on frontend with adjustable weights)
-        # Legal certainty (max 50 raw pts -> normalized to 0-100)
-        legal = 0
-        # Must stay identical to computeScore() in map/src/App.jsx, which is what
-        # the UI actually displays, sorts and exports. These two had drifted apart
-        # and agreed on only 18 of 2,917 rows.
-        # Additive, max 93. dob_r1_filing_count is deliberately NOT scored: it
-        # counts the same DOB filings that set dob_has_r1, so awarding points for
-        # both double-counted one signal.
-        bldgclass = record.get("bldgclass") or ""
-        has_class_b = (record.get("hpd_class_b") or 0) > 0
-        has_h_class = bldgclass.startswith("H")
-        if has_class_b:
-            legal += 40
-        if has_h_class:
-            legal += 25
-        if record.get("dob_has_r1"):
-            legal += 15
-        # Mirror of computeScore(): a final C of O outranks a temporary one.
-        coo_type = record.get("coo_latest_type") or ""
-        if coo_type == "Final" or coo_type.startswith("Renewal"):
-            legal += 12
-        elif coo_type in ("Temporary", "Initial"):
-            legal += 7
-        if (record.get("permit_transient_strong") or 0) >= 1:
-            legal += 8
-        # Zoning penalty applies only where there are no grandfathered rights.
-        if record.get("zoning_hotel_permitted") == "not_permitted" and not (has_class_b or has_h_class):
-            legal = max(0, legal - 15)
-        properties["score_legal"] = min(legal, 100)
+        # Deal sub-scores. Only availability is computed here.
+        #
+        # score_legal used to live here too, with a comment insisting it "must
+        # stay identical to computeScore() in map/src/App.jsx". It could not.
+        # The app lets the deal team retune every weight per user, so no number
+        # baked in at build time can be the score anyone is looking at -- and
+        # the two drifted twice, first to agreeing on 18 rows of 2,917, then to
+        # disagreeing on 572 of 2,592 once penalties for current-use conflict
+        # and union coverage were added here and never here.
+        #
+        # It is not recomputed, it is gone. Nothing read it: the app computes
+        # its own, and the export to HubSpot was dropped once the two numbers
+        # were found sitting on the same record. The score has one definition
+        # now, SCORE_SIGNALS in the app, and that file is where it belongs
+        # because that is where the weights are editable.
+        #
+        # score_quality went the same way: nothing read it, and it scored any
+        # H-class as a hotel -- including the H8 dormitories and HR SROs this
+        # pipeline excludes by name three hundred lines up.
 
-        # Availability (max 45 raw pts -> normalized to 0-100)
+        # Availability (max 45 raw pts -> normalized to 0-100). Kept: the app
+        # has no counterpart to contradict, and HubSpot exports it.
         avail = 0
         if record.get("prior_operator"):
             avail += 15
@@ -871,20 +861,6 @@ def build_geojson(
         if (record.get("ecb_total_balance") or 0) > 10000:
             avail += 4
         properties["score_avail"] = round(min(avail / 45, 1.0) * 100)
-
-        # Building quality (max 15 raw pts -> normalized to 0-100)
-        quality = 0
-        bldgclass = record.get("bldgclass") or ""
-        if not bldgclass.startswith("H"):
-            quality += 7
-        class_c = record.get("hpd_class_c_violations") or 0
-        if class_c < 10:
-            quality += 5
-        elif class_c < 20:
-            quality += 2
-        if (record.get("owner_portfolio_size") or 0) > 1:
-            quality += 3
-        properties["score_quality"] = round(min(quality / 15, 1.0) * 100)
 
         feature = {
             "type": "Feature",
