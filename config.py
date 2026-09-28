@@ -46,6 +46,23 @@ TARGET_CDS = TARGET_CDS_BK | TARGET_CDS_QN
 BOROUGH_TEXT_TO_NUM = {"MN": "1", "BX": "2", "BK": "3", "QN": "4", "SI": "5"}
 BOROUGH_NUM_TO_TEXT = {v: k for k, v in BOROUGH_TEXT_TO_NUM.items()}
 
+# PLUTO building classes that mean transient use, and the two that wear an H
+# and are not hotels. Moved here from pipeline.py so build_geojson.py can reach
+# them without importing the pipeline: its scoring used a bare startswith("H")
+# and counted dormitories.
+HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H9",
+                 "HB", "HH", "HS", "RH"}
+EXCLUDED_HOTEL_CLASSES = {"HR", "H8"}  # HR=SRO (rent-regulated), H8=dormitory
+
+
+def is_hotel_class(bldgclass):
+    """The one rule. Mirrored in map/src/hotelClass.js in the app repo."""
+    b = (bldgclass or "").upper()
+    if b in EXCLUDED_HOTEL_CLASSES:
+        return False
+    return b in HOTEL_CLASSES or b.startswith("H")
+
+
 # Tiers (3 tiers + overlays)
 # legal_transient: confirmed transient capacity, can operate as-of-right
 # partial: evidence of transient capacity, needs verification

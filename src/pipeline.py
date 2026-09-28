@@ -40,15 +40,15 @@ def _data_vintage() -> str:
 DATA_VINTAGE = _data_vintage()
 
 # Building classes that indicate direct hotel/transient use
-HOTEL_CLASSES = {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H9",
-                 "HB", "HH", "HS", "RH"}
+# HOTEL_CLASSES and EXCLUDED_HOTEL_CLASSES now live in config.py, so the build
+# can apply the same rule when it completes reason codes.
+from config import HOTEL_CLASSES, EXCLUDED_HOTEL_CLASSES  # noqa: E402,F401
 
 # Excluded hotel-adjacent classes — legal constraints make them non-targets.
 # NOTE: the tier exclusion below only fires when class_b == 0, so it never
 # catches the SROs/dorms that actually reach the target list. Those are flagged
 # via RESTRICTED_CONVERSION_CLASSES instead and hidden behind a UI toggle, so
 # they stay reachable rather than being dropped from the dataset entirely.
-EXCLUDED_HOTEL_CLASSES = {"HR", "H8"}  # HR=SRO (rent-regulated), H8=dormitory
 
 # Classes whose conversion to conventional transient use is legally or
 # operationally restricted. Kept in the data, hidden from the default view.

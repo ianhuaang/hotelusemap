@@ -11,7 +11,7 @@ from pathlib import Path
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import DATA_RAW, DATA_PROCESSED
+from config import DATA_RAW, DATA_PROCESSED, is_hotel_class
 from src import provenance
 
 TODAY = date.today().strftime("%Y%m%d")
@@ -429,6 +429,108 @@ def apply_roster_current_use(features: list[dict]) -> int:
         p["current_use_basis"] = "Hotel Trades Council roster, matched inside the building footprint"
         applied += 1
     return applied
+
+
+
+# Evidence a building carries, as opposed to the evidence that decided its tier.
+#
+# reason_codes were appended inside the if/elif chain that picks a tier, and in
+# enrich.py only where a signal changed the verdict. That makes them a decision
+# log, which is coherent -- and is not what the panel presents. It shows them
+# under "Reason Codes" beside Legal Feasibility, where a reader takes them for
+# the evidence on the building.
+#
+# They were not. dob_transient_occupancy appeared on 66 buildings and was true
+# of 444, because a mixed-use class is tested before DOB occupancy and claims
+# the building first. dcwp_hotel_license appeared on 11 and was true of 492,
+# because it is appended only when a licence upgrades the tier -- so a building
+# already legal on Class B rooms held an active hotel licence and said nothing
+# about it. Click the pin, see why it qualifies, and the strongest thing on the
+# record is missing.
+#
+# This runs last, over final properties, and adds any code whose field is true.
+# Nothing is removed: a code the chain set is still there, and order still puts
+# the deciding signal first.
+EVIDENCE = [
+    ("hpd_class_b",             lambda p: (p.get("hpd_class_b") or 0) > 0),
+    ("bldg_class_hotel",        lambda p: is_hotel_class(p.get("bldgclass"))),
+    # R-1 or J-1: the panel and the methodology bucket both read "R-1/J-1", and
+    # 64 buildings carry the J-1 classification and no R-1.
+    ("dob_transient_occupancy", lambda p: bool(p.get("dob_has_r1") or p.get("dob_has_j1"))),
+    ("current_use_conflict",    lambda p: bool(p.get("current_use_conflict"))),
+    ("illegal_transient_violation", lambda p: (p.get("ecb_illegal_transient") or 0) > 0),
+    # Split the way DCWP splits it: a lapsed licence is evidence of a different
+    # thing from a live one, and collapsing them would read as still licensed.
+    ("dcwp_hotel_license",      lambda p: p.get("has_hotel_license")
+        and p.get("hotel_license_status") in ("Active", "Ready for Renewal")),
+    ("dcwp_license_lapsed",     lambda p: p.get("has_hotel_license")
+        and p.get("hotel_license_status") in ("Surrendered", "Failed to Renew")),
+]
+
+
+# A code whose field is its whole definition, so the field is allowed to take it
+# back. current_use_conflict is appended when a conflict is detected and the
+# field is cleared again further down enrich.py; 16 buildings ended up wearing
+# the chip with the field reading False, which is the same contradiction this
+# stage exists to remove, pointing the other way.
+#
+# dob_transient_occupancy is deliberately not in here. It is legitimately set
+# from DOB filings the dob_has_r1 flag does not cover.
+FIELD_OWNED = {
+    "current_use_conflict": lambda p: bool(p.get("current_use_conflict")),
+}
+
+
+def complete_reason_codes(features):
+    added = {}
+    dropped = {}
+    for f in features:
+        p = f["properties"]
+        codes = [c for c in (p.get("reason_codes") or [])
+                 if c not in FIELD_OWNED or FIELD_OWNED[c](p)]
+        for c in set(p.get("reason_codes") or []) - set(codes):
+            dropped[c] = dropped.get(c, 0) + 1
+        seen = set(codes)
+        for code, test in EVIDENCE:
+            if code in seen:
+                continue
+            try:
+                hit = bool(test(p))
+            except (TypeError, ValueError):
+                hit = False
+            if hit:
+                codes.append(code)
+                seen.add(code)
+                added[code] = added.get(code, 0) + 1
+        p["reason_codes"] = codes
+    if added:
+        print("Reason codes completed from the fields they describe:")
+        for code, n in sorted(added.items(), key=lambda kv: -kv[1]):
+            print(f"  +{n:5} {code}")
+    if dropped:
+        print("Reason codes dropped where the field they name is false:")
+        for code, n in sorted(dropped.items(), key=lambda kv: -kv[1]):
+            print(f"  -{n:5} {code}")
+
+    # Check the work, here rather than in a test. The panel presents these as
+    # the evidence on a building, and a code that stops matching its field is
+    # invisible -- it reads as a building that simply has less going on. The
+    # build is the only place that sees every row, so it is the place to fail.
+    mismatches = []
+    for code, test in EVIDENCE:
+        missing = sum(1 for f in features
+                      if test(f["properties"]) and code not in f["properties"]["reason_codes"])
+        extra = sum(1 for f in features
+                    if code in f["properties"]["reason_codes"] and not test(f["properties"]))
+        if missing or extra:
+            mismatches.append(f"  {code}: {missing} with the field and no code, "
+                              f"{extra} with the code and no field")
+    if mismatches:
+        print("::error title=Reason codes do not match their fields::")
+        print("\n".join(mismatches))
+        raise SystemExit(1)
+    print(f"Reason codes agree with their fields on all {len(features)} buildings.")
+    return added
 
 
 def build_geojson(
@@ -882,6 +984,8 @@ def build_geojson(
         print(f"  current-use conflicts the roster caught and Google did not: {roster_conflicts}")
     else:
         print("HTC union roster: not found — run src/pull_htc_union.py")
+
+    complete_reason_codes(features)
 
     # Per collection, not per feature. Every building in a build reads the same
     # pull of the same source, so stamping 2,592 features with 22 dates each
