@@ -12,6 +12,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, DATA_PROCESSED
+from src import provenance
 
 TODAY = date.today().strftime("%Y%m%d")
 
@@ -906,8 +907,27 @@ def build_geojson(
     else:
         print("HTC union roster: not found — run src/pull_htc_union.py")
 
+    # Per collection, not per feature. Every building in a build reads the same
+    # pull of the same source, so stamping 2,592 features with 22 dates each
+    # would add megabytes to say one thing. source_pulled_on stays on the
+    # feature because the app reads it; this is what it leaves out.
+    sources = provenance.manifest()
+    print("Sources this build read:")
+    print(provenance.summarise(sources))
+    stale = [k for k, v in sources.items() if not v["refreshed_by_ci"] and v["pulled_on"]]
+    if stale:
+        print(f"  note: {len(stale)} source(s) above are refreshed by hand, not by "
+              f"refresh-data.yml. Their dates do not move when this runs.")
+    missing = [k for k, v in sources.items() if not v["pulled_on"]]
+    if missing:
+        print(f"  warning: no file found for {', '.join(sorted(missing))}")
+
     geojson = {
         "type": "FeatureCollection",
+        # What this build actually read, and which of it a weekly run keeps
+        # current. Without it the file carries one date -- the newest PLUTO
+        # pull -- over sources that were not pulled with PLUTO at all.
+        "sources": sources,
         "features": features,
     }
 

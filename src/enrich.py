@@ -14,6 +14,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, DATA_PROCESSED
+from src import provenance
 
 TODAY = date.today().strftime("%Y%m%d")
 
@@ -110,17 +111,19 @@ def _zoning_hotel_compatibility(zonedist: str) -> tuple[str, str]:
 
 
 def _resolve_data_file(prefix: str, path: Path = None) -> Path:
-    """Find today's data file or fall back to the most recent one."""
-    if path is not None:
-        if path.exists():
-            return path
-    today_path = DATA_RAW / f"{prefix}_{TODAY}.json"
-    if today_path.exists():
-        return today_path
-    files = sorted(DATA_RAW.glob(f"{prefix}_*.json"), reverse=True)
-    if files:
-        return files[0]
-    return today_path  # will fail with FileNotFoundError, which is correct
+    """Find today's data file or fall back to the most recent one.
+
+    Delegates to provenance.resolve so the manifest the build publishes and the
+    file this actually opens are decided by one rule. Kept as a wrapper rather
+    than replaced at twelve call sites: the name says what it does here.
+
+    One behaviour change came with the move. This globbed `{prefix}_*.json`,
+    which sorts "cache" above every digit — so a `<prefix>_cache.json` sitting
+    beside the dated pulls would outrank all of them under reverse sort. No
+    source reached through here has one today; google_current_use does, and
+    its own loader already guards with [0-9]. Now they all do.
+    """
+    return provenance.resolve(prefix, DATA_RAW, path)
 
 
 def _normalize_bbl(raw: str) -> str:
