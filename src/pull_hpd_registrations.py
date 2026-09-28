@@ -1,10 +1,22 @@
-"""Pull HPD registration managing agents for pipeline buildings.
+"""Pull HPD registration owners and managing agents for pipeline buildings.
 
 Two datasets joined:
   - HPD Registrations (tesw-yqqr): building → registrationid
-  - HPD Registration Contacts (feu5-w2e2): registrationid → agent name/corp
+  - HPD Registration Contacts (feu5-w2e2): registrationid → contacts
 
-Output: {bbl: {managing_agent, managing_agent_corp, owner_corp, head_officer}}
+Every multiple dwelling in the city has to register annually and name the people
+responsible for it, which makes this the widest free owner-contact source there
+is — it reaches ~84% of the transient map where ACRIS reaches ~28%.
+
+It carries a business mailing address, and no phone and no email: those columns
+do not exist in feu5-w2e2. A "free contact" from here is somewhere to send a
+letter and a name to look up, not a number to ring. Worth being plain about,
+because the alternative being priced against it (Reonomy, LightBox) sells
+phone numbers.
+
+Output: {bbl: {managing_agent, managing_agent_corp, owner_corp, head_officer,
+               owner_contact, agent_contact}}
+where the two *_contact entries carry {name, corp, role, address}.
 """
 
 import json
@@ -27,6 +39,30 @@ HPD_REGISTRATIONS_DATASET_ID = "tesw-yqqr"
 HPD_CONTACTS_DATASET_ID = "feu5-w2e2"
 BATCH_SIZE = 5000
 TODAY = date.today().strftime("%Y%m%d")
+
+
+# Which owner-side contact to keep when a registration names several. Lower
+# wins. A head officer is a person who answers for the building; a corporate
+# owner is the entity that holds it. Both are worth having and the person is
+# worth more on a first approach.
+OWNER_ROLE_RANK = {
+    "HeadOfficer": 0, "IndividualOwner": 1, "JointOwner": 2, "CorporateOwner": 3,
+}
+
+
+def _business_address(contact):
+    """The mailing address HPD holds for a contact, or "" if it holds none."""
+    house = (contact.get("businesshousenumber") or "").strip()
+    street = (contact.get("businessstreetname") or "").strip()
+    apt = (contact.get("businessapartment") or "").strip()
+    city = (contact.get("businesscity") or "").strip()
+    state = (contact.get("businessstate") or "").strip()
+    zipc = (contact.get("businesszip") or "").strip()
+    line1 = " ".join(x for x in (house, street) if x)
+    if apt:
+        line1 = f"{line1}, {apt}" if line1 else apt
+    line2 = " ".join(x for x in (f"{city}," if city and (state or zipc) else city, state, zipc) if x)
+    return ", ".join(x for x in (line1, line2) if x)
 
 
 def _fetch_all(dataset_id, params_base, label="records"):
@@ -142,12 +178,20 @@ def pull_hpd_registrations():
         id_list = ",".join(f"'{rid}'" for rid in chunk)
         where = (
             f"registrationid IN ({id_list}) "
-            f"AND type IN ('Agent','CorporateOwner','HeadOfficer')"
+            f"AND type IN ('Agent','CorporateOwner','HeadOfficer',"
+            f"'IndividualOwner','JointOwner')"
         )
         contacts = _fetch_all(
             HPD_CONTACTS_DATASET_ID,
             {
-                "$select": "registrationid,type,corporationname,firstname,lastname",
+                "$select": (
+                    "registrationid,type,corporationname,firstname,lastname,"
+                    # The address columns were being dropped, which left the
+                    # map with names it could not act on. HPD publishes where
+                    # to reach each contact; this asks for it.
+                    "businesshousenumber,businessstreetname,businessapartment,"
+                    "businesscity,businessstate,businesszip"
+                ),
                 "$where": where,
             },
             label=f"contacts batch {i // 200 + 1}",
@@ -176,6 +220,8 @@ def pull_hpd_registrations():
             last = (contact.get("lastname") or "").strip()
             person = f"{first} {last}".strip()
 
+            # Names, as before. enrich.py reads these four and they keep their
+            # shape; everything below is additive.
             if ctype == "Agent":
                 entry["managing_agent"] = person
                 entry["managing_agent_corp"] = corp
@@ -184,7 +230,25 @@ def pull_hpd_registrations():
             elif ctype == "HeadOfficer":
                 entry["head_officer"] = person
 
-        if any(k in entry for k in ("managing_agent", "managing_agent_corp", "owner_corp")):
+            # A reachable contact needs somewhere to reach it. Owner roles are
+            # ranked: a named head officer beats a corporate shell, because the
+            # shell is who owns it and the officer is who answers for it.
+            addr = _business_address(contact)
+            slot = "agent_contact" if ctype == "Agent" else "owner_contact"
+            rank = OWNER_ROLE_RANK.get(ctype, 99)
+            best = entry.get(slot)
+            if (person or corp) and (best is None or rank < best.get("_rank", 99)):
+                entry[slot] = {
+                    "name": person, "corp": corp, "role": ctype,
+                    "address": addr, "_rank": rank,
+                }
+
+        for slot in ("owner_contact", "agent_contact"):
+            if slot in entry:
+                entry[slot].pop("_rank", None)
+
+        if any(k in entry for k in ("managing_agent", "managing_agent_corp",
+                                    "owner_corp", "owner_contact", "agent_contact")):
             results.append(entry)
 
     outfile.write_text(json.dumps(results, indent=2))

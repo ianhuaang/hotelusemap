@@ -179,3 +179,46 @@ def test_the_tier_split_is_sane(by_bbl):
     assert counts[TIER_PARTIAL] > counts[TIER_LEGAL_TRANSIENT], counts
     assert counts[TIER_LEGAL_TRANSIENT] > 100, counts
     assert 1000 < len(by_bbl) < 50000, f"{len(by_bbl)} buildings — out of range"
+
+
+# --- free owner contacts -----------------------------------------------------
+
+def test_every_contact_says_where_it_came_from(by_bbl):
+    """A mailing address with no source or date is not usable evidence.
+
+    HPD registration and ACRIS are pulled on different days, so a contact
+    inherits neither the build date nor the other source's date.
+    """
+    seen = 0
+    for bbl, p in by_bbl.items():
+        for c in p.get("owner_contacts") or []:
+            seen += 1
+            assert c.get("kind") in ("owner", "managing_agent"), f"{bbl}: {c.get('kind')}"
+            assert c.get("source"), f"{bbl}: contact with no source"
+            assert c.get("pulled_on"), f"{bbl}: contact with no pull date"
+            assert c.get("name") or c.get("org"), f"{bbl}: contact with no name at all"
+    assert seen > 1000, f"only {seen} contacts — the HPD join has probably broken"
+
+
+def test_has_free_contact_means_there_is_an_address(by_bbl):
+    """The flag the panel branches on, checked against what it claims.
+
+    A name with nowhere to send anything is not a contact. If this drifted, the
+    panel would offer "access contact info" and then show a name and no address,
+    or claim a paid lookup was needed for a building that has one.
+    """
+    for bbl, p in by_bbl.items():
+        addressed = any(c.get("address") for c in (p.get("owner_contacts") or []))
+        assert bool(p.get("has_free_contact")) == addressed, bbl
+
+
+def test_the_free_sources_cover_most_of_the_map(by_bbl):
+    """Coverage is the number that decides whether to pay for the rest.
+
+    84% of buildings carry both an owner and a managing agent, and 11% carry
+    neither. A silent regression in the HPD join would show up here as the
+    paid-lookup share climbing, and nowhere else.
+    """
+    covered = sum(1 for p in by_bbl.values() if p.get("has_free_contact"))
+    share = covered / len(by_bbl)
+    assert share > 0.80, f"only {share:.0%} of buildings have a free contact"

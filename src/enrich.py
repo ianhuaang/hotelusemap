@@ -837,6 +837,10 @@ def enrich_pipeline(
     hotel_licenses = load_hotel_licenses()
     current_use = load_current_use()
     hpd_regs = load_hpd_registrations()
+    # The date on the file each contact was actually read from, so a contact can
+    # say how stale it is without the reader going to look.
+    hpd_pulled_on = provenance.vintage(provenance.resolve("hpd_registrations", DATA_RAW)) or ""
+    acris_pulled_on = provenance.vintage(provenance.resolve("acris_owners", DATA_RAW)) or ""
     landmarks = load_landmarks()
     tax_benefits = load_tax_benefits()
     rent_stab = load_rent_stabilization()
@@ -1183,6 +1187,55 @@ def enrich_pipeline(
             record["hpd_managing_agent_corp"] = ""
             record["hpd_owner_corp"] = ""
             record["hpd_head_officer"] = ""
+
+        # --- Who to write to, and where that came from -----------------------
+        #
+        # Two free sources. HPD registration reaches most of the map because
+        # every multiple dwelling must register annually and name who answers
+        # for it; ACRIS reaches whatever has traded, and gives the entity on
+        # the deed with the address it filed. Both join on BBL, which is why
+        # this is a clean join and the hotel-side address matching was not.
+        #
+        # Each contact carries its own source and pull date rather than
+        # inheriting the file's, because they are different datasets pulled on
+        # different days, and a reader about to send a letter should be able to
+        # see how old the address is.
+        contacts = []
+        if hpd_reg:
+            for slot, kind in (("owner_contact", "owner"), ("agent_contact", "managing_agent")):
+                c = hpd_reg.get(slot)
+                if c and (c.get("name") or c.get("corp")):
+                    contacts.append({
+                        "kind": kind,
+                        "name": c.get("name", ""),
+                        "org": c.get("corp", ""),
+                        "role": c.get("role", ""),
+                        "address": c.get("address", ""),
+                        "source": "HPD registration",
+                        "source_detail": "NYC HPD Registration Contacts (feu5-w2e2)",
+                        "pulled_on": hpd_pulled_on,
+                    })
+        # ACRIS only as an owner when HPD gave none: HPD is annual and current,
+        # a deed is whenever the building last sold.
+        if not any(c["kind"] == "owner" for c in contacts):
+            deed_owner = (record.get("acris_deed_owner") or "").strip()
+            deed_addr = (record.get("acris_deed_address") or "").strip()
+            if deed_owner:
+                contacts.append({
+                    "kind": "owner",
+                    "name": "",
+                    "org": deed_owner,
+                    "role": "DeedOwner",
+                    "address": deed_addr,
+                    "source": "ACRIS deed",
+                    "source_detail": "NYC ACRIS master/legals",
+                    "pulled_on": acris_pulled_on,
+                })
+        record["owner_contacts"] = contacts
+        # A contact with nowhere to send anything is a name, not a contact.
+        # The panel needs that distinction to decide whether to offer a paid
+        # lookup, so it is decided here rather than in the browser.
+        record["has_free_contact"] = any(c.get("address") for c in contacts)
 
         # LPC landmarks / historic districts
         lm = landmarks.get(bbl)

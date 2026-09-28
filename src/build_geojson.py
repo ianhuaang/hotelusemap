@@ -570,6 +570,44 @@ def complete_reason_codes(features):
     return added
 
 
+def report_contact_coverage(features):
+    """How much of the contact problem the free sources actually solve.
+
+    Printed because the number decides whether anyone should be paying Reonomy
+    or LightBox for the rest, and it is worth seeing move week to week rather
+    than being measured once in a spreadsheet.
+
+    A contact counts only when it has an address. HPD names a head officer for
+    almost every registered building, and a name with nowhere to send anything
+    is not a contact — counting those would flatter this considerably.
+    """
+    both = owner_only = agent_only = neither = 0
+    by_source = {}
+    for f in features:
+        cs = [c for c in (f["properties"].get("owner_contacts") or []) if c.get("address")]
+        for c in cs:
+            by_source[c["source"]] = by_source.get(c["source"], 0) + 1
+        kinds = {c["kind"] for c in cs}
+        if {"owner", "managing_agent"} <= kinds:
+            both += 1
+        elif "owner" in kinds:
+            owner_only += 1
+        elif "managing_agent" in kinds:
+            agent_only += 1
+        else:
+            neither += 1
+    n = len(features)
+    covered = both + owner_only + agent_only
+    print("Free owner contacts (HPD registration + ACRIS):")
+    print(f"  owner and managing agent : {both:5}  ({100 * both // n}%)")
+    print(f"  owner only               : {owner_only:5}  ({100 * owner_only // n}%)")
+    print(f"  managing agent only      : {agent_only:5}  ({100 * agent_only // n}%)")
+    print(f"  neither — needs a paid lookup : {neither:5}  ({100 * neither // n}%)")
+    print(f"  any free contact         : {covered:5}  ({100 * covered // n}% of {n})")
+    for src, c in sorted(by_source.items(), key=lambda kv: -kv[1]):
+        print(f"    via {src}: {c}")
+
+
 def check_no_laundered_operators(features):
     """Refuse to publish a departure dressed up as a current operator.
 
@@ -890,6 +928,10 @@ def build_geojson(
             "operator_source": record.get("operator_source", ""),
             "hpd_managing_agent": record.get("hpd_managing_agent", ""),
             "hpd_managing_agent_corp": record.get("hpd_managing_agent_corp", ""),
+            # Who to write to, from HPD registration and ACRIS. Each entry
+            # carries its own source and pull date; see enrich.py.
+            "owner_contacts": record.get("owner_contacts", []),
+            "has_free_contact": record.get("has_free_contact", False),
             "hpd_owner_corp": record.get("hpd_owner_corp", ""),
             "hpd_head_officer": record.get("hpd_head_officer", ""),
             # Mortgage maturity
@@ -1064,6 +1106,7 @@ def build_geojson(
 
     complete_reason_codes(features)
     check_no_laundered_operators(features)
+    report_contact_coverage(features)
 
     # Per collection, not per feature. Every building in a build reads the same
     # pull of the same source, so stamping 2,592 features with 22 dates each
