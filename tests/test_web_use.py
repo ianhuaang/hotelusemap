@@ -522,3 +522,20 @@ def test_a_filing_date_is_read_by_year_not_by_month():
     assert _sortable_us("12/30/2013") < _sortable_us("01/04/2016")
     assert _sortable_us("03/14/2023") == "2023-03-14"
     assert _sortable_us("") == ""
+
+
+def test_a_candidate_with_no_history_says_so_rather_than_shrugging():
+    # Eleven of the 42 are proposed on their building class and unit mix and
+    # nothing else. "No transient use evidenced" reads as though somewhere was
+    # searched and came back empty, which invites someone to go and verify a
+    # building that was never recorded as a hotel anywhere.
+    ok, why = _rev(bldgclass="HS", hpd_class_a=19)
+    assert ok is False
+    assert "nothing records this as a hotel at all" in why
+    assert "HS" in why and "19" in why
+
+    # A building that does have a history gets the other message — something
+    # was looked at and did not reach the cutoff.
+    ok, why = _rev(bldgclass="H3", hpd_class_a=40, coo_count=12)
+    assert ok is False
+    assert "nothing records this as a hotel at all" not in why

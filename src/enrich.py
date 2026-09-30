@@ -779,6 +779,21 @@ def _pre_cutoff_transient_evidence(record: dict) -> tuple[bool, str]:
             f"to the cutoff"
         )
 
+    # Nothing anywhere says this was ever a hotel. It is in the list because
+    # its building class is a hotel class and HPD registers residential units
+    # in it, which is a shape, not a history — and saying "no evidence found"
+    # reads as though somewhere was searched and came back empty. Eleven of
+    # the 42 candidates are here on nothing else.
+    if not (record.get("dob_conversion_detail") or record.get("prior_operator")
+            or record.get("dob_has_r1") or record.get("dob_has_j1")
+            or record.get("hotel_license_status") or (record.get("coo_count") or 0) > 0):
+        return False, (
+            f"nothing records this as a hotel at all — no C of O, no DOB "
+            f"occupancy filing, no licence, no operator. It is here because "
+            f"the building class is {record.get('bldgclass', '?')} and HPD "
+            f"registers {record.get('hpd_class_a') or 0} Class A units"
+        )
+
     return False, "no transient use evidenced before the 2021-12-09 cutoff"
 
 

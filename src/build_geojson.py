@@ -106,14 +106,20 @@ POST_2021_REVERSIONS = {
         "sale_price": 24_125_000,
         "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
     },
-    "1008940071": {
+    # Lot 0071 became billing lot 7505 when the building was condominiumised,
+    # which is what a conversion does to a tax lot and is why this entry
+    # matched nothing for as long as anyone read the count as six. 130 East
+    # 39th Street, RC, 15 floors.
+    "1008947505": {
         "former_hotel": "W New York - The Court (St. Giles)",
         "closure_year": 2020,
         "note": "Closed during pandemic ~2020. Sold Jan 2023 for $50M. Currently migrant shelter.",
         "sale_price": 50_000_000,
         "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
     },
-    "1013190034": {
+    # Lot 0034 became billing lot 7504 on the same conversion the note below
+    # describes. 234 East 46th Street, R4, 20 floors.
+    "1013197504": {
         "former_hotel": "AKA United Nations",
         "closure_year": 2024,
         # The only sale on record is unit-sized, consistent with a condo
@@ -811,7 +817,16 @@ def build_geojson(
 
     # Drop unknown-tier buildings — no transient signal, just noise
     # But keep any building with a prior_operator tag
-    pipeline = [r for r in pipeline if r["tier"] != "unknown" or r.get("prior_operator")]
+    # A hand-curated reversion survives this the same way it survives the
+    # zoning filter below. 234 East 46th Street is AKA United Nations, now the
+    # Perrie condominiums — 95 units, which is the figure the curated note
+    # records — and it arrives with tier "unknown" because HPD has nothing on
+    # a condominium billing lot. It was dropped here, two filters before the
+    # exemption that was meant to keep it.
+    pipeline = [r for r in pipeline
+                if r["tier"] != "unknown"
+                or r.get("prior_operator")
+                or r["bbl"] in POST_2021_REVERSIONS]
 
     # A building is "actively operating" if it has evidence of current hotel use.
     # Buildings without this evidence would need a CPC special permit (2021 text
