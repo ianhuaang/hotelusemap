@@ -539,3 +539,43 @@ def test_a_candidate_with_no_history_says_so_rather_than_shrugging():
     ok, why = _rev(bldgclass="H3", hpd_class_a=40, coo_count=12)
     assert ok is False
     assert "nothing records this as a hotel at all" not in why
+
+
+def test_a_hotel_that_left_before_the_amendment_is_ruled_out():
+    # 330 East 56th Street was the Sutton Hotel and became condominiums in
+    # 2005 — sixteen years before the cutoff. It sat in the list unverified,
+    # as though somebody might yet find the evidence, when what was missing
+    # was a year that took one search to find.
+    ok, why = _rev(bldgclass="RM", coo_count=4,
+                   prior_operator={"name": "AKA Sutton Place", "end_year": "2005"})
+    assert ok is False
+    assert "2005" in why and "before" in why
+
+
+def test_an_operator_who_arrived_before_the_cutoff_still_counts():
+    ok, why = _rev(bldgclass="D9", coo_count=4,
+                   prior_operator={"name": "Sonder Wall Street", "start_year": "2019"})
+    assert ok is True
+    assert "2019" in why
+
+
+def test_leaving_outranks_arriving():
+    # Both years present: the departure decides it. An operator who arrived in
+    # 2015 and left in 2018 was not there when the amendment landed.
+    ok, _ = _rev(bldgclass="RM", coo_count=4,
+                 prior_operator={"name": "x", "start_year": "2015", "end_year": "2018"})
+    assert ok is False
+
+
+def test_every_recorded_year_says_where_it_came_from():
+    # A year in a hand-kept file with nothing behind it is the thing nobody
+    # can re-check, which is how "6 tracked" survived in the reference for
+    # months after it stopped being six.
+    import csv
+    from pathlib import Path
+
+    rows = list(csv.DictReader((Path(__file__).parent.parent / "ground_truth.csv").open()))
+    dated = [r for r in rows if r.get("start_year") or r.get("end_year")]
+    assert dated, "no prior operator carries a year yet"
+    for r in dated:
+        assert r.get("year_source"), f"{r['name']} has a year and no source"

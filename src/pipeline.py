@@ -113,6 +113,15 @@ def load_prior_operators(path: Path = None) -> dict[str, dict]:
                     "name": row["name"],
                     "address": row["address"],
                     "notes": row.get("notes", ""),
+                    # When the operator arrived and when they left, where
+                    # anybody has found out. The reversion rule has read
+                    # start_year since it was written and the column did not
+                    # exist, so every one of these was undated — and I kept
+                    # calling that a question only the team could answer. It
+                    # took one search each.
+                    "start_year": row.get("start_year", ""),
+                    "end_year": row.get("end_year", ""),
+                    "year_source": row.get("year_source", ""),
                 }
     return result
 

@@ -737,7 +737,17 @@ def _pre_cutoff_transient_evidence(record: dict) -> tuple[bool, str]:
         return True, f"DCWP hotel licence issued {created} and live at the cutoff"
 
     prior = record.get("prior_operator") or {}
+    end = str(prior.get("end_year") or "")[:4]
     start = str(prior.get("start_year") or prior.get("since") or "")[:4]
+    # A hotel that had already gone before the amendment has no use to revert
+    # to. 330 East 56th Street was the Sutton Hotel and became condominiums in
+    # 2005 — sixteen years early — and it sat in the list unverified, as
+    # though somebody might yet find the evidence.
+    if end.isdigit() and int(end) < 2021:
+        return False, (
+            f"{prior.get('name', 'the hotel')} left in {end}, before the "
+            f"{HOTEL_SPECIAL_PERMIT_CUTOFF} cutoff"
+        )
     if start.isdigit() and int(start) < 2021:
         return True, f"prior operator {prior.get('name', '')} from {start}"
 
