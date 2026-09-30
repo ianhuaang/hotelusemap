@@ -19,6 +19,7 @@ jobs:
       # Free, and moves us off the per-IP pool that GitHub's shared runners
       # contend for. Absent, everything still works, just throttled.
       SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
     # Must exceed the sum of the per-step caps (275 min). If the job cap fires
     # first, the run is cancelled before the verify step can report which
     # sources failed — the cap killing the run costs us the diagnosis. Real
@@ -300,6 +301,62 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python src/report_step_budget.py
+
+      # Phase 3b: the sweeps that were committed by hand instead of pulled.
+      #
+      # These three call Google Places and were never in this workflow, so
+      # every weekly build re-read whichever sweep somebody last committed and
+      # stamped it with that Monday's date. The gap widened by a week every
+      # week. They are not decorative: current_use_conflict is the largest
+      # single term in the score at -35, and the current-use label titles a
+      # panel people read as fact.
+      #
+      # Both Places scripts keep a cache in data/raw and only query what is
+      # new or stale, so a weekly run costs a fraction of a cold sweep.
+      - name: Check the Google key
+        run: |
+          if [ -z "$GOOGLE_API_KEY" ]; then
+            echo "::error title=Missing secret::GOOGLE_API_KEY is not set, so the current-use, hotel-name and hotel-class sweeps cannot run. Set it in repository secrets — without it the build reads whatever sweep was last committed by hand and stamps it with today's date."
+            exit 1
+          fi
+          echo "Google key present."
+
+      - name: Sweep current use (Google Places)
+        id: p_currentuse
+        run: python src/enrich_current_use.py
+        continue-on-error: true
+
+      - name: Sweep hotel names (Google Places)
+        id: p_hotelnames
+        run: python src/enrich_hotel_names.py
+        continue-on-error: true
+
+      - name: Sweep hotel-class buildings (Google Places)
+        id: p_hclass
+        run: python src/enrich_hclass_hotels.py
+        continue-on-error: true
+
+      # City Record shelter notices. Socrata, not Google, and it was simply
+      # never wired in — the only source in the tree with no route into a run.
+      - name: Pull City Record shelter notices
+        id: p_cityrecord
+        run: python src/enrich_city_record.py
+        continue-on-error: true
+
+      - name: Verify the sweeps completed
+        run: |
+          FAILED=""
+          check() { [ "$2" = "success" ] || FAILED="$FAILED\n  - $1 ($2)"; }
+          check "current-use sweep"   "${{ steps.p_currentuse.outcome }}"
+          check "hotel-name sweep"    "${{ steps.p_hotelnames.outcome }}"
+          check "hotel-class sweep"   "${{ steps.p_hclass.outcome }}"
+          check "City Record notices" "${{ steps.p_cityrecord.outcome }}"
+          if [ -n "$FAILED" ]; then
+            echo "::error title=Incomplete sweep::A sweep did not complete, so the build would fall back to a committed file of unknown age."
+            printf '%b\n' "Sweeps that did not complete:$FAILED"
+            exit 1
+          fi
+          echo "All 4 sweeps completed."
 
       # Phase 4: Enrich and build
       - name: Run enrichment

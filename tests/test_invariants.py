@@ -263,3 +263,41 @@ def test_a_building_on_the_map_has_been_looked_at():
     assert integrity([{"properties": stranded}]) >= 1
     # Excluded buildings are allowed to be unaccounted for; nobody browses them.
     assert integrity([{"properties": {**stranded, "segment": "unknown"}}]) == 0
+
+
+def test_every_source_has_a_route_into_a_scheduled_run():
+    """No input may depend on somebody remembering to run it.
+
+    Three Google Places sweeps and the City Record shelter pull were outside
+    refresh-data.yml. Their output sat in data/raw as committed files, so every
+    Monday re-read whichever sweep was last run by hand and stamped it with
+    that Monday's date. current_use_conflict is the largest single term in the
+    score at -35, so the gap moved scores quietly.
+
+    Asserted against the workflow text rather than the SOURCES table, because
+    the table is a claim and the workflow is what actually runs.
+    """
+    import re
+    from pathlib import Path
+
+    from src import provenance
+
+    workflow = Path(__file__).resolve().parents[1] / ".github/workflows/refresh-data.yml"
+    text = workflow.read_text()
+
+    missing = [key for key, _, _, ci in provenance.SOURCES if not ci]
+    assert not missing, (
+        f"sources with no scheduled refresh: {missing}. "
+        "A source nothing pulls is a source that quietly ages.")
+
+    # And the scripts themselves are invoked, not merely claimed.
+    scripts = sorted(
+        p.name for p in (Path(__file__).resolve().parents[1] / "src").glob("enrich_*.py"))
+    run_by_ci = set(re.findall(r"python src/(enrich_[a-z_]+\.py)", text))
+    # enrich.py is the main pass and is not an enrich_* source script.
+    never_run = [s for s in scripts if s not in run_by_ci]
+    assert never_run == ["enrich_web_use.py"], (
+        f"enrichment scripts the workflow never runs: {never_run}. "
+        "enrich_web_use.py is the known exception — it needs a Programmable "
+        "Search Engine id that was never set up, and it is dormant in the "
+        "pipeline too.")

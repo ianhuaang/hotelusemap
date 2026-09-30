@@ -5,13 +5,16 @@ the newest PLUTO pull. For the fifteen sources refresh-data.yml pulls in a
 single job that is honest — they all land the same morning, and a gate refuses
 to publish unless every one of them completed.
 
-It is not honest for the sources CI never pulls. `enrich_current_use.py`,
+It was not honest for the sources CI never pulled. `enrich_current_use.py`,
 `enrich_hotel_names.py` and `enrich_hclass_hotels.py` are the only scripts that
-call Google Places, and none of them appears in the workflow. Their output is
-committed to data/raw instead, so every weekly build reads the same Places
-sweep and stamps it with that Monday's date. On 28 Sep 2026 the published file
-carried current-use data pulled on the 23rd and said nothing about it, and that
-gap widens by a week every week until somebody re-runs the sweep by hand.
+call Google Places, and none of them appeared in the workflow; their output was
+committed to data/raw instead, so every weekly build read the same Places sweep
+and stamped it with that Monday's date. On 28 Sep 2026 the published file
+carried current-use data pulled on the 23rd and said nothing about it.
+`enrich_city_record.py` had no route into a run at all. All four are in
+refresh-data.yml as of 30 Sep 2026, behind the same completion gate as the
+fifteen city pulls, so this table's `ci` column is now True throughout — and
+the check that matters is that it stays that way.
 
 Which would matter less if those fields were decorative. current_use_conflict is
 the largest single term in the score at -35, current_use_label titles the
@@ -65,10 +68,15 @@ SOURCES = [
     # penalty, so a silent failure here moves scores quietly — the manifest is
     # where that becomes visible.
     ("htc_union",            "htc_union",                DATA_RAW,       True),
-    # Google Places. Committed, never pulled by CI, manual sweep only.
-    ("google_current_use",   "google_current_use",       DATA_RAW,       False),
-    ("google_hotel_names",   "google_hotel_names",       DATA_RAW,       False),
-    ("google_hclass_hotels", "google_hclass_hotels",     DATA_RAW,       False),
+    # Google Places. Pulled by refresh-data.yml since 30 Sep 2026 and gated
+    # like the rest; before that they were committed by hand and every weekly
+    # build re-read the last sweep somebody remembered to run.
+    ("google_current_use",   "google_current_use",       DATA_RAW,       True),
+    ("google_hotel_names",   "google_hotel_names",       DATA_RAW,       True),
+    ("google_hclass_hotels", "google_hclass_hotels",     DATA_RAW,       True),
+    # City Record shelter notices — the one source with no route into a run at
+    # all until the same change.
+    ("city_record_shelter",  "city_record_shelter",      DATA_RAW,       True),
 ]
 
 _DIRS = {key: (prefix, directory) for key, prefix, directory, _ in SOURCES}

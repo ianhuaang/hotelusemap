@@ -886,9 +886,23 @@ def build_geojson(
         return bool((r.get("reversion_window") or {}).get("pre_2021_use"))
 
     pre_zoning = len(pipeline)
+    # A building already operating as a hotel cannot be disqualified by a
+    # zoning district that would not permit a new one — that is what a
+    # pre-existing nonconforming use is. The rule let HPD Class B stand for
+    # "already transient", which misses every hotel that does not register
+    # with HPD: 449 West 36th (Casamia 36), 319 West 38th (Hotel 38, Tapestry
+    # Collection by Hilton), 24 East 39th (The William) and 56 Irving Place
+    # (The Inn at Irving Place) all hold live DCWP hotel licences and were
+    # being dropped off the map before anyone could see them.
+    def _already_transient(r):
+        return (r.get("hpd_class_b", 0) > 0
+                or r.get("has_hotel_license")
+                or str(r.get("bldgclass") or "").upper().startswith("H")
+                or r.get("dob_has_r1"))
+
     pipeline = [r for r in pipeline
                 if r.get("zoning_hotel_permitted") == "permitted"
-                or r.get("hpd_class_b", 0) > 0
+                or _already_transient(r)
                 or r["bbl"] in POST_2021_REVERSIONS
                 or _evidenced_reversion(r)]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
