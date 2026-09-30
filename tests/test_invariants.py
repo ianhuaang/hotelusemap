@@ -146,6 +146,27 @@ def test_the_stewart_hotel_figure_matches_city_records():
     assert POST_2021_REVERSIONS["1008060076"]["sale_price"] == 260_000_000
 
 
+# --- flex operators (stage 3) -----------------------------------------------
+
+def test_a_former_residence_inn_is_not_a_flex_operator():
+    # FLEX_OPERATORS names the exclusion three lines above itself — purpose-
+    # built extended-stay brands sell hotel product, these take over apartment
+    # inventory — and then the former-operator branch took whatever the ground
+    # truth held and bypassed it. 554 Third Avenue is the former Residence Inn
+    # Midtown East and wore the Flex operators badge; 18 others did too,
+    # including six LuxUrbans, three AKAs, a Yotel and a Citadines.
+    from src.build_geojson import _is_flex_name
+
+    for not_flex in ("Residence Inn Midtown East", "LuxUrban Washington Hotel",
+                     "AKA Times Square", "Yotel New York", "Citadines Fifth Avenue",
+                     "Oakwood at The Nash", "Selina Chelsea", ""):
+        assert _is_flex_name(not_flex) is False, f"{not_flex} is not a flex operator"
+
+    for flex in ("Sonder Battery Park", "Mint House 70 Pine (Kasa)",
+                 "Placemakr Wall Street", "Blueground", "Sentral"):
+        assert _is_flex_name(flex) is True, f"{flex} is a flex operator"
+
+
 # --- DOB occupancy dates (pull stage) ---------------------------------------
 
 def test_filing_dates_sort_by_year_and_not_by_month():

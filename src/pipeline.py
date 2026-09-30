@@ -266,11 +266,12 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 bbl in dob_conversion_bbls  # DOB filing changed occupancy from transient
                 or class_a >= 5            # substantial residential presence, not just a super's apt
             )
-            if has_conversion_evidence:
-                confidence = CONFIDENCE_MEDIUM
-                reason_codes.append("reversion_window")
-            else:
-                confidence = CONFIDENCE_LOW
+            # The reason code is no longer appended here. It belongs to the
+            # reversion window itself, which is decided below on wider
+            # evidence than a surviving hotel class; appending it inside the
+            # tier chain meant a building could carry the window and not the
+            # code, which is what 554 Third Avenue did.
+            confidence = CONFIDENCE_MEDIUM if has_conversion_evidence else CONFIDENCE_LOW
         elif is_hotel_class:
             # Hotel class, no HPD data
             tier = TIER_LEGAL_TRANSIENT
@@ -303,10 +304,24 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                 "pct_transient": round(class_b / (class_a + class_b) * 100),
             }
 
-        # Reversion window overlay — only if there's evidence of actual conversion
+        # Reversion window overlay.
+        #
+        # Two things are being asked, and the building class answers neither:
+        # was this a hotel at the December 2021 cutoff, and is it residential
+        # now. The gate used to demand `is_hotel_class`, which reads the
+        # second question off the first and misses any building whose class
+        # was actually changed on conversion — 33 of the 39 buildings DOB
+        # records as converted from transient occupancy, and 554 Third Avenue,
+        # the former Residence Inn Midtown East, which HPD carries as RM with
+        # 144 Class A units and no Class B.
+        #
+        # This proposes a candidate on "residential now, and something says it
+        # was once a hotel". Whether the hotel use reached the cutoff is
+        # decided in enrich.py, where the C of O and licence history exist.
         reversion_window = None
         conversion_detail = dob_conversion_bbls.get(bbl, "")
-        if is_hotel_class and class_a > 0 and class_b == 0:
+        was_hotel_signal = is_hotel_class or bool(conversion_detail) or is_prior_op
+        if was_hotel_signal and class_a > 0 and class_b == 0:
             has_conversion_evidence = bool(conversion_detail) or class_a >= 5
             if has_conversion_evidence:
                 evidence = conversion_detail or f"{class_a} Class A units registered"
@@ -317,6 +332,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
                     "evidence": evidence,
                     "note": f"Building class {bldgclass} (hotel) converted to residential ({evidence}). Can revert to hotel use without special permit before Dec 9, 2027.",
                 }
+                if "reversion_window" not in reason_codes:
+                    reason_codes.append("reversion_window")
 
 
         record = {
@@ -345,6 +362,10 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             "hpd_stories": hpd_info.get("legalstories", ""),
             "prior_operator": prior_op_info,
             "reversion_window": reversion_window,
+            # "J-1 -> B (01/15/2021)". The date is what says whether the
+            # transient use was still running at the 2021 cutoff, and it
+            # was computed here and dropped.
+            "dob_conversion_detail": conversion_detail,
             "class_b_split": class_b_split,
             "source_pulled_on": DATA_VINTAGE,
         }

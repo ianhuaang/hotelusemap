@@ -206,7 +206,24 @@ def _current_flex_operator(record: dict) -> str:
         (record.get("operator_name") or "").strip()
     # These two are usually the same string; only join when they differ.
     name = hotel if hotel.lower() == operator.lower() else " / ".join(x for x in (hotel, operator) if x)
-    return name if any(op in name.lower() for op in FLEX_OPERATORS) else ""
+    return _is_flex_name(name) and name or ""
+
+
+def _is_flex_name(name: str) -> bool:
+    """Is this the name of a flex-stay operator, as the list defines one?
+
+    The current-operator path has always asked this. The former-operator path
+    did not, and took whatever the ground truth held — so the exclusion three
+    lines above, which names Residence Inn specifically, was written and then
+    bypassed. 19 of the 38 buildings wearing the Flex operators badge were
+    former Residence Inns, LuxUrbans, AKAs, a Yotel and a Citadines: hotel
+    product and serviced apartments, none of them a flex operator taking over
+    apartment inventory.
+
+    has_prior_op is untouched. A building that used to be a hotel is still a
+    building that used to be a hotel; it is just not a flex one.
+    """
+    return any(op in (name or "").lower() for op in FLEX_OPERATORS)
 
 
 def _is_non_target(record: dict) -> bool:
@@ -508,6 +525,14 @@ def apply_roster_current_use(features: list[dict]) -> int:
 # This runs last, over final properties, and adds any code whose field is true.
 # Nothing is removed: a code the chain set is still there, and order still puts
 # the deciding signal first.
+# Uses the team asked to keep on the list, which are also uses a business can
+# be trading in. A named occupant carrying one of these means the building is
+# in possession — not that the use disqualifies it.
+OCCUPIED_PRODUCT_USES = frozenset({
+    "student_housing", "hostel", "sro", "private_club",
+})
+
+
 EVIDENCE = [
     ("hpd_class_b",             lambda p: (p.get("hpd_class_b") or 0) > 0),
     ("bldg_class_hotel",        lambda p: is_hotel_class(p.get("bldgclass"))),
@@ -515,6 +540,10 @@ EVIDENCE = [
     # 64 buildings carry the J-1 classification and no R-1.
     ("dob_transient_occupancy", lambda p: bool(p.get("dob_has_r1") or p.get("dob_has_j1"))),
     ("current_use_conflict",    lambda p: bool(p.get("current_use_conflict"))),
+    # The city printed a shelter notice for this address. It is evidence to
+    # read, not a verdict — the notice carries a publication date and no term,
+    # so it says a shelter was contracted here, never that one is here now.
+    ("city_shelter_notice",     lambda p: bool(p.get("shelter_notice"))),
     ("illegal_transient_violation", lambda p: (p.get("ecb_illegal_transient") or 0) > 0),
     # Split the way DCWP splits it: a lapsed licence is evidence of a different
     # thing from a live one, and collapsing them would read as still licensed.
@@ -535,6 +564,7 @@ EVIDENCE = [
 # from DOB filings the dob_has_r1 flag does not cover.
 FIELD_OWNED = {
     "current_use_conflict": lambda p: bool(p.get("current_use_conflict")),
+    "city_shelter_notice": lambda p: bool(p.get("shelter_notice")),
 }
 
 
@@ -743,14 +773,31 @@ def build_geojson(
             return True
         if r["bbl"] in POST_2021_REVERSIONS:
             return True
+        if (r.get("reversion_window") or {}).get("pre_2021_use"):
+            return True
         return False
 
     # Drop buildings in incompatible zoning unless they have HPD Class B rooms
     # (confirmed current transient operation = grandfathered nonconforming use).
     # License/reversion/prior-op alone isn't enough — without Class B, there's
     # no active transient use to grandfather.
+    #
+    # The reversion exemption reads the hand-curated list and now also an
+    # evidenced derived window. A reversion candidate has no Class B rooms by
+    # definition — that is the "residential now" half of the test — so every
+    # clause above rejected it, and 37 of 42 candidates were dropped here
+    # having been found two stages earlier. Only evidenced ones are exempt:
+    # without evidence the use reached the 2021 cutoff there is nothing to
+    # grandfather, which is what this filter is for.
+    def _evidenced_reversion(r):
+        return bool((r.get("reversion_window") or {}).get("pre_2021_use"))
+
     pre_zoning = len(pipeline)
-    pipeline = [r for r in pipeline if r.get("zoning_hotel_permitted") == "permitted" or r.get("hpd_class_b", 0) > 0 or r["bbl"] in POST_2021_REVERSIONS]
+    pipeline = [r for r in pipeline
+                if r.get("zoning_hotel_permitted") == "permitted"
+                or r.get("hpd_class_b", 0) > 0
+                or r["bbl"] in POST_2021_REVERSIONS
+                or _evidenced_reversion(r)]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
 
     # Drop hotel-class buildings that aren't actively operating — they'd need
@@ -996,11 +1043,19 @@ def build_geojson(
             "current_use_name": record.get("current_use_name", ""),
             "current_use_confidence": record.get("current_use_confidence", ""),
             "current_use_basis": record.get("current_use_basis", ""),
+            "current_use_place_id": record.get("current_use_place_id", ""),
             "current_use_conflict": record.get("current_use_conflict", False),
             "current_use_source": "google" if record.get("current_use") else "",
             "current_use_occupants": record.get("current_use_occupants", []),
             "current_use_needs_review": record.get("current_use_needs_review", False),
             "current_use_checked": record.get("current_use_checked", False),
+            # Published by the city, carried whole so a reader can open it.
+            "shelter_notice": record.get("shelter_notice", False),
+            "shelter_status": record.get("shelter_status", ""),
+            "shelter_status_basis": record.get("shelter_status_basis", ""),
+            "shelter_notice_date": record.get("shelter_notice_date", ""),
+            "shelter_notice_count": record.get("shelter_notice_count", 0),
+            "shelter_notice_evidence": record.get("shelter_notice_evidence", []),
             # Operator identification
             "operator_name": record.get("operator_name", ""),
             "operator_source": record.get("operator_source", ""),
@@ -1059,7 +1114,9 @@ def build_geojson(
         if current_flex:
             properties["flex_op_name"] = current_flex
             properties["flex_op_status"] = "current"
-        elif record.get("prior_operator"):
+        # `.get(key, {})` hands back None when the key is present holding
+        # None, which most records here do.
+        elif _is_flex_name((record.get("prior_operator") or {}).get("name", "")):
             properties["flex_op_name"] = record["prior_operator"]["name"]
             properties["flex_op_status"] = "former"
         if properties.get("flex_op_name"):
@@ -1116,8 +1173,25 @@ def build_geojson(
             or op_looks_like_hotel
             or record.get("current_use") == "hotel"
         )
+        # The same question one step wider. has_active_operator only knows how
+        # to see a hotel, so a building with a dormitory, hostel, SRO or club
+        # trading in it read as having nobody in it at all: 99 Washington
+        # Street is 492 Class B rooms running as FOUND Study Financial
+        # District and sat in "no operator" scoring 85.
+        #
+        # The team asked to see these product types, which is about what the
+        # building is. Whether someone is in possession is a different fact,
+        # and the penalty that used to carry it was doing both jobs at once.
+        # A dorm-classed building with Class B rooms and nobody trading in it
+        # is still a target and stays one — 68 of them do.
+        occupant_name = (record.get("current_use_name") or "").strip()
+        has_other_operator = bool(
+            occupant_name and record.get("current_use") in OCCUPIED_PRODUCT_USES
+        )
         if seg_tier == "legal_transient" and has_active_operator:
             properties["segment"] = "active_hotel"
+        elif seg_tier == "legal_transient" and has_other_operator:
+            properties["segment"] = "active_other"
         elif seg_tier == "legal_transient":
             properties["segment"] = "transient"
         elif seg_tier == "partial":

@@ -59,6 +59,7 @@ LICENSE_TERM_LONG_YEARS = 3
 # education records. Nothing failed — the map was simply quieter than the
 # data, which is the kind of gap that survives a review.
 from src.enrich_current_use import NON_TRANSIENT_USES as NON_TRANSIENT_CURRENT_USES
+from src.enrich_current_use import restate as restate_current_use
 
 # Zoning compatibility for hotel use (Use Group 5)
 # Post-2021 amendment: ALL new hotels require CPC special permit.
@@ -681,25 +682,102 @@ def _guest_rooms(record: dict) -> tuple[int, str]:
     return 0, "none"
 
 
+def _sortable_us(us_date: str) -> str:
+    """MM/DD/YYYY as DOB writes it, to YYYY-MM-DD so it can be compared."""
+    parts = str(us_date or "").strip().split("/")
+    if len(parts) == 3 and len(parts[2]) == 4:
+        mm, dd, yyyy = parts
+        try:
+            return f"{yyyy}-{int(mm):02d}-{int(dd):02d}"
+        except ValueError:
+            return ""
+    return str(us_date or "")[:10] if str(us_date or "").count("-") == 2 else ""
+
+
+def _conversion_date(detail: str) -> str:
+    """The date out of a DOB conversion note: "J-1 -> B (01/15/2021)"."""
+    m = re.search(r"\((\d{1,2})/(\d{1,2})/(\d{4})\)", str(detail or ""))
+    if not m:
+        return ""
+    mm, dd, yyyy = m.groups()
+    return f"{yyyy}-{int(mm):02d}-{int(dd):02d}"
+
+
 def _pre_cutoff_transient_evidence(record: dict) -> tuple[bool, str]:
-    """Is there evidence this building's transient use predates 2021-12-09?"""
+    """Was this building in hotel use at the December 9, 2021 cutoff?
+
+    That is the question the overlay's own copy asks — "hotels that closed or
+    converted to residential post-2021 ... because their hotel use predates
+    the 2021 text amendment" — and it used to be answered by asking whether
+    the building still carries a hotel class, which is a different question
+    with a different answer.
+    """
     bldgclass = (record.get("bldgclass") or "").upper()
-    if bldgclass.startswith("H"):
-        for coo in record.get("coo_records") or []:
-            iso = _coo_date(coo.get("issue_date", ""))
-            if iso and iso < HOTEL_SPECIAL_PERMIT_CUTOFF:
-                return True, f"hotel building class {bldgclass} with a C of O issued {iso}"
+
+    # Strongest, and dated: DOB recorded the change out of transient use. If
+    # that happened at or after the cutoff, the hotel was running right up to
+    # it. If it happened before, the use had already gone when the amendment
+    # landed and there is no pre-existing use to revert to — which the old
+    # test could not say at all.
+    converted = _conversion_date(record.get("dob_conversion_detail"))
+    if converted:
+        if converted >= HOTEL_SPECIAL_PERMIT_CUTOFF:
+            return True, f"DOB records transient use here until {converted}"
+        return False, (
+            f"DOB records the transient use ending {converted}, before the "
+            f"{HOTEL_SPECIAL_PERMIT_CUTOFF} cutoff"
+        )
+
+    # A hotel licence that was live at the cutoff says the same thing.
+    created = str(record.get("hotel_license_created") or "")[:10]
+    expires = str(record.get("hotel_license_expiration") or "")[:10]
+    if created and created <= HOTEL_SPECIAL_PERMIT_CUTOFF and (
+        not expires or expires >= HOTEL_SPECIAL_PERMIT_CUTOFF
+    ):
+        return True, f"DCWP hotel licence issued {created} and live at the cutoff"
 
     prior = record.get("prior_operator") or {}
     start = str(prior.get("start_year") or prior.get("since") or "")[:4]
     if start.isdigit() and int(start) < 2021:
         return True, f"prior operator {prior.get('name', '')} from {start}"
 
+    # The C of O route. No longer gated on the building class: a C of O
+    # predating the cutoff on a building HPD now records as residential is the
+    # ordinary shape of a conversion, and requiring an H class to look at all
+    # is what hid 554 Third Avenue and 33 others.
+    coos = record.get("coo_records") or []
+    if bldgclass.startswith("H") or record.get("dob_has_r1") or record.get("dob_has_j1"):
+        for coo in coos:
+            iso = _coo_date(coo.get("issue_date", ""))
+            if iso and iso < HOTEL_SPECIAL_PERMIT_CUTOFF:
+                return True, f"transient occupancy on file with a C of O issued {iso}"
+
+    # DOB's own filing dates. These were in the pull all along and dropped on
+    # the way in, so every one of these buildings read "undated in our data" —
+    # a statement about our plumbing that sounded like a statement about DOB.
+    last = _sortable_us(record.get("dob_transient_last_filing"))
+    if last:
+        if last >= HOTEL_SPECIAL_PERMIT_CUTOFF:
+            return True, f"DOB transient occupancy filed {last}, at or after the cutoff"
+        # Filed before the cutoff and nothing records the use ending. That is
+        # not proof it ran to December 2021, and saying which year it reaches
+        # is worth more than saying nothing at all.
+        return False, (
+            f"DOB transient occupancy last filed {last}; nothing records it ending, "
+            f"but nothing carries it to the cutoff either"
+        )
+
     if record.get("dob_has_r1") or record.get("dob_has_j1"):
-        # DOB occupancy filings carry no date through the pipeline, so this
-        # establishes transient use without establishing when. Deliberately
-        # weaker than the C of O route and labelled as such.
-        return False, "DOB R-1/J-1 occupancy on file, but undated in our data"
+        return False, "DOB R-1/J-1 occupancy on file, with no filing date recorded"
+
+    if prior.get("name"):
+        # Somebody researched this building and wrote down which hotel it was,
+        # without a year. Worth showing and worth checking; not worth
+        # asserting.
+        return False, (
+            f"known former hotel ({prior['name']}), but nothing dates the use "
+            f"to the cutoff"
+        )
 
     return False, "no transient use evidenced before the 2021-12-09 cutoff"
 
@@ -714,18 +792,104 @@ def _license_term_years(created: str, expires: str) -> float | None:
     return round((end - start).days / 365.25)
 
 
+# Places answered, but not about the building. A shop at street level says
+# nothing about the 120 rooms above it, and a blank says nothing at all.
+WEAK_PLACES_USES = {"", "ground_floor_tenant", "other"}
+
+
+def _use_holds_building(cu: dict) -> bool:
+    """Does this use occupy the building, or does it rent a suite in it?
+
+    Two tests, and a use has to pass both.
+
+    Most of the occupants carry it. One tenant of eight does not make the
+    address a church, and reading it that way cost 238 buildings a penalty
+    built for buildings that are genuinely in other hands.
+
+    And it rests on what the place is rather than on what it is called.
+    "Fountain Pen Hospital" on Warren Street is a pen shop; a name match alone
+    carried it to a medical classification and a full penalty, and 49 of the
+    278 penalties stood on nothing sturdier than that.
+    """
+    if not str(cu.get("basis") or "").startswith("type="):
+        return False
+    occupants = cu.get("occupants") or []
+    if not occupants:
+        return False
+    use = cu.get("current_use")
+    same = sum(1 for o in occupants if o.get("use") == use)
+    return same / len(occupants) >= 0.5
+
+
 def load_current_use() -> dict[str, dict]:
-    """Load Google Places current-use findings keyed by BBL.
+    """Load current-use findings keyed by BBL, Places first then the web.
 
     Produced by src/enrich_current_use.py. Records what is at the address
     today, which city records do not answer — 569 Lexington Avenue reads as
     730 Class B units in HPD and is a student dormitory on the ground.
+
+    Places is a business directory, so it only sees uses that registered as a
+    business. The ones that never do are invisible to it: 35-02 37 Avenue runs
+    as a shelter for single adults under a $65.8m city contract to June 2030,
+    and all Places had was the Citi Bike dock at the kerb. src/enrich_web_use.py
+    reads the open web for exactly those, and its finding is laid over the top
+    wherever Places came back with a shop or with nothing. It never displaces a
+    real Places answer — a building Places calls a hotel is a hotel, and a news
+    page about what it used to be is not better evidence than that.
     """
     files = sorted(DATA_RAW.glob("google_current_use_[0-9]*.json"), reverse=True)
     if not files:
         return {}
-    raw = json.loads(files[0].read_text())
-    return {r["bbl"]: r for r in raw if r.get("bbl")}
+    by_bbl = {r["bbl"]: r for r in json.loads(files[0].read_text()) if r.get("bbl")}
+    # Read under today's rules, not under whichever ones were in force the day
+    # the sweep ran. A file on disk is the places Google returned; what they
+    # mean is decided here, every build.
+    restated = sum(restate_current_use(r) for r in by_bbl.values())
+    if restated:
+        print(f"  Current use: {restated} stored readings restated under the current rules")
+
+    web_files = sorted(DATA_RAW.glob("web_current_use_[0-9]*.json"), reverse=True)
+    if not web_files:
+        return by_bbl
+    for w in json.loads(web_files[0].read_text()):
+        bbl = w.get("bbl")
+        if not bbl or not w.get("current_use"):
+            continue
+        held = by_bbl.get(bbl, {})
+        if (held.get("current_use") or "") not in WEAK_PLACES_USES:
+            continue
+        by_bbl[bbl] = {
+            **held,
+            "bbl": bbl,
+            "current_use": w["current_use"],
+            "current_use_label": w["current_use_label"],
+            "use_confidence": w.get("use_confidence", "low"),
+            "basis": w.get("basis", ""),
+            "google_name": "",
+            # A web reading is a sentence in an article, not an address-verified
+            # listing, so it always goes in front of a person before it removes
+            # a building from anyone's list.
+            "needs_review": True,
+            "swept": True,
+            "web_evidence": w.get("evidence", []),
+        }
+    return by_bbl
+
+
+def load_city_record_shelter() -> dict[str, dict]:
+    """Buildings the city has published a DHS or HRA shelter notice for.
+
+    Produced by src/enrich_city_record.py. This flags and never decides, and
+    the dates are why: the City Record carries the publication date of a
+    notice, not the term of the contract inside it. 17 Battery Place holds a
+    DHS notice from December 2008 and is an operating hotel today. A source
+    that spoke with authority here would delete it from the list on
+    eighteen-year-old evidence.
+    """
+    files = sorted(DATA_RAW.glob("city_record_shelter_[0-9]*.json"), reverse=True)
+    if not files:
+        return {}
+    return {r["bbl"]: r for r in json.loads(files[0].read_text()) if r.get("bbl")}
 
 
 def load_acris_owners(path: Path = None) -> dict[str, dict]:
@@ -836,6 +1000,7 @@ def enrich_pipeline(
     permit_keywords_by_bbl = scan_permit_descriptions(permits_path)
     hotel_licenses = load_hotel_licenses()
     current_use = load_current_use()
+    shelter_notices = load_city_record_shelter()
     hpd_regs = load_hpd_registrations()
     # The date on the file each contact was actually read from, so a contact can
     # say how stale it is without the reader going to look.
@@ -1015,22 +1180,64 @@ def enrich_pipeline(
             reliable and rooms > SAFE_HOTELS_LARGE_HOTEL_ROOMS
         )
 
+        # A shelter notice the city printed. Flag only — see
+        # load_city_record_shelter for why this never sets the use itself.
+        notice = shelter_notices.get(bbl)
+        if notice:
+            record["shelter_notice"] = True
+            # active / uncertain / historical. 17 Battery Place last appeared
+            # in a DHS notice in 2008 and is a working hotel; 1 Hoyt Street
+            # was awarded to a named operator for $51.9m in 2026. Grading them
+            # apart is the difference between a flag worth reading and noise.
+            record["shelter_status"] = notice.get("shelter_status", "")
+            record["shelter_status_basis"] = notice.get("shelter_status_basis", "")
+            record["shelter_notice_date"] = notice.get("latest_notice", "")
+            record["shelter_notice_count"] = notice.get("notice_count", 0)
+            record["shelter_notice_evidence"] = notice.get("notices", [])[:3]
+
         # Current use on the ground (Google Places, address-verified)
         cu = current_use.get(bbl)
-        if cu:
+        # A row with no occupant now means "asked, nothing came back", which is
+        # different from never having asked and must not be read as a finding.
+        if cu and not cu.get("current_use") and cu.get("swept"):
+            record["current_use"] = ""
+            record["current_use_label"] = ""
+            record["current_use_name"] = ""
+            record["current_use_confidence"] = ""
+            record["current_use_basis"] = cu.get("basis", "no match")
+            record["current_use_occupants"] = []
+            # Nothing came back from Places, but the city may still have
+            # printed a notice for the address — that is exactly the building
+            # this whole source exists for.
+            record["current_use_needs_review"] = bool(notice)
+            record["current_use_checked"] = True
+            record["current_use_conflict"] = False
+        elif cu:
             record["current_use"] = cu.get("current_use", "")
             record["current_use_label"] = cu.get("current_use_label", "")
             record["current_use_name"] = cu.get("google_name", "")
             record["current_use_confidence"] = cu.get("use_confidence", "")
             record["current_use_basis"] = cu.get("basis", "")
+            # The Places id of whatever the sweep resolved. Carried so the
+            # profile can link straight to the listing it is quoting, rather
+            # than to an address search that may land somewhere else.
+            record["current_use_place_id"] = cu.get("place_id", "")
             record["current_use_occupants"] = cu.get("occupants", [])
-            record["current_use_needs_review"] = bool(cu.get("needs_review"))
+            record["current_use_needs_review"] = bool(cu.get("needs_review")) or bool(notice)
             record["current_use_checked"] = True
-            # A dorm, shelter, church or clinic is not a sourcing target no
-            # matter how many Class B units it registers. Flagged rather than
-            # excluded: name-only matches are medium confidence and a human
-            # should see them before the building leaves the list.
-            if cu.get("current_use") in NON_TRANSIENT_CURRENT_USES:
+            # A shelter, church or clinic is not a sourcing target no matter
+            # how many Class B units it registers — but it has to actually
+            # hold the building. The penalty used to fire on any occupant at
+            # the address and landed on 278 buildings, 238 of which had the
+            # use in one suite among many: 33 Rector Street was marked
+            # religious because Orthodox Union has an office there, beside a
+            # wine shop and a parking garage, and 13 Rector Street was marked
+            # government in a building whose other tenants are 7-Eleven and
+            # Dunkin'. Thirty-five points came off each of them.
+            #
+            # Flagged rather than excluded: a human should still see them
+            # before the building leaves the list.
+            if cu.get("current_use") in NON_TRANSIENT_CURRENT_USES and _use_holds_building(cu):
                 record["current_use_conflict"] = True
                 record.setdefault("reason_codes", []).append("current_use_conflict")
             else:
@@ -1053,6 +1260,12 @@ def enrich_pipeline(
             record["dob_has_j1"] = dob_occ.get("has_j1", False)
             record["dob_r1_filing_count"] = dob_occ.get("r1_filing_count", 0)
             record["dob_transient_units"] = dob_occ.get("max_dwelling_units", 0)
+            # When DOB last saw a transient filing here. The reversion rule
+            # needs it and the comment above it used to read "DOB occupancy
+            # filings carry no date through the pipeline" — they carry two,
+            # and both were dropped on the way in.
+            record["dob_transient_first_filing"] = dob_occ.get("earliest_date", "")
+            record["dob_transient_last_filing"] = dob_occ.get("latest_date", "")
             # Tier upgrade: R-1 in DOB = legally established transient use
             tier = record.get("tier", "")
             class_b = record.get("hpd_class_b", 0) or 0
@@ -1142,6 +1355,21 @@ def enrich_pipeline(
             record["has_hotel_license"] = False
             record["safe_hotels_licensed"] = False
             record["hotel_license_term_years"] = None
+
+        # A building trading as a hotel right now has nothing to revert to.
+        #
+        # The licence test above catches this only where DCWP shows an active
+        # one, and licences lapse while hotels keep trading: 50 Bowery reads
+        # "Failed to Renew" at DCWP and is Hotel 50 Bowery, JDV by Hyatt, on
+        # the ground. 123 Washington Street is The Washington Hotel NYC with
+        # no licence on file at all. Both were sitting in the reversion list
+        # as buildings that had converted to residential.
+        if record.get("reversion_window") and record.get("current_use") == "hotel":
+            record["reversion_window"] = None
+            record["has_reversion"] = False
+            rc = record.get("reason_codes", [])
+            if "reversion_window" in rc:
+                rc.remove("reversion_window")
 
         # Reversion window — test it against the 2021-12-09 cutoff
         #

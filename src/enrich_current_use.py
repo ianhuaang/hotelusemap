@@ -119,7 +119,7 @@ TYPE_RULES = [
         "city_hall", "local_government_office", "government_office",
         "courthouse", "police", "fire_station", "embassy", "post_office",
     )),
-    ("institutional_lodging", "Nonprofit / institutional lodging", (
+    ("hostel", "Hostel", (
         "hostel",
     )),
     ("hotel", "Hotel", (
@@ -215,10 +215,65 @@ TENANT_TYPES = frozenset({
 
 # Tiers where a non-transient current use is a contradiction worth surfacing.
 TRANSIENT_TIERS = ("legal_transient", "partial")
+# Which occupants mean the building is not a sourcing target.
+#
+# Narrowed on the team's instruction: they want to see SROs, hostels, members
+# clubs and dormitories, and not shelters. All four were being treated the same
+# as a church or a clinic — flagged as a conflict, penalised 35 points and
+# pushed off the list — when a dormitory or a members club is a building with a
+# tenant to negotiate out, not a building that cannot be a hotel.
+#
+# So student_housing, private_club and hostel come out. What stays is the set
+# nobody is converting: shelters and transitional housing, and the civic uses.
+# institutional_lodging stays with them because it is now missions and charity
+# lodging only — Bowery Mission, Salvation Army — with hostels moved out.
+#
+# Surfaced is not the same as unflagged. The occupant is still named in the
+# building's Current use section; it simply no longer decides the building's
+# fate on its own.
 NON_TRANSIENT_USES = frozenset({
-    "student_housing", "supportive_housing", "institutional_lodging",
-    "religious", "medical", "government", "private_club", "education",
+    # The team's designation, September 2026: SROs, hostels, members clubs and
+    # dormitories stay on the list — they are legally transient stock with a
+    # tenant — and shelters come off it. A shelter is established by the web
+    # source, never by Places, which has no listing for one.
+    "shelter",
+    "supportive_housing", "institutional_lodging",
+    "religious", "medical", "government", "education",
 })
+
+
+def restate(row: dict) -> bool:
+    """Re-read a stored sweep row under the current rules. True if it changed.
+
+    A stored row keeps the place Google returned but not the reading we made
+    of it, because the rules move. Splitting hostels out of institutional
+    lodging left 15 of them still labelled "Nonprofit / institutional
+    lodging" — a use the score penalises — months after the team asked to be
+    shown hostels. The place is data; the classification is a derivation, and
+    it is derived again every time it is used.
+    """
+    if not (row.get("primary_type") or row.get("google_name")):
+        return False
+    use, label, confidence, basis = classify({
+        "displayName": {"text": row.get("google_name") or ""},
+        "primaryType": row.get("primary_type") or "",
+        "types": row.get("types") or [],
+        "businessStatus": row.get("business_status") or "",
+    })
+    if use == row.get("current_use"):
+        return False
+    # Only ever a correction, never an erasure. A stored row that carries a
+    # name but no place type re-derives to "unknown", and letting that land
+    # would quietly blank a reading that was made when the full place was in
+    # hand. Restating is for a rule that changed, not for data we no longer
+    # hold.
+    if use in ("", "unknown") and row.get("current_use") not in ("", "unknown"):
+        return False
+    row["current_use"] = use
+    row["current_use_label"] = label
+    row["use_confidence"] = confidence
+    row["basis"] = basis
+    return True
 
 
 def classify(place: dict) -> tuple[str, str, str, str]:
@@ -338,6 +393,47 @@ def address_match(query_addr, result_addr: str) -> str:
 # 177 hotel names were rejected on the house-number test alone. The footprint
 # is already in the GeoJSON we read, so none of that had to be lost.
 
+# How far outside the outline a pin may sit and still be the building.
+#
+# Google pins a business to its street entrance, which is on the pavement — a
+# few metres outside the DOB polygon. Requiring a pin strictly inside the
+# outline therefore rejected the building's own occupants: at 156 Tillary
+# Street every one of the ten places the probe returned was thrown away, the
+# Hampton Inn among them, because its pin sits 12.8m off the edge and Google
+# files it under 125 Flatbush Ave Ext, an address the city's own alt-address
+# list does not carry. The building read as never checked.
+#
+# 15m is drawn from that case: the whole complex sits at 12.3-12.8m, and the
+# nearest genuinely different buildings are at 20.3m. Containment still beats a
+# buffered hit in ranking, so this widens what is considered, not what wins.
+FOOTPRINT_BUFFER_M = 15.0
+
+
+def _metres_from_footprint(lon: float, lat: float, coordinates: list) -> float:
+    """Shortest distance from a point to any outer ring, in metres."""
+    import math
+    best = float("inf")
+    mlon = 111320.0 * math.cos(math.radians(lat))
+    for poly in coordinates or []:
+        for ring in (poly or [])[:1]:
+            for i in range(len(ring) - 1):
+                ax = (ring[i][0] - lon) * mlon
+                ay = (ring[i][1] - lat) * 111320.0
+                bx = (ring[i + 1][0] - lon) * mlon
+                by = (ring[i + 1][1] - lat) * 111320.0
+                dx, dy = bx - ax, by - ay
+                t = 0.0 if dx == dy == 0 else max(0.0, min(1.0, -(ax * dx + ay * dy) / (dx * dx + dy * dy)))
+                best = min(best, math.hypot(ax + t * dx, ay + t * dy))
+    return best
+
+
+def near_footprint(lon: float, lat: float, coordinates: list) -> bool:
+    """Inside the outline, or within a doorway's distance of it."""
+    if in_footprint(lon, lat, coordinates):
+        return True
+    return _metres_from_footprint(lon, lat, coordinates) <= FOOTPRINT_BUFFER_M
+
+
 def in_footprint(lon: float, lat: float, coordinates: list) -> bool:
     """Ray casting over each polygon's outer ring."""
     for poly in coordinates:
@@ -394,6 +490,54 @@ def places_nearby(lat: float, lon: float) -> list[dict]:
             if e.code in (429, 500, 503) and attempt < 2:
                 time.sleep(2 * (attempt + 1))
                 continue
+            raise
+        except (TimeoutError, urllib.error.URLError):
+            if attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise
+    return []
+
+
+def places_text(query: str) -> list[dict]:
+    """Ask by address as well as by point.
+
+    places_nearby answers "what is at this spot", which is the right question
+    and an incomplete one. It only returns what Google has geocoded inside a
+    45m circle on the footprint centroid, so it misses an occupant pinned to
+    another corner of a large building, and it misses anything filed under one
+    of the building's other addresses entirely.
+
+    That is not hypothetical. 35-02 37 Avenue is filed five ways, is the former
+    Paper Factory Hotel and is now a shelter, and the point probe returned one
+    thing: a Citi Bike dock. 156 Tillary Street, 145 registered rooms in
+    Downtown Brooklyn, returned nothing at all.
+
+    A text search for a bare address does resolve to the postal premise, which
+    is why this supplements the point probe rather than replacing it — but it
+    also returns establishments Google files at that address, which is the half
+    that was missing.
+    """
+    body = json.dumps({"textQuery": query, "maxResultCount": 20}).encode()
+    req = urllib.request.Request(
+        SEARCH_URL,
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": API_KEY,
+            "X-Goog-FieldMask": FIELD_MASK,
+        },
+    )
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, context=CTX, timeout=20) as resp:
+                return json.loads(resp.read()).get("places", [])
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 503) and attempt < 2:
+                time.sleep(2 * (attempt + 1))
+                continue
+            if e.code == 400:
+                return []
             raise
         except (TimeoutError, urllib.error.URLError):
             if attempt < 2:
@@ -463,17 +607,33 @@ def candidates(address, lat: float, lon: float, footprint: list = None) -> list[
     Lexington back to a travel wholesaler in the process.
     """
     places = places_nearby(lat, lon)
+
+    # Every address the building is filed under, asked by name as well as by
+    # point. `address` already arrives as the full list from main(); it was
+    # only ever used to verify a match, never to look one up, which left the
+    # multi-address buildings answering with whatever happened to sit within
+    # 45m of their centroid.
+    queries = [address] if isinstance(address, str) else list(address or [])
+    seen = {p.get("id") for p in places if p.get("id")}
+    for q in queries:
+        if not q:
+            continue
+        for p in places_text(f"{q}, New York, NY"):
+            pid = p.get("id")
+            if pid and pid not in seen:
+                seen.add(pid)
+                places.append(p)
+
     if not places:
         return []
 
     scored = []
     for p in places:
         loc = p.get("location") or {}
-        contained = bool(
-            footprint
-            and loc.get("longitude") is not None
-            and in_footprint(loc["longitude"], loc["latitude"], footprint)
-        )
+        has_loc = footprint and loc.get("longitude") is not None
+        strict = bool(has_loc and in_footprint(loc["longitude"], loc["latitude"], footprint))
+        # Admitted on the buffered test, ranked on the strict one.
+        contained = bool(strict or (has_loc and near_footprint(loc["longitude"], loc["latitude"], footprint)))
         match = address_match(address, p.get("formattedAddress", ""))
         # Standing in the building settles it. The house number is the
         # fallback for the handful of places Google has not located precisely.
@@ -496,7 +656,8 @@ def candidates(address, lat: float, lon: float, footprint: list = None) -> list[
             "use_confidence": conf,
             "basis": basis,
             "names_building": _names_the_building(p),
-            "in_footprint": contained,
+            "in_footprint": strict,
+            "near_footprint": contained,
         })
 
     return scored
@@ -582,12 +743,29 @@ def load_buildings() -> list[dict]:
 
     rows = []
     for f in g["features"]:
-        c = _centroid(f["geometry"]["coordinates"])
+        # Two buildings have no geometry at all: DOB has no footprint for them
+        # and no geocode could be trusted, so build_geojson keeps them with a
+        # null geometry rather than inventing a location. This read straight
+        # through to ["coordinates"] and crashed the whole sweep on them — so
+        # since that data landed, no sweep has run at all.
+        geom = f.get("geometry") or {}
+        coords = geom.get("coordinates")
+        if not coords:
+            continue
+        # A geocoded point rather than a footprint: usable for the probe, but
+        # there is no outline to test containment against.
+        if geom.get("type") == "Point":
+            r = dict(f["properties"])
+            r["lon"], r["lat"] = coords[0], coords[1]
+            r["footprint"] = None
+            rows.append(r)
+            continue
+        c = _centroid(coords)
         if not c:
             continue
         r = dict(f["properties"])
         r["lon"], r["lat"] = c
-        r["footprint"] = f["geometry"]["coordinates"]
+        r["footprint"] = coords
         rows.append(r)
     return rows
 
@@ -618,12 +796,40 @@ def main() -> None:
     ap.add_argument("--limit", type=int, default=0, help="stop after N new lookups")
     ap.add_argument("--estimate", action="store_true",
                     help="report the target count and API cost, call nothing")
+    ap.add_argument("--rescue", action="store_true",
+                    help="re-query cached buildings that produced no occupant, "
+                         "or only a ground-floor tenant, using the address "
+                         "searches as well as the point probe")
     args = ap.parse_args()
 
     rows = load_buildings()
     targets = select_targets(rows, args.tiers.split(","), [b for b in args.bbl.split(",") if b])
     cache = json.loads(CACHE_FILE.read_text()) if CACHE_FILE.exists() else {}
-    uncached = [t for t in targets if f"{t['bbl']}|{t.get('address','')}" not in cache]
+
+    # A cached answer that describes nothing about the building is not an
+    # answer. Before the address searches existed these were the buildings the
+    # point probe could not reach — a Citi Bike dock at 35-02 37 Avenue, and
+    # nothing at all at 156 Tillary — and they are the ones worth paying to ask
+    # again. Everything else stays cached and costs nothing.
+    def thin(entry):
+        for c in (entry or []):
+            use, _, _, _ = classify({
+                "displayName": {"text": c.get("google_name", "")},
+                "types": c.get("types") or [],
+                "primaryType": c.get("primary_type") or "",
+                "primaryTypeDisplayName": {"text": c.get("primary_type_display", "")},
+            })
+            if use not in ("", "ground_floor_tenant", "unknown", "other"):
+                return False
+        return True
+
+    def needs_lookup(t):
+        key = f"{t['bbl']}|{t.get('address','')}"
+        if key not in cache:
+            return True
+        return args.rescue and thin(cache[key])
+
+    uncached = [t for t in targets if needs_lookup(t)]
 
     print(f"Targets: {len(targets)}  cached: {len(targets) - len(uncached)}  to look up: {len(uncached)}")
     billable = max(0, len(uncached) - FREE_CALLS_PER_MONTH)
@@ -653,7 +859,7 @@ def main() -> None:
 
         # The cache holds candidates, never the verdict. Ranking is applied on
         # every run, so changing how the winner is chosen costs nothing.
-        if key in cache:
+        if key in cache and not (args.rescue and thin(cache[key])):
             # Re-classify on read. The cache is meant to hold candidates rather
             # than verdicts, but classification was being baked in at write
             # time, so a change to TYPE_RULES or TENANT_TYPES reached only
@@ -688,6 +894,19 @@ def main() -> None:
         found = rank_candidates(scored or [])
         if not found:
             misses += 1
+            # A row all the same. Emitting nothing made a swept building
+            # indistinguishable from an unswept one downstream, and 183
+            # buildings were reading as "never checked" when most of them had
+            # been asked about and simply come back empty.
+            results.append({
+                "bbl": bbl, "address": addr, "tier": rec.get("tier", ""),
+                "bldgclass": rec.get("bldgclass", ""),
+                "hpd_class_b": rec.get("hpd_class_b", 0),
+                "contradicts_tier": False,
+                "swept": True, "current_use": "", "current_use_label": "",
+                "google_name": "", "use_confidence": "", "basis": "no match",
+                "occupants": [],
+            })
             continue
         hits += 1
         contradicts = (rec.get("tier") in TRANSIENT_TIERS
@@ -696,11 +915,40 @@ def main() -> None:
             "bbl": bbl, "address": addr, "tier": rec.get("tier", ""),
             "bldgclass": rec.get("bldgclass", ""),
             "hpd_class_b": rec.get("hpd_class_b", 0),
-            "contradicts_tier": contradicts, **found,
+            "contradicts_tier": contradicts, "swept": True, **found,
         })
 
     CACHE_FILE.write_text(json.dumps(cache, indent=2))
-    OUTPUT_FILE.write_text(json.dumps(results, indent=2))
+    # Merged onto the previous run, not written over it. enrich.py reads the
+    # newest dated file, so a targeted run — one BBL, or a --limit that stops
+    # early — used to publish a file holding only the buildings it touched, and
+    # every other building silently lost its current use on the next build. A
+    # one-BBL test wrote a one-row file over a 2,451-row sweep.
+    previous = {}
+    prior_files = sorted(DATA_RAW.glob("google_current_use_[0-9]*.json"), reverse=True)
+    for f in prior_files:
+        if f == OUTPUT_FILE:
+            continue
+        try:
+            previous = {r["bbl"]: r for r in json.loads(f.read_text()) if r.get("bbl")}
+        except (json.JSONDecodeError, OSError):
+            continue
+        break
+    # A carried row keeps the place Google returned but not the reading we made
+    # of it, because the rules move. Splitting hostels out of institutional
+    # lodging left 15 of them still labelled "Nonprofit / institutional
+    # lodging" — a use the score penalises — months after the team asked to be
+    # shown hostels. The place data is stored; the classification is derived
+    # again from it every time.
+    restated = sum(restate(row) for row in previous.values())
+    if restated:
+        print(f"  Re-read {restated} carried rows under the current rules")
+
+    merged = {**previous, **{r["bbl"]: r for r in results if r.get("bbl")}}
+    kept = len(merged) - len(results)
+    if kept > 0:
+        print(f"Carried {kept:,} buildings forward from {prior_files[0].name if prior_files else 'nothing'}")
+    OUTPUT_FILE.write_text(json.dumps(list(merged.values()), indent=2))
 
     flagged = [r for r in results if r["contradicts_tier"]]
     DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
