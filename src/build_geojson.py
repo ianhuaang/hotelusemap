@@ -270,6 +270,14 @@ def _occupancy_state(record: dict) -> str:
     return "thin" if record.get("current_use_checked") else "unchecked"
 
 
+def _fallback_address(record: dict, alt_addresses: dict) -> str:
+    """An address for a building PLUTO did not name, from what else we hold."""
+    for alt in alt_addresses.get(record["bbl"], []):
+        if str(alt or "").strip():
+            return str(alt).strip()
+    return ""
+
+
 def _is_non_target(record: dict) -> bool:
     bldg_class = record.get("bldgclass", "")
     if bldg_class in EXCLUDED_BLDG_CLASSES:
@@ -1002,7 +1010,12 @@ def build_geojson(
     for record, fp in best_by_bbl.values():
         properties = {
             "bbl": record["bbl"],
-            "address": record["address"],
+            # PLUTO carries no address for some condominium billing lots —
+            # 1008397501 is the 420 Fifth Avenue condominium and comes through
+            # with an empty string. It was unsearchable, unexportable and
+            # unvisitable, and the alt-address list had six spellings of it
+            # sitting right there.
+            "address": record["address"] or _fallback_address(record, alt_addresses),
             # True where DOB has no footprint for this lot, so the map draws a
             # point at a geocoded address instead of the building's outline.
             "no_footprint": bool(record.get("_no_footprint")),
@@ -1374,6 +1387,20 @@ def build_geojson(
             print(f"  ...and {len(lost) - 5} more")
 
     print(f"Built GeoJSON: {len(features)} features ({matched} BBLs matched, {unmatched_pipeline} unmatched)")
+
+    # Count what reached what, every build. Things fell through the cracks
+    # because nothing was looking at the cracks: a source that returns nothing
+    # and a source that was never asked look identical downstream, and the
+    # sweep was silently skipping 173 buildings for a week before anyone
+    # noticed. This will not tell you a source is wrong. It will tell you one
+    # stopped arriving, which is the failure that actually keeps happening.
+    from src.coverage import integrity, report
+
+    report(features)
+    breached = integrity(features)
+    if breached:
+        print(f"\n  {breached} integrity check(s) failed — see above.")
+
     return outpath
 
 

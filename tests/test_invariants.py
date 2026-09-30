@@ -198,3 +198,68 @@ def test_the_pair_it_produces_is_in_order():
             entry["latest_date"] = filing
     assert entry["earliest_date"] == "09/24/2008"
     assert entry["latest_date"] == "01/04/2016"
+
+
+# --- coverage and integrity (build stage) ------------------------------------
+
+def test_a_source_that_stops_arriving_is_caught():
+    # The failure that keeps happening: a source returns nothing for a run and
+    # nothing downstream can tell that from the city having no record. The
+    # sweep skipped 173 buildings for a week this way.
+    from src.coverage import SOURCES, report
+
+    swept = [{"properties": {"bldgclass": "H2", "current_use_checked": True,
+                             "occupancy_state": "clear", "address": "1 TEST ST"}}] * 100
+    rows = {r["source"]: r for r in report(swept)}
+    assert rows["Google Places — current use"]["share"] == 1.0
+
+    # Now the same buildings with the sweep absent, which is what a broken
+    # pull looks like from here.
+    unswept = [{"properties": {"bldgclass": "H2", "occupancy_state": "clear",
+                               "address": "1 TEST ST"}}] * 100
+    rows = {r["source"]: r for r in report(unswept)}
+    row = rows["Google Places — current use"]
+    assert row["share"] == 0.0
+    assert row["broken"] is True, "a source at zero has to be reported as broken"
+
+    # And the floors have to mean something. Zeroing them would silence every
+    # one of these without touching a test that only reads shares.
+    guarded = [s for s in SOURCES if s[2] >= 0.9]
+    assert len(guarded) >= 10, "the sources that should always arrive need a real floor"
+    named = {s[0] for s in guarded}
+    for must in ("PLUTO — building class", "Google Places — current use",
+                 "Occupancy — established", "Zoning"):
+        assert must in named, f"{must} has no floor to fall below"
+
+
+def test_the_integrity_checks_fail_on_the_things_they_name():
+    from src.coverage import integrity
+
+    good = {"bldgclass": "H2", "address": "1 TEST ST", "occupancy_state": "clear",
+            "segment": "transient", "current_use_checked": True}
+    assert integrity([{"properties": good}]) == 0
+
+    # Each of these is a defect that shipped at some point.
+    breaks = [
+        {**good, "current_use": "hotel", "current_use_basis": ""},        # a use from nowhere
+        {**good, "occupancy_state": "onrecord", "occupancy_basis": ""},   # knows without saying how
+        {**good, "shelter_notice": True, "shelter_status": ""},           # a date with no meaning
+        {**good, "has_reversion": True, "reversion_kind": ""},            # closed or converted, unsaid
+        {**good, "address": ""},                                          # unsearchable
+    ]
+    for bad in breaks:
+        assert integrity([{"properties": bad}]) >= 1, bad
+
+
+def test_a_building_on_the_map_has_been_looked_at():
+    # Three evidenced reversions entered the geojson through the zoning
+    # exemption, which admits a building the sweep had never reached. They
+    # were in a segment somebody browses with nothing establishing what was
+    # inside them.
+    from src.coverage import integrity
+
+    stranded = {"bldgclass": "H2", "address": "1 TEST ST", "segment": "transient",
+                "occupancy_state": "unchecked"}
+    assert integrity([{"properties": stranded}]) >= 1
+    # Excluded buildings are allowed to be unaccounted for; nobody browses them.
+    assert integrity([{"properties": {**stranded, "segment": "unknown"}}]) == 0
