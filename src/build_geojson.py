@@ -800,6 +800,18 @@ def build_geojson(
                 or _evidenced_reversion(r)]
     print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
 
+    # A hand-curated BBL that matches nothing does nothing, and says so to
+    # nobody. Two of the six — the W New York / St Giles and AKA United
+    # Nations — name lots PLUTO no longer carries, almost certainly merged or
+    # renumbered on conversion, and had been inert for as long as anyone had
+    # been reading the count as six.
+    present = {r["bbl"] for r in pipeline}
+    orphans = [b for b in POST_2021_REVERSIONS if b not in present]
+    if orphans:
+        print(f"Curated reversions matching no building: {len(orphans)} of {len(POST_2021_REVERSIONS)}")
+        for b in orphans:
+            print(f"  {b} — {POST_2021_REVERSIONS[b].get('former_hotel', '?')}")
+
     # Drop hotel-class buildings that aren't actively operating — they'd need
     # a CPC special permit to start new hotel use
     pre_permit = len(pipeline)
@@ -1123,6 +1135,24 @@ def build_geojson(
             properties["has_flex_op"] = True
             properties["flex_op_is_kasa"] = bool(
                 re.search(r"\bkasa\b", properties["flex_op_name"], re.I)
+            )
+
+        # What kind of reversion this is, for everyone, derived from the data.
+        #
+        # Two mechanisms had grown up beside each other and they never met:
+        # has_reversion from the hand-curated list, and the reversion_window
+        # reason code from the rule. Zero overlap, and the line between them
+        # was hpd_class_b all along.
+        #
+        # A closed hotel still registering Class B rooms has not converted to
+        # anything — the rooms are legally transient and there is nothing to
+        # undo. Row NYC is 1,332 of them, the Hudson 959, the Stewart 620.
+        # A building with none has gone residential and needs the window to
+        # come back. Both are worth sourcing and they are not the same job,
+        # so they no longer share a word.
+        if record.get("reversion_window") or POST_2021_REVERSIONS.get(record["bbl"]):
+            properties["reversion_kind"] = (
+                "closed" if (record.get("hpd_class_b") or 0) > 0 else "converted"
             )
 
         reversion_info = POST_2021_REVERSIONS.get(record["bbl"])
