@@ -210,9 +210,35 @@ def _current_flex_operator(record: dict) -> str:
     # PLG, and no Sonder.
     operator = "" if record.get("operator_source") == "ground_truth" else \
         (record.get("operator_name") or "").strip()
-    # These two are usually the same string; only join when they differ.
-    name = hotel if hotel.lower() == operator.lower() else " / ".join(x for x in (hotel, operator) if x)
-    return _is_flex_name(name) and name or ""
+    # A live DCWP licence in a flex operator's name is present-tense evidence
+    # and was not being read. 37 West 24 Street is licenced to "Sonder Henri
+    # on 24", issued May 2025 and Ready for Renewal, while hotel_name still
+    # carries "Wyndham Garden Manhattan Chelsea West" from a pull dated 2
+    # September and Google's sweep finds "Hotel Henri NY". Sonder is the
+    # operator now — the sequence runs Wyndham Garden, then Hotel Henri, then
+    # Sonder — and the panel called them a prior operator, which is the
+    # opposite of true.
+    #
+    # Only while the licence is live. A surrendered one is exactly the
+    # departure the prior-operator branch is for.
+    licenced = (record.get("hotel_license_name") or "").strip()
+    if record.get("hotel_license_status") not in ("Active", "Ready for Renewal"):
+        licenced = ""
+
+    # These are usually the same string; only join the ones that differ.
+    seen, parts = set(), []
+    for candidate in (hotel, operator, licenced):
+        key = candidate.lower()
+        if candidate and key not in seen:
+            seen.add(key)
+            parts.append(candidate)
+    # Whichever part is the flex operator is the name to show — joining a
+    # Wyndham to a Sonder would read as one operator with a double-barrelled
+    # name.
+    for part in parts:
+        if _is_flex_name(part):
+            return part
+    return ""
 
 
 def _is_flex_name(name: str) -> bool:
@@ -1135,7 +1161,12 @@ def build_geojson(
             "current_use_checked": record.get("current_use_checked", False),
             # Published by the city, carried whole so a reader can open it.
             "occupancy_state": _occupancy_state(record),
-            "occupancy_basis": _city_records_know_use(record),
+            # Only where the register is what decided it. On a building Places
+            # named an occupant for, this read "the certificate of occupancy
+            # carries a dwelling-unit count" beside a state that had nothing to
+            # do with the C of O.
+            "occupancy_basis": (_city_records_know_use(record)
+                                if _occupancy_state(record) == "onrecord" else ""),
             "shelter_notice": record.get("shelter_notice", False),
             "shelter_status": record.get("shelter_status", ""),
             "shelter_status_basis": record.get("shelter_status_basis", ""),
