@@ -144,3 +144,36 @@ def test_the_stewart_hotel_figure_matches_city_records():
     # It was written as $255M. The city records $260M, and it had been read the
     # wrong way for as long as nobody re-read it.
     assert POST_2021_REVERSIONS["1008060076"]["sale_price"] == 260_000_000
+
+
+# --- DOB occupancy dates (pull stage) ---------------------------------------
+
+def test_filing_dates_sort_by_year_and_not_by_month():
+    # DOB writes MM/DD/YYYY and these were compared as those strings, which
+    # sorts by month, then day, then year. 1,007 of 3,795 buildings came out
+    # of the pull with an earliest filing date later than their latest one,
+    # and the reversion rule was about to read those dates as evidence of
+    # when a building stopped being a hotel.
+    from src.pull_dob_occupancy import _sortable
+
+    assert _sortable("12/30/2013") < _sortable("01/04/2016")
+    assert _sortable("05/14/2019") < _sortable("10/01/2020")
+    assert _sortable("09/24/2008") < _sortable("04/06/2012")
+    assert _sortable("") == ""
+    # Already-ISO input is left alone rather than mangled.
+    assert _sortable("2019-05-14") == "2019-05-14"
+
+
+def test_the_pair_it_produces_is_in_order():
+    # The property that was violated, stated directly.
+    from src.pull_dob_occupancy import _sortable
+
+    entry = {"earliest_date": "", "latest_date": ""}
+    for filing in ("04/06/2012", "09/24/2008", "12/30/2013", "01/04/2016"):
+        key = _sortable(filing)
+        if not entry["earliest_date"] or key < _sortable(entry["earliest_date"]):
+            entry["earliest_date"] = filing
+        if not entry["latest_date"] or key > _sortable(entry["latest_date"]):
+            entry["latest_date"] = filing
+    assert entry["earliest_date"] == "09/24/2008"
+    assert entry["latest_date"] == "01/04/2016"

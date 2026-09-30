@@ -35,6 +35,25 @@ TRANSIENT_OCCUPANCY_CODES = {"R-1", "J-1"}
 TARGET_BOROUGHS = ("MANHATTAN", "BROOKLYN", "QUEENS")
 
 
+def _sortable(us_date: str) -> str:
+    """MM/DD/YYYY to YYYY-MM-DD, so two dates can be compared.
+
+    These were compared as the strings DOB writes them, which sorts by month
+    and then by day and only then by year: "05/14/2019" came out earlier than
+    "10/01/2020" for the right reason and "12/30/2013" came out later than
+    "01/04/2016" for no reason at all. 1,007 of 3,795 buildings ended up with
+    an earliest date after their latest one.
+    """
+    s = str(us_date or "").strip()
+    if not s:
+        return ""
+    parts = s.split("/")
+    if len(parts) == 3 and len(parts[2]) == 4:
+        mm, dd, yyyy = parts
+        return f"{yyyy}-{int(mm):02d}-{int(dd):02d}"
+    return s          # already ISO, or something we do not recognise
+
+
 def _fetch_paginated(where: str, ctx) -> list[dict]:
     select = ("bbl, existing_occupancy, proposed_occupancy, "
               "existing_dwelling_units, proposed_dwelling_units, "
@@ -126,10 +145,12 @@ def _aggregate_by_bbl(rows: list[dict]) -> dict[str, dict]:
             entry["has_conversion_from_transient"] = True
             entry["conversion_detail"] = f"{ex_occ} -> {pr_occ} ({filing_date})"
 
-        if filing_date and (not entry["earliest_date"] or filing_date < entry["earliest_date"]):
-            entry["earliest_date"] = filing_date
-        if filing_date and filing_date > entry["latest_date"]:
-            entry["latest_date"] = filing_date
+        if filing_date:
+            key = _sortable(filing_date)
+            if not entry["earliest_date"] or key < _sortable(entry["earliest_date"]):
+                entry["earliest_date"] = filing_date
+            if not entry["latest_date"] or key > _sortable(entry["latest_date"]):
+                entry["latest_date"] = filing_date
 
         try:
             du_int = int(du)
