@@ -226,6 +226,50 @@ def _is_flex_name(name: str) -> bool:
     return any(op in (name or "").lower() for op in FLEX_OPERATORS)
 
 
+# Whether anybody has established what is inside, decided once and published.
+#
+# This lived in the browser as occupancyKey, and the map's own filter had to
+# restate it as a MapLibre expression — a second implementation of one rule,
+# which this file has already paid for twice. It cannot be restated a third
+# time anyway: the residential-class test is a regex and MapLibre has no
+# regex. So it is computed here and read there.
+#
+# The state it replaces called 269 buildings unknown. 239 of them are
+# registered multiple dwellings with a managing agent, or carry residential
+# units in PLUTO, or hold a C of O with a dwelling-unit count — the records
+# answered the question and nothing was asking them. Of the remaining 30,
+# nearly all are RC and its siblings: condominium billing lots, which register
+# per unit rather than per lot, so the class is the answer.
+RESIDENTIAL_CLASS_PREFIX = re.compile(r"^(R[A-Z0-9]|[ABCD]\d)")
+
+
+def _city_records_know_use(record: dict) -> str:
+    """What the records say is inside, or "" if they say nothing."""
+    if (record.get("hpd_class_a") or 0) > 0 or (record.get("hpd_class_b") or 0) > 0:
+        return "HPD registers dwelling units here"
+    if (record.get("unitsres") or 0) > 0:
+        return "PLUTO records residential units here"
+    if record.get("coo_dwelling_units"):
+        return "the certificate of occupancy carries a dwelling-unit count"
+    if record.get("hpd_managing_agent"):
+        return "HPD registers a managing agent for it"
+    if RESIDENTIAL_CLASS_PREFIX.match(str(record.get("bldgclass") or "").upper()):
+        return "the building class is residential"
+    return ""
+
+
+def _occupancy_state(record: dict) -> str:
+    """occupied | clear | onrecord | thin | unchecked."""
+    if record.get("current_use_conflict"):
+        return "occupied"
+    occupants = record.get("current_use_occupants") or []
+    if any(o.get("use") not in ("ground_floor_tenant", "unknown") for o in occupants):
+        return "clear"
+    if _city_records_know_use(record):
+        return "onrecord"
+    return "thin" if record.get("current_use_checked") else "unchecked"
+
+
 def _is_non_target(record: dict) -> bool:
     bldg_class = record.get("bldgclass", "")
     if bldg_class in EXCLUDED_BLDG_CLASSES:
@@ -1062,6 +1106,8 @@ def build_geojson(
             "current_use_needs_review": record.get("current_use_needs_review", False),
             "current_use_checked": record.get("current_use_checked", False),
             # Published by the city, carried whole so a reader can open it.
+            "occupancy_state": _occupancy_state(record),
+            "occupancy_basis": _city_records_know_use(record),
             "shelter_notice": record.get("shelter_notice", False),
             "shelter_status": record.get("shelter_status", ""),
             "shelter_status_basis": record.get("shelter_status_basis", ""),
