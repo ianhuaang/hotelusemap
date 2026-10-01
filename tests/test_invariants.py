@@ -336,3 +336,42 @@ def test_every_fetching_step_has_a_time_cap():
     assert not uncapped, (
         f"these fetch over the network with no time cap: {uncapped}. "
         "An unbounded step runs to the job's 350-minute limit.")
+
+
+def test_the_sweeps_run_after_something_has_built_a_geojson():
+    """enrich_current_use.py reads the built GeoJSON and exits if there is none.
+
+    It probes a point inside each building's footprint, and the built file is
+    the only artefact carrying one. data/processed is not committed, so on a
+    fresh runner nothing satisfies that until build_geojson.py has run — and
+    the sweeps were placed before it. The 1 Oct 2026 run failed there, which
+    the completion gate turned into a refusal to publish rather than a
+    silently stale build.
+
+    The ordering is invisible in the YAML: nothing in a step named "Sweep
+    current use" says it depends on a file an earlier step writes.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    text = (root / ".github/workflows/refresh-data.yml").read_text()
+
+    # The dependency is real: assert the script still bails without the file,
+    # so this test fails loudly if that changes rather than guarding a ghost.
+    source = (root / "src/enrich_current_use.py").read_text()
+    assert "buildings_*.geojson" in source and "sys.exit" in source, (
+        "enrich_current_use.py no longer reads the built GeoJSON; this "
+        "ordering constraint may no longer apply")
+
+    order = re.findall(r"\n      - name: ([^\n]+)", text)
+    builds = [i for i, n in enumerate(order) if n.startswith("Build GeoJSON")]
+    sweep = next(i for i, n in enumerate(order) if n.startswith("Sweep current use"))
+
+    assert builds, "no Build GeoJSON step at all"
+    assert min(builds) < sweep, (
+        f"the current-use sweep runs at step {sweep} and the first build at "
+        f"{min(builds)}; it reads what the build writes")
+    assert max(builds) > sweep, (
+        "nothing rebuilds after the sweeps, so the published file would not "
+        "carry what they found")

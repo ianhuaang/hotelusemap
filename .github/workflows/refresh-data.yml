@@ -302,6 +302,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: python src/report_step_budget.py
 
+      # enrich_current_use.py probes a point inside each building's footprint,
+      # so it reads the built GeoJSON — the only artefact that carries one —
+      # and exits if there is none. data/processed is not committed, so on a
+      # fresh runner there is none until this step has run. Putting the sweeps
+      # before it is what failed the 1 Oct run.
+      #
+      # So: build once to give the sweep something to read, sweep, then build
+      # again so the published file carries what the sweep just found. The
+      # first build is scaffolding and is never published.
+      - name: Build GeoJSON (for the sweeps to read)
+        run: |
+          python src/enrich.py
+          python src/build_geojson.py
+
       # Phase 3b: the sweeps that were committed by hand instead of pulled.
       #
       # These three call Google Places and were never in this workflow, so
@@ -368,7 +382,7 @@ jobs:
           fi
           echo "All 4 sweeps completed."
 
-      # Phase 4: Enrich and build
+      # Phase 4: Enrich and build, now with the sweeps in hand.
       - name: Run enrichment
         run: python src/enrich.py
 
