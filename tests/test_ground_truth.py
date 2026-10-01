@@ -180,12 +180,20 @@ def test_the_build_says_what_it_read(build):
 
 
 def test_the_tier_split_is_sane(by_bbl):
-    """partial is the bulk; legal_transient a minority; excluded a handful."""
+    """Both tiers are real, and evidence outnumbers suggestion.
+
+    This used to assert partial was the bulk, which was true while partial
+    held 1,540 buildings whose only claim was the class code on the lot. Those
+    were dropped on 1 Oct 2026 and partial fell to a few hundred, so the
+    assertion now runs the other way — and that inversion is the point of the
+    change rather than a regression against it.
+    """
     from collections import Counter
     counts = Counter(p["tier"] for p in by_bbl.values())
-    assert counts[TIER_PARTIAL] > counts[TIER_LEGAL_TRANSIENT], counts
+    assert counts[TIER_LEGAL_TRANSIENT] > counts[TIER_PARTIAL], counts
+    assert counts[TIER_PARTIAL] > 50, counts
     assert counts[TIER_LEGAL_TRANSIENT] > 100, counts
-    assert 1000 < len(by_bbl) < 50000, f"{len(by_bbl)} buildings — out of range"
+    assert 500 < len(by_bbl) < 50000, f"{len(by_bbl)} buildings — out of range"
 
 
 # --- free owner contacts -----------------------------------------------------
@@ -241,7 +249,11 @@ def test_a_building_without_a_footprint_is_still_published(by_bbl):
     canonical positive. The map and the table both lost them silently.
     """
     nofp = [p for p in by_bbl.values() if p.get("no_footprint")]
-    assert len(nofp) > 20, f"only {len(nofp)} footprint-less buildings — the injection has broken"
+    # A count, not a proportion, and the population it was sized against has
+    # more than halved. What it is really checking is that these are published
+    # at all rather than dropped for want of a shape to draw, so it asks for
+    # some rather than for twenty.
+    assert len(nofp) > 5, f"only {len(nofp)} footprint-less buildings — the injection has broken"
     assert any(p.get("tier") == TIER_LEGAL_TRANSIENT for p in nofp)
 
 
@@ -309,3 +321,39 @@ def test_the_availability_score_matches_its_own_signals(by_bbl):
 
     assert seen_any > 100, "no building fires an availability signal; the check proves nothing"
     assert max(p["score_avail"] for p in by_bbl.values()) <= 100
+
+
+def test_no_curated_building_is_dropped(by_bbl):
+    """Every researched building survives every filter. The negatives do not.
+
+    Two drops run in the build and they disagreed about what counts as
+    researched: the scope drop kept a building whose prior operator somebody
+    had written down, and the class-code drop then deleted it. 20 Broad Street
+    went that way — Sonder's first NYC building, cited here to Tribeca Citizen,
+    classed D9 by PLUTO with no Class B rooms, so every automatic test of
+    transient use says no and the one human record says yes.
+
+    The three negatives are the other half: they are in this file precisely
+    because they should not reach the map, so their absence is the assertion.
+    """
+    import csv
+    from pathlib import Path
+
+    rows = list(csv.DictReader(
+        (Path(__file__).resolve().parents[1] / "ground_truth.csv").open()))
+    assert rows, "ground_truth.csv is empty"
+
+    missing, leaked = [], []
+    for row in rows:
+        bbl = (row.get("bbl") or "").strip()
+        if not bbl:
+            continue
+        present = bbl in by_bbl
+        if row["label_type"] == "negative":
+            if present:
+                leaked.append(f"{row['name']} ({bbl})")
+        elif not present:
+            missing.append(f"{row['name']} ({bbl})")
+
+    assert not missing, f"curated buildings dropped from the build: {missing}"
+    assert not leaked, f"negative examples reached the map: {leaked}"

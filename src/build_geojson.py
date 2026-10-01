@@ -375,6 +375,23 @@ def _guestroom_works(record: dict) -> dict | None:
 # Class B rooms and R-1 occupancy are deliberately absent from this list —
 # a building carrying either is legal_transient and never reaches the partial
 # branch. J-1 is what actually distinguishes these: 124 of the 227.
+# Two drops run in this build and they must agree about what is researched.
+# They did not: the scope drop kept a building whose prior operator somebody
+# had written down, and the class-code drop then deleted it. 20 Broad Street
+# is Sonder's first NYC building, it sits in ground_truth.csv with a Tribeca
+# Citizen citation, and PLUTO calls it D9 with no Class B rooms — so every
+# automatic test of transient use says no and the one human record says yes.
+#
+# A live licence belongs here for the same reason from the other direction:
+# somebody is trading in the building today whatever the lot is classed.
+def _never_drop(record: dict) -> bool:
+    return bool(
+        record.get("has_hotel_license")
+        or (record.get("prior_operator") or {}).get("name")
+        or record["bbl"] in POST_2021_REVERSIONS
+    )
+
+
 def _has_transient_evidence(record: dict) -> bool:
     return bool(
         (record.get("hpd_class_b") or 0) > 0
@@ -383,6 +400,11 @@ def _has_transient_evidence(record: dict) -> bool:
         or record.get("has_hotel_license")
         or record.get("hotel_name")
         or (record.get("permit_transient_strong") or 0) > 0
+        # A researched prior operator is evidence too, and leaving it out made
+        # this disagree with _never_drop: six buildings were kept by that rule
+        # and then labelled with a segment the app had stopped carrying, which
+        # is how a building becomes invisible rather than merely hidden.
+        or _never_drop(record)
     )
 
 
@@ -1106,15 +1128,7 @@ def build_geojson(
     # prior operator — they are offices and flats carrying an old R-1 filing,
     # classed D8, O3, V1, N2. Using the broad test here would have kept all
     # 385 on the strength of that filing alone.
-    # Somebody researched this building and wrote down which flex operator ran
-    # a hotel in it. That is direct evidence of transient use and it outranks
-    # whatever PLUTO says about the lot — 29 West 34th Street is class K2, a
-    # store building, and Sonder ran a hotel there. Both of the two are Sonder
-    # departures, which is exactly what the prior-operator overlay is for.
-    def _researched_hotel(r):
-        return bool(r.get("has_hotel_license") or (r.get("prior_operator") or {}).get("name"))
-
-    kept_back = [r for r in pipeline if r.get("out_of_scope") and _researched_hotel(r)]
+    kept_back = [r for r in pipeline if r.get("out_of_scope") and _never_drop(r)]
     for r in kept_back:
         r["out_of_scope"] = ""
         r["out_of_scope_reason"] = ""
@@ -1134,6 +1148,25 @@ def build_geojson(
     print(f"Out of scope: dropped {len(dropped)}, kept back {len(kept_back)} "
           f"with a researched operator, {len(pipeline)} remain")
 
+    # Held up by the lot's class code and nothing else.
+    #
+    # The entry test takes the whole mixed-use family — RM alone is 2,612 lots
+    # citywide — because a hotel that converted to flats usually ends up
+    # classed RM, and missing those would miss every conversion. Most of what
+    # comes through that door is flats over shops. They were carried as a
+    # segment nobody could switch on without being told what it meant.
+    #
+    # Dropping them costs nothing. This runs from PLUTO every time, so a
+    # building that acquires a J-1 filing, a licence or a Class B registration
+    # arrives in "Possibly transient" on the next build whether or not it was
+    # being carried in the meantime.
+    pre_class_only = len(pipeline)
+    pipeline = [r for r in pipeline if _has_transient_evidence(r)
+                or r.get("tier") != "partial"
+                or _never_drop(r)]
+    class_only_dropped = pre_class_only - len(pipeline)
+    print(f"Class code only: dropped {class_only_dropped}, {len(pipeline)} remain")
+
     # Published so the reference page can show where 98,580 tax lots become
     # the few thousand in the tool. Counted here rather than written down
     # there: a hand-kept funnel is a diagram that drifts the first time a rule
@@ -1151,13 +1184,20 @@ def build_geojson(
         {"key": "tiered", "label": "City records say something", "count": funnel_tier[1],
          "note": "The rest arrive with nothing from HPD or DOB to tier them on.",
          "removed": funnel_tier[0] - funnel_tier[1]},
-        {"key": "in_scope", "label": "In the tool", "count": len(pipeline),
+        {"key": "in_scope", "label": "Past the scope rules",
+         "count": len(pipeline) + class_only_dropped,
          "note": "What the five scope rules leave.",
          "removed": len(dropped),
          "breakdown": [
              {"rule": k, "count": v, "label": SCOPE_RULE_LABELS.get(k, k)}
              for k, v in by_rule.most_common()
          ]},
+        {"key": "evidenced", "label": "In the tool", "count": len(pipeline),
+         "removed": class_only_dropped,
+         "note": "The rest were here on the lot's class code alone — no Class B "
+                 "rooms, no DOB filing, no licence, no hotel name. Flats over "
+                 "shops that share a code with the conversions worth finding. "
+                 "Any of them returns the moment a record appears."},
     ]
 
     # Index pipeline by BBL
@@ -1550,8 +1590,7 @@ def build_geojson(
         elif seg_tier == "legal_transient":
             properties["segment"] = "transient"
         elif seg_tier == "partial":
-            properties["segment"] = (
-                "partial" if _has_transient_evidence(record) else "class_only")
+            properties["segment"] = "partial"
         else:
             properties["segment"] = "unknown"
 
