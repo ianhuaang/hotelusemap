@@ -190,6 +190,29 @@ NAME_RULES = [
 
 # A restaurant at the base of a 40-storey tower says nothing about the tower.
 # Google types that carry no information about who is in the building.
+# A listing whose name is a street address is Google holding a pin on a door.
+# It carries no information about what is inside, and it was carrying plenty:
+# 360 of them, of which "20 Broad" and "55 Wall Street" were classified
+# residential and four more as hotels — so an address pin was setting the
+# building's use and reporting it as established.
+#
+# Matched on shape rather than against this building's own addresses, which is
+# what the app was doing: 182 11th Avenue listed "182 11th Ave" and "184 11th
+# Ave", and only the first was its own.
+BARE_ADDRESS = re.compile(r"""
+    ^\s*\d+[A-Za-z]?(\s*[-\u2013]\s*\d+)?\s+
+    (E|W|N|S|East|West|North|South)?\s*\d*\s*
+    [A-Za-z0-9.\s']*?\s*
+    (st|street|ave|avenue|av|blvd|boulevard|rd|road|pl|place|dr|drive|ct|court|
+     ln|lane|pkwy|parkway|ter|terrace|way|sq|square|slip|row|broadway|bowery)\.?
+    (\s+(N|S|E|W|North|South|East|West))?\s*$
+""", re.I | re.X)
+
+
+def _is_bare_address(name: str) -> bool:
+    return bool(BARE_ADDRESS.match((name or "").strip()))
+
+
 NO_INFORMATION_TYPES = frozenset({
     "premise", "subpremise", "point_of_interest", "establishment",
     "geocode", "street_address", "route", "political",
@@ -290,10 +313,17 @@ def restate(row: dict) -> bool:
 
 def classify(place: dict) -> tuple[str, str, str, str]:
     """Return (use, label, confidence, basis) for one Places result."""
-    name = (place.get("displayName", {}).get("text") or "").lower()
+    raw_name = place.get("displayName", {}).get("text") or ""
+    name = raw_name.lower()
     types = [t.lower() for t in place.get("types", [])]
     primary = (place.get("primaryType") or "").lower()
     type_set = set(types) | ({primary} if primary else set())
+
+    # Before anything else. A pin on a door tells us nothing, whatever type
+    # Google hangs on it, and the type is often wrong in the flattering
+    # direction — "20 Broad" came back residential.
+    if _is_bare_address(raw_name):
+        return "unknown", "Unknown", "low", "name is a street address"
 
     # primaryType is Google's own answer to "what is this place"; the types
     # array is a bag that collects strays — a doctor's listing carrying
