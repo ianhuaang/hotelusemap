@@ -1421,6 +1421,17 @@ def enrich_pipeline(
                 # dropping buildings is what the review objected to.
                 rw["unverified"] = True
                 record["reversion_unverified"] = True
+                # The sentence this function worked out, kept where the build
+                # can publish it. reversion_window is not emitted, so the only
+                # thing reaching a reader was the boolean — and the profile
+                # rendered every one of them as "no record shows transient use
+                # here before the cutoff". For 26 of the 42 that is false:
+                # 700 8 Avenue registers 1,332 Class B rooms and 353 West 57th
+                # is the Hudson New York. What is true of those is narrower —
+                # the records are there and nothing dates them to the cutoff —
+                # and the difference decides whether a special permit is
+                # needed, so it is not a nuance to round off.
+                record["reversion_unverified_reason"] = evidence
                 record.setdefault("reason_codes", []).append("reversion_unverified")
             else:
                 rw["unverified"] = False

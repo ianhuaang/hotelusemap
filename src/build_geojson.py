@@ -347,6 +347,29 @@ def _guestroom_works(record: dict) -> dict | None:
     }
 
 
+# Something about this building, other than the code the city stamps on the
+# lot, points at transient use.
+#
+# "Possibly transient" was 1,769 buildings of which 1,542 carried exactly one
+# reason code — bldg_class_RM, or RC, or RD. That family sometimes contains
+# transient use, which is why it is pulled in, and a block of flats sharing a
+# code with a hotel is not a lead. On by default, it was most of what the map
+# showed on open: ~1,990 dots of which maybe 448 meant anything.
+#
+# Class B rooms and R-1 occupancy are deliberately absent from this list —
+# a building carrying either is legal_transient and never reaches the partial
+# branch. J-1 is what actually distinguishes these: 124 of the 227.
+def _has_transient_evidence(record: dict) -> bool:
+    return bool(
+        (record.get("hpd_class_b") or 0) > 0
+        or record.get("dob_has_r1")
+        or record.get("dob_has_j1")
+        or record.get("has_hotel_license")
+        or record.get("hotel_name")
+        or (record.get("permit_transient_strong") or 0) > 0
+    )
+
+
 def _set_out_of_scope(records, test, code, reason):
     """Mark the records `test` selects. Returns how many were marked."""
     n = 0
@@ -1195,6 +1218,8 @@ def build_geojson(
             "coo_count": record.get("coo_count", 0),
             "coo_latest_date": record.get("coo_latest_date"),
             "reversion_unverified": record.get("reversion_unverified", False),
+            # Why, in the detector's own words. See enrich.py.
+            "reversion_unverified_reason": record.get("reversion_unverified_reason", ""),
             "ecb_illegal_transient": record.get("ecb_illegal_transient", 0),
             "fisp_applicable": record.get("fisp_applicable", False),
             # Safe Hotels Act thresholds
@@ -1438,7 +1463,8 @@ def build_geojson(
         elif seg_tier == "legal_transient":
             properties["segment"] = "transient"
         elif seg_tier == "partial":
-            properties["segment"] = "partial"
+            properties["segment"] = (
+                "partial" if _has_transient_evidence(record) else "class_only")
         else:
             properties["segment"] = "unknown"
 
