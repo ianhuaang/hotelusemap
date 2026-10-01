@@ -393,6 +393,37 @@ def load_coo_floors() -> dict:
     return best
 
 
+# A building with a demolition filed is not a deal, whatever its rooms say.
+#
+# "Full Demolition" is a DOB job type, not a word in a description. Matching
+# the word catches interior work — "DEMOLISH EXISTING ROOF MOUNTED AIR
+# HANDLING", "INTERIOR DEMOLITION OF NON-LOAD BEARING PARTITIONS", gas piping
+# — and would have excluded fifteen live hotels mid-fit-out. The job type
+# catches the thing itself: 2,438 lots citywide, five of them in this tool,
+# and one is 859 7th Avenue, the Wellington, 687 Class B rooms, approved for
+# demolition on 2026-05-28 while sitting second on the target list.
+#
+# It never reached the build because only the three most recent permits per
+# building are published and a demolition filing is rarely among them.
+def load_demolitions() -> dict:
+    """The latest Full Demolition filing per lot, by BBL."""
+    path = provenance.resolve("permits", DATA_RAW)
+    if not path.exists():
+        return {}
+    latest: dict = {}
+    for row in json.loads(path.read_text()):
+        if row.get("job_type") != "Full Demolition":
+            continue
+        bbl = str(row.get("bbl") or "")
+        if not bbl:
+            continue
+        held = latest.get(bbl)
+        if held is None or str(row.get("filing_date") or "") > str(held.get("filing_date") or ""):
+            latest[bbl] = row
+    print(f"  Full Demolition filings: {len(latest)} lots")
+    return latest
+
+
 def _occupancy_state(record: dict) -> str:
     """occupied | clear | onrecord | thin | unchecked."""
     if record.get("current_use_conflict"):
@@ -1077,6 +1108,7 @@ def build_geojson(
     # a condominium billing lot. It was dropped here, two filters before the
     # exemption that was meant to keep it.
     coo_floors = load_coo_floors()
+    demolitions = load_demolitions()
 
     pre_tier = len(pipeline)
     pipeline = [r for r in pipeline
@@ -1468,6 +1500,17 @@ def build_geojson(
             "height_roof": fp.get("height_roof"),
             "construction_year": fp.get("construction_year"),
             "bin": fp.get("bin", ""),
+            # A demolition filed against this lot, if there is one. Published
+            # rather than acted on here: whether it disqualifies a building is
+            # a judgement for the view, and the status matters — "Objections"
+            # is not "Permit Entire".
+            **(lambda d: {
+                "demolition": {
+                    "filed_on": str(d.get("filing_date") or "")[:10],
+                    "status": d.get("filing_status", ""),
+                    "description": str(d.get("job_description") or "")[:160],
+                },
+            } if d else {})(demolitions.get(record["bbl"])),
             # The certificate's floor table, joined on the BIN the footprint
             # just supplied — no parsed record carries a BBL, and the pipeline
             # record has no BIN until here, which is why this cannot live in
