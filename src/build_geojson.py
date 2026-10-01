@@ -6,7 +6,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 import json
 import math
 import re
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import sys
@@ -309,6 +309,44 @@ def _occupancy_state(record: dict) -> str:
 # reading the pipeline by hand.
 #
 # The rules themselves are unchanged: what was a filter is now a label.
+# Work on the guest rooms themselves, filed recently. This is the one signal
+# that separates a hotel shut for refurbishment from a hotel nobody is coming
+# back to, and the two were indistinguishable: 2 Lexington Avenue is the
+# Gramercy Park Hotel, closed since 2020, and it sat in "Transient, no
+# operator" at a legal score of 80 while MCR spent $13.2m putting floors 3-16
+# back together.
+#
+# Deliberately narrow. The obvious wording — anything mentioning a hotel or a
+# lobby — catches 83 buildings, most of them blocks of flats redoing an
+# entrance. Rooms or an explicit change to hotel use catches 10, nine of which
+# are already trading and doing normal upkeep, leaving exactly one that the
+# segment was describing wrongly.
+GUESTROOM_WORK = re.compile(
+    r"guest ?rooms?|key count|hotel rooms?|convert.{0,30}\bhotel\b|\bhotel\b.{0,20}convert",
+    re.I)
+WORKS_LOOKBACK_MONTHS = 18
+
+
+def _guestroom_works(record: dict) -> dict | None:
+    """The largest recent permit that is work on the rooms, or None."""
+    cutoff = (date.today() - timedelta(days=WORKS_LOOKBACK_MONTHS * 30)).isoformat()
+    best = None
+    for q in record.get("permits") or []:
+        when = q.get("action_date") or ""
+        if when < cutoff or not GUESTROOM_WORK.search(q.get("description") or ""):
+            continue
+        if best is None or (q.get("cost") or 0) > (best.get("cost") or 0):
+            best = q
+    if best is None:
+        return None
+    return {
+        "cost": best.get("cost") or 0,
+        "filed_on": best.get("action_date") or "",
+        "description": (best.get("description") or "")[:200],
+        "status": best.get("status") or "",
+    }
+
+
 def _set_out_of_scope(records, test, code, reason):
     """Mark the records `test` selects. Returns how many were marked."""
     n = 0
@@ -1258,6 +1296,13 @@ def build_geojson(
             "is_condo": _is_condo(record),
         }
 
+        # Rooms being rebuilt right now. Emitted whatever the segment, so the
+        # nine operating hotels doing upkeep carry it too — it is a fact about
+        # the building either way.
+        works = _guestroom_works(record)
+        if works:
+            properties["guestroom_works"] = works
+
         # Include top 3 permits (trimmed to save space)
         permits = record.get("permits", [])
         if permits:
@@ -1417,21 +1462,29 @@ def build_geojson(
         # H-class as a hotel -- including the H8 dormitories and HR SROs this
         # pipeline excludes by name three hundred lines up.
 
-        # Availability (max 45 raw pts -> normalized to 0-100). Kept: the app
-        # has no counterpart to contradict, and HubSpot exports it.
-        avail = 0
-        if record.get("prior_operator"):
-            avail += 15
-        if record.get("has_tax_lien"):
-            avail += 8
-        if record.get("has_lis_pendens"):
-            avail += 8
-        sale_date = record.get("last_sale_date") or ""
-        if sale_date >= f"{date.today().year - 2}-01-01":
-            avail += 5
-        if (record.get("ecb_total_balance") or 0) > 10000:
-            avail += 4
-        properties["score_avail"] = round(min(avail / 45, 1.0) * 100)
+        # Availability. Kept: the app has no counterpart to contradict, and
+        # HubSpot exports it.
+        #
+        # The divisor was 45 and the five terms sum to 40, so 100 was
+        # unreachable by construction — the best a building could do was 89,
+        # and the highest in the set is 62. On a 0-100 scale displayed beside
+        # a legal score that does reach 100, that reads as "barely available"
+        # for a building carrying every distress signal we track. It is shown
+        # on the Independent Hotels tab and exported to HubSpot, so the number
+        # went out wrong in both.
+        #
+        # Derived from the weights rather than written down twice, so adding a
+        # term cannot leave the divisor behind again.
+        AVAIL_SIGNALS = (
+            (15, bool(record.get("prior_operator"))),
+            (8, bool(record.get("has_tax_lien"))),
+            (8, bool(record.get("has_lis_pendens"))),
+            (5, (record.get("last_sale_date") or "") >= f"{date.today().year - 2}-01-01"),
+            (4, (record.get("ecb_total_balance") or 0) > 10000),
+        )
+        avail = sum(points for points, fired in AVAIL_SIGNALS if fired)
+        avail_max = sum(points for points, _ in AVAIL_SIGNALS)
+        properties["score_avail"] = round(avail / avail_max * 100)
 
         feature = {
             "type": "Feature",

@@ -271,3 +271,41 @@ def test_a_pin_is_only_dropped_where_the_geocode_is_trustworthy(build):
             assert geom is None, f"{p['bbl']} is unplaceable yet carries geometry"
         else:
             assert geom and geom.get("type") in ("Polygon", "MultiPolygon"), p["bbl"]
+
+
+def test_the_availability_score_matches_its_own_signals(by_bbl):
+    """Recomputed from the published fields, every score agrees — and tops out at 100.
+
+    The divisor was 45 while the five terms summed to 40, so 100 was
+    unreachable by construction: the best possible was 89 and the highest in
+    the set was 62. It is shown on the Independent Hotels tab and exported to
+    HubSpot, so a building carrying every distress signal we track went out
+    reading as barely available.
+
+    Checked against the artifact rather than by re-running the formula, since
+    re-running the formula would pass with the bug in place.
+    """
+    from datetime import date
+
+    year = date.today().year
+    weights = [15, 8, 8, 5, 4]
+    ceiling = sum(weights)
+    seen_any = 0
+
+    for bbl, p in by_bbl.items():
+        fired = [
+            bool(p.get("prior_operator")),
+            bool(p.get("has_tax_lien")),
+            bool(p.get("has_lis_pendens")),
+            (p.get("last_sale_date") or "") >= f"{year - 2}-01-01",
+            (p.get("ecb_total_balance") or 0) > 10000,
+        ]
+        raw = sum(w for w, f in zip(weights, fired) if f)
+        assert p["score_avail"] == round(raw / ceiling * 100), (
+            f"{bbl}: published {p['score_avail']}, signals give "
+            f"{round(raw / ceiling * 100)}")
+        if raw:
+            seen_any += 1
+
+    assert seen_any > 100, "no building fires an availability signal; the check proves nothing"
+    assert max(p["score_avail"] for p in by_bbl.values()) <= 100
