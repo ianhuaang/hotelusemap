@@ -301,3 +301,38 @@ def test_every_source_has_a_route_into_a_scheduled_run():
         "enrich_web_use.py is the known exception — it needs a Programmable "
         "Search Engine id that was never set up, and it is dormant in the "
         "pipeline too.")
+
+
+def test_every_fetching_step_has_a_time_cap():
+    """A step that talks to the network cannot be allowed to run to the job cap.
+
+    Every pull step in refresh-data.yml carries timeout-minutes, sized just
+    above its real runtime so drift shows up as a warning before it becomes a
+    failure. The four sweeps added on 30 Sep 2026 did not, which meant a
+    Places sweep that stalled would have burned the job's whole 350-minute
+    budget before anyone saw it — and because the sweeps run with
+    continue-on-error, it would have done so silently.
+
+    Compute-only steps (pipeline, enrichment, build) are deliberately
+    uncapped: they do no I/O beyond the local disk, and a cap there would be
+    a guess about machine speed rather than about a remote host.
+    """
+    import re
+    from pathlib import Path
+
+    workflow = Path(__file__).resolve().parents[1] / ".github/workflows/refresh-data.yml"
+    steps = re.split(r"\n      - name: ", workflow.read_text())[1:]
+
+    COMPUTE_ONLY = {"src/pipeline.py", "src/enrich.py", "src/build_geojson.py",
+                    "src/report_step_budget.py"}
+    uncapped = []
+    for step in steps:
+        run = re.search(r"run: python (src/\S+\.py)", step)
+        if not run or run.group(1) in COMPUTE_ONLY:
+            continue
+        if "timeout-minutes" not in step:
+            uncapped.append(step.split("\n")[0])
+
+    assert not uncapped, (
+        f"these fetch over the network with no time cap: {uncapped}. "
+        "An unbounded step runs to the job's 350-minute limit.")

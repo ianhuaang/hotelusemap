@@ -325,16 +325,25 @@ jobs:
         id: p_currentuse
         run: python src/enrich_current_use.py
         continue-on-error: true
+        # The cache carries 2,655 addresses. The dataset is 4,496 since the
+        # filters became labels, so a first run after that change has about
+        # 1,850 cold lookups at roughly half a second each. Sized well above
+        # that, and far below the 350-minute job cap this would otherwise
+        # run to — every other pull step here is capped and these four were
+        # not, which is the only way a sweep can hang a run all afternoon.
+        timeout-minutes: 45
 
       - name: Sweep hotel names (Google Places)
         id: p_hotelnames
         run: python src/enrich_hotel_names.py
         continue-on-error: true
+        timeout-minutes: 25
 
       - name: Sweep hotel-class buildings (Google Places)
         id: p_hclass
         run: python src/enrich_hclass_hotels.py
         continue-on-error: true
+        timeout-minutes: 25
 
       # City Record shelter notices. Socrata, not Google, and it was simply
       # never wired in — the only source in the tree with no route into a run.
@@ -342,6 +351,7 @@ jobs:
         id: p_cityrecord
         run: python src/enrich_city_record.py
         continue-on-error: true
+        timeout-minutes: 15
 
       - name: Verify the sweeps completed
         run: |
