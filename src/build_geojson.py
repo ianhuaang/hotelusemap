@@ -5,6 +5,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 
 import json
 import math
+from collections import Counter
 import re
 from datetime import date, timedelta
 from pathlib import Path
@@ -150,6 +151,21 @@ POST_2021_REVERSIONS = {
         "sale_price": None,
         "source": None,
     },
+}
+
+
+def _funnel_entry() -> dict:
+    """The two counts pipeline.py leaves behind, or empty if it has not run."""
+    files = sorted(DATA_PROCESSED.glob("funnel_entry_*.json"), reverse=True)
+    return json.loads(files[0].read_text()) if files else {}
+
+
+SCOPE_RULE_LABELS = {
+    "zoning": "Zoning does not permit a hotel, and no existing right to grandfather",
+    "special_permit": "Hotel-class but not operating, so restarting needs a CPC special permit",
+    "non_target": "Institutional or non-residential — school, shelter, garage, warehouse",
+    "no_units": "No units, no Class B rooms, no hotel signal",
+    "negligible_class_b": "Three or fewer Class B rooms in a building of twenty-plus",
 }
 
 
@@ -930,10 +946,12 @@ def build_geojson(
     # records — and it arrives with tier "unknown" because HPD has nothing on
     # a condominium billing lot. It was dropped here, two filters before the
     # exemption that was meant to keep it.
+    pre_tier = len(pipeline)
     pipeline = [r for r in pipeline
                 if r["tier"] != "unknown"
                 or r.get("prior_operator")
                 or r["bbl"] in POST_2021_REVERSIONS]
+    funnel_tier = (pre_tier, len(pipeline))
 
     # A building is "actively operating" if it has evidence of current hotel use.
     # Buildings without this evidence would need a CPC special permit (2021 text
@@ -1065,6 +1083,82 @@ def build_geojson(
         "Three or fewer Class B rooms in a residential building of twenty or "
         "more units — too few to be the point of a deal.")
     print(f"Negligible Class B: marked {n} of {pre_neg} out of scope (none dropped)")
+
+    # Out of scope leaves the file.
+    #
+    # It was kept and labelled for a day, which is how the zoning rule was
+    # caught deleting live licensed hotels — Casamia 36, Hotel 38, The
+    # William. That protection is now a rule rather than a pair of eyes:
+    # _already_transient exempts anything holding a licence, a hotel class or
+    # an R-1 filing, and the assertion below refuses to drop a building that
+    # still looks transient. So the buildings can go without the risk going
+    # with them.
+    # Two different jobs, deliberately two different tests.
+    #
+    # _already_transient decides whether zoning may disqualify a building, and
+    # is broad on purpose: a hotel class or an R-1 filing is enough, because a
+    # pre-existing nonconforming use is exactly what zoning cannot touch.
+    #
+    # This one decides whether a building may leave the file entirely, so it
+    # asks for evidence the building is or was actually a hotel rather than
+    # merely shaped like one. Of the 385 the special-permit rule removes, none
+    # holds a licence, none registers a Class B room and none has a named
+    # prior operator — they are offices and flats carrying an old R-1 filing,
+    # classed D8, O3, V1, N2. Using the broad test here would have kept all
+    # 385 on the strength of that filing alone.
+    # Somebody researched this building and wrote down which flex operator ran
+    # a hotel in it. That is direct evidence of transient use and it outranks
+    # whatever PLUTO says about the lot — 29 West 34th Street is class K2, a
+    # store building, and Sonder ran a hotel there. Both of the two are Sonder
+    # departures, which is exactly what the prior-operator overlay is for.
+    def _researched_hotel(r):
+        return bool(r.get("has_hotel_license") or (r.get("prior_operator") or {}).get("name"))
+
+    kept_back = [r for r in pipeline if r.get("out_of_scope") and _researched_hotel(r)]
+    for r in kept_back:
+        r["out_of_scope"] = ""
+        r["out_of_scope_reason"] = ""
+
+    dropped = [r for r in pipeline if r.get("out_of_scope")]
+
+    # The guard that remains. A live DCWP licence means somebody is trading in
+    # the building today; nothing may remove one, whatever rule fired.
+    licensed = [r for r in dropped if r.get("has_hotel_license")]
+    if licensed:
+        raise SystemExit(
+            "refusing to drop buildings holding a live hotel licence:\n  "
+            + "\n  ".join(f"{r['bbl']} {r.get('address', '?')} "
+                           f"({r.get('out_of_scope')})" for r in licensed[:20]))
+
+    pipeline = [r for r in pipeline if not r.get("out_of_scope")]
+    print(f"Out of scope: dropped {len(dropped)}, kept back {len(kept_back)} "
+          f"with a researched operator, {len(pipeline)} remain")
+
+    # Published so the reference page can show where 98,580 tax lots become
+    # the few thousand in the tool. Counted here rather than written down
+    # there: a hand-kept funnel is a diagram that drifts the first time a rule
+    # changes, and the rules have changed four times this week.
+    by_rule = Counter(r["out_of_scope"] for r in dropped)
+    funnel = [
+        {"key": "lots", "label": "NYC tax lots", "count": _funnel_entry().get("pluto_lots", 0),
+         "note": "Every lot in PLUTO, citywide."},
+        {"key": "entry", "label": "Could hold transient use",
+         "count": _funnel_entry().get("entry_survivors", 0),
+         "note": "Hotel building class, a mixed-use class, enough units, a known "
+                 "prior operator, or a DOB R-1/J-1 occupancy filing. Cast wide on "
+                 "purpose: a hotel that converted to flats usually ends up classed "
+                 "RM, so the net has to include that whole family."},
+        {"key": "tiered", "label": "City records say something", "count": funnel_tier[1],
+         "note": "The rest arrive with nothing from HPD or DOB to tier them on.",
+         "removed": funnel_tier[0] - funnel_tier[1]},
+        {"key": "in_scope", "label": "In the tool", "count": len(pipeline),
+         "note": "What the five scope rules leave.",
+         "removed": len(dropped),
+         "breakdown": [
+             {"rule": k, "count": v, "label": SCOPE_RULE_LABELS.get(k, k)}
+             for k, v in by_rule.most_common()
+         ]},
+    ]
 
     # Index pipeline by BBL
     pipe_by_bbl = {r["bbl"]: r for r in pipeline}
@@ -1449,14 +1543,7 @@ def build_geojson(
         has_other_operator = bool(
             occupant_name and record.get("current_use") in OCCUPIED_PRODUCT_USES
         )
-        # Out of scope is its own segment, so the view can leave it off by
-        # default without the building being absent from the file. It is
-        # tested first: a warehouse that happens to hold a Class B room is
-        # still a warehouse, and the reason it is out of scope is the more
-        # useful thing to show.
-        if record.get("out_of_scope"):
-            properties["segment"] = "out_of_scope"
-        elif seg_tier == "legal_transient" and has_active_operator:
+        if seg_tier == "legal_transient" and has_active_operator:
             properties["segment"] = "active_hotel"
         elif seg_tier == "legal_transient" and has_other_operator:
             properties["segment"] = "active_other"
@@ -1558,6 +1645,7 @@ def build_geojson(
         # current. Without it the file carries one date -- the newest PLUTO
         # pull -- over sources that were not pulled with PLUTO at all.
         "sources": sources,
+        "funnel": funnel,
         "features": features,
     }
 

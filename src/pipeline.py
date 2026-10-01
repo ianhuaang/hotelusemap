@@ -39,6 +39,10 @@ def _data_vintage() -> str:
 
 DATA_VINTAGE = _data_vintage()
 
+# Filled in by the PLUTO filter, read by the sidecar written at the end.
+_funnel_pluto_total = 0
+_funnel_survivors = 0
+
 # Building classes that indicate direct hotel/transient use
 # HOTEL_CLASSES and EXCLUDED_HOTEL_CLASSES now live in config.py, so the build
 # can apply the same rule when it completes reason codes.
@@ -196,6 +200,8 @@ def run_pipeline(pluto_path: Path = None, hpd_path: Path = None) -> list[dict]:
             survivors.append(row)
 
     print(f"PLUTO filter: {len(pluto)} -> {len(survivors)} survivors")
+    global _funnel_pluto_total, _funnel_survivors
+    _funnel_pluto_total, _funnel_survivors = len(pluto), len(survivors)
     if dob_additions:
         print(f"  ({dob_additions} added by DOB R-1/J-1 that would have been filtered out)")
 
@@ -432,6 +438,15 @@ def save_pipeline_output(results: list[dict], path: Path = None) -> Path:
         path = DATA_PROCESSED / f"pipeline_{TODAY}.json"
     path.write_text(json.dumps(results, indent=2, default=str))
     print(f"Saved -> {path}")
+
+    # The two counts only this stage knows, for the reference page's funnel.
+    # A sidecar rather than a key on the output: that file is a bare list and
+    # every reader of it indexes straight into the records.
+    entry = DATA_PROCESSED / f"funnel_entry_{TODAY}.json"
+    entry.write_text(json.dumps({
+        "pluto_lots": _funnel_pluto_total,
+        "entry_survivors": _funnel_survivors,
+    }, indent=2))
     return path
 
 
