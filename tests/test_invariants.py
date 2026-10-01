@@ -385,3 +385,45 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
     assert max(builds) > sweep, (
         "nothing rebuilds after the sweeps, so the published file would not "
         "carry what they found")
+
+
+def test_registration_is_not_evidence_of_trading():
+    """The two questions the build must keep apart.
+
+    A predicate called _is_actively_operating returned True on an HPD Class B
+    registration, so the Roosevelt Hotel — shut since 2020 — counted as
+    trading because the city still records 1,064 rooms against it.
+
+    Nothing user-facing was wrong: the segment reads "Transient, no operator"
+    correctly, because has_active_operator asks whether anybody is in
+    possession — a name, a licence, an operator that reads like a hotel, a
+    current use of hotel — and never looks at the register.
+
+    What was wrong was a name. The special-permit rule turns on whether there
+    is an entitlement to grandfather, and a registration is exactly that, so
+    the input was right and the label was a trap for whoever touched it next.
+    This holds the line: the register may decide entitlement and must never
+    decide possession.
+    """
+    import re
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+
+    # Defined or called, not merely mentioned — the comment recording why it
+    # was renamed is worth keeping.
+    assert not re.search(r"(def |[^#\w])_is_actively_operating\s*\(", src), (
+        "a predicate named for operation is reading the register; it tests "
+        "entitlement, and the name has to say so")
+
+    # has_active_operator decides possession. It may not consult the register.
+    # To the dedented close of the bool(...) call, not to the first ")" on a
+    # line — the lazy version captured only `record.get("hotel_name")` and a
+    # register field added below it sailed through.
+    m = re.search(r"has_active_operator = bool\(\n(.*?)\n        \)", src, re.S)
+    assert m, "has_active_operator has moved; this guard needs rewriting"
+    possession = m.group(1)
+    for register_field in ("hpd_class_b", "hpd_class_a", "unitsres", "coo_dwelling_units"):
+        assert register_field not in possession, (
+            f"has_active_operator reads {register_field}; a registration says what a "
+            "building is entitled to, never who is trading in it")

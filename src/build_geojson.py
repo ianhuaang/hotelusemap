@@ -1120,7 +1120,18 @@ def build_geojson(
     # A building is "actively operating" if it has evidence of current hotel use.
     # Buildings without this evidence would need a CPC special permit (2021 text
     # amendment) — filter those out entirely.
-    def _is_actively_operating(r):
+    # Named for what it tests, which is not operation.
+    #
+    # It was called _is_actively_operating and returned True on an HPD Class B
+    # registration, so the Roosevelt Hotel — shut since 2020 — counted as
+    # trading because the city still records 1,064 rooms against it. Nothing
+    # user-facing was wrong: the segment reads "Transient, no operator"
+    # correctly, because has_active_operator asks a different and better
+    # question. But a predicate that claims to test one thing and tests
+    # another is a trap for whoever touches it next, and the thing it really
+    # tests is the right input here — a registration is an entitlement to
+    # grandfather, which is exactly what the special-permit rule turns on.
+    def _holds_transient_entitlement(r):
         if r.get("hpd_class_b", 0) > 0:
             return True
         if r.get("has_hotel_license"):
@@ -1191,7 +1202,7 @@ def build_geojson(
     pre_permit = len(pipeline)
     n = _set_out_of_scope(
         pipeline,
-        lambda r: not (_is_actively_operating(r) or r.get("tier") != "legal_transient"),
+        lambda r: not (_holds_transient_entitlement(r) or r.get("tier") != "legal_transient"),
         "special_permit",
         "Hotel-class but not operating, so restarting transient use would need "
         "a CPC special permit under the December 2021 rule.")
