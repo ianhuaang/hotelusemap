@@ -285,7 +285,17 @@ def test_every_source_has_a_route_into_a_scheduled_run():
     workflow = Path(__file__).resolve().parents[1] / ".github/workflows/refresh-data.yml"
     text = workflow.read_text()
 
-    missing = [key for key, _, _, ci in provenance.SOURCES if not ci]
+    # One named exception, and it is physics rather than neglect. DOB BIS
+    # returns 403 to everything automated — curl with browser headers,
+    # headless Chromium with a session established first, the servlet
+    # directly. Only a headed browser gets 200, so the certificates are
+    # fetched by a visible window on somebody's desk and the parsed output is
+    # committed for the build to read.
+    #
+    # Named rather than tolerated: a new manual source still fails this.
+    MANUAL_BY_NECESSITY = {"coo_parsed"}
+    missing = [key for key, _, _, ci in provenance.SOURCES
+               if not ci and key not in MANUAL_BY_NECESSITY]
     assert not missing, (
         f"sources with no scheduled refresh: {missing}. "
         "A source nothing pulls is a source that quietly ages.")

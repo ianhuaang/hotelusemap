@@ -77,6 +77,14 @@ SOURCES = [
     # City Record shelter notices — the one source with no route into a run at
     # all until the same change.
     ("city_record_shelter",  "city_record_shelter",      DATA_RAW,       True),
+    # The Certificate of Occupancy floor tables, and the one source CI cannot
+    # refresh however much anybody wants it to. DOB BIS sits behind Akamai and
+    # returns 403 to everything automated — curl with browser headers, headless
+    # Chromium with a session established first, the servlet directly. Only a
+    # headed browser gets 200, so src/pull_coo_pdfs.js opens a visible window
+    # and runs on somebody's desk. The parsed output is committed so a build
+    # can read it; refreshing it is a hand operation by physics, not neglect.
+    ("coo_parsed",           "coo_parsed",               DATA_PROCESSED, False),
 ]
 
 _DIRS = {key: (prefix, directory) for key, prefix, directory, _ in SOURCES}

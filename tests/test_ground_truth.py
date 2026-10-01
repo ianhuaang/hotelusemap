@@ -172,7 +172,12 @@ def test_the_build_says_what_it_read(build):
     # available. The three Places sweeps and the City Record pull are in
     # refresh-data.yml now, so the honest assertion is the stronger one: there
     # is nothing left that only a person remembering keeps current.
-    manual = [k for k, v in sources.items() if not v["refreshed_by_ci"]]
+    # coo_parsed is the one source CI cannot refresh: DOB BIS 403s everything
+    # automated and only a headed browser gets through, so the certificates
+    # are fetched by hand and the parsed output committed. See the invariant
+    # in tests/test_invariants.py for why that is physics, not neglect.
+    manual = [k for k, v in sources.items()
+              if not v["refreshed_by_ci"] and k != "coo_parsed"]
     assert manual == [], \
         f"sources nothing on a schedule refreshes: {manual}"
     assert sources["google_current_use"]["pulled_on"], \
