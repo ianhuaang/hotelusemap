@@ -306,6 +306,20 @@ def _city_records_know_use(record: dict) -> str:
     return ""
 
 
+# Uses that describe a business at the door rather than who lives upstairs.
+# Google lists shops, offices and congregations; it cannot see a flat. So a
+# single listing of one of these cannot establish what is inside a building
+# the city registers homes in.
+DOOR_USES = frozenset({
+    "office", "religious", "education", "government", "medical", "other",
+    "ground_floor_tenant",
+})
+
+# Where the register is the better witness. Ten is conservative — the set it
+# catches runs to 416 registered homes under a post office.
+REGISTER_OUTRANKS_DOOR = 10
+
+
 def _occupancy_state(record: dict) -> str:
     """occupied | clear | onrecord | thin | unchecked."""
     if record.get("current_use_conflict"):
@@ -316,9 +330,23 @@ def _occupancy_state(record: dict) -> str:
     # address handed back as a place. Counting it as an occupant told a reader
     # the building was established when nothing about it was — 145 buildings,
     # including a shelter and two closed hotels.
+    # A business listing cannot speak for a building the city registers homes
+    # in. 116 John Street has 416 registered units and a post office branch,
+    # and read as "government"; 310 Riverside has 330 and read as "religious";
+    # 306 West 94th is class H6 with 114 Class B rooms and read as "Office",
+    # on the strength of one corporate listing. 50 buildings in that shape.
+    #
+    # The register is not a weaker answer than the door here, it is the better
+    # one, so these fall through to it rather than claiming to be established.
+    registered = (record.get("hpd_class_a") or 0) + (record.get("hpd_class_b") or 0)
+    door_only = (registered >= REGISTER_OUTRANKS_DOOR
+                 and record.get("current_use") in DOOR_USES)
+
     occupants = record.get("current_use_occupants") or []
-    if any(o.get("use") not in ("ground_floor_tenant", "unknown", "other")
-           for o in occupants):
+    if not door_only and any(
+        o.get("use") not in ("ground_floor_tenant", "unknown", "other")
+        for o in occupants
+    ):
         return "clear"
     if _city_records_know_use(record):
         return "onrecord"
