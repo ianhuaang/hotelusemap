@@ -302,6 +302,26 @@ def _occupancy_state(record: dict) -> str:
     return "thin" if record.get("current_use_checked") else "unchecked"
 
 
+# Nothing is dropped any more. A building that one of these rules would have
+# removed is kept and marked with which rule and why, because a building that
+# is absent cannot be searched for, linked to, or argued with — and the only
+# way anyone found the licensed hotels the zoning rule was eating was by
+# reading the pipeline by hand.
+#
+# The rules themselves are unchanged: what was a filter is now a label.
+def _set_out_of_scope(records, test, code, reason):
+    """Mark the records `test` selects. Returns how many were marked."""
+    n = 0
+    for r in records:
+        if r.get("out_of_scope"):
+            continue          # first rule to catch it owns the explanation
+        if test(r):
+            r["out_of_scope"] = code
+            r["out_of_scope_reason"] = reason
+            n += 1
+    return n
+
+
 def _fallback_address(record: dict, alt_addresses: dict) -> str:
     """An address for a building PLUTO did not name, from what else we hold."""
     for alt in alt_addresses.get(record["bbl"], []):
@@ -900,12 +920,16 @@ def build_geojson(
                 or str(r.get("bldgclass") or "").upper().startswith("H")
                 or r.get("dob_has_r1"))
 
-    pipeline = [r for r in pipeline
-                if r.get("zoning_hotel_permitted") == "permitted"
-                or _already_transient(r)
-                or r["bbl"] in POST_2021_REVERSIONS
-                or _evidenced_reversion(r)]
-    print(f"Zoning filter: {pre_zoning} -> {len(pipeline)} (removed {pre_zoning - len(pipeline)} not-permitted/unknown zoning)")
+    n = _set_out_of_scope(
+        pipeline,
+        lambda r: not (r.get("zoning_hotel_permitted") == "permitted"
+                       or _already_transient(r)
+                       or r["bbl"] in POST_2021_REVERSIONS
+                       or _evidenced_reversion(r)),
+        "zoning",
+        "Zoning does not permit hotel use here and the building carries no "
+        "existing transient right to grandfather.")
+    print(f"Zoning: marked {n} of {pre_zoning} out of scope (none dropped)")
 
     # A hand-curated BBL that matches nothing does nothing, and says so to
     # nobody. Two of the six — the W New York / St Giles and AKA United
@@ -922,8 +946,13 @@ def build_geojson(
     # Drop hotel-class buildings that aren't actively operating — they'd need
     # a CPC special permit to start new hotel use
     pre_permit = len(pipeline)
-    pipeline = [r for r in pipeline if _is_actively_operating(r) or r.get("tier") != "legal_transient"]
-    print(f"Special permit filter: {pre_permit} -> {len(pipeline)} (removed {pre_permit - len(pipeline)} not actively operating)")
+    n = _set_out_of_scope(
+        pipeline,
+        lambda r: not (_is_actively_operating(r) or r.get("tier") != "legal_transient"),
+        "special_permit",
+        "Hotel-class but not operating, so restarting transient use would need "
+        "a CPC special permit under the December 2021 rule.")
+    print(f"Special permit: marked {n} of {pre_permit} out of scope (none dropped)")
 
     # Drop non-target buildings (dorms, shelters, HDFCs, garages, vacant land, etc.)
     pre_inst = len(pipeline)
@@ -933,9 +962,13 @@ def build_geojson(
     # and removed 620 Class B rooms from the map — but that ownership is the
     # consequence of the reversion, not a reason to hide it. The legend said
     # six tracked and the map carried five.
-    pipeline = [r for r in pipeline
-                if r["bbl"] in POST_2021_REVERSIONS or not _is_non_target(r)]
-    print(f"Non-target filter: {pre_inst} -> {len(pipeline)} (removed {pre_inst - len(pipeline)} non-target buildings)")
+    n = _set_out_of_scope(
+        pipeline,
+        lambda r: r["bbl"] not in POST_2021_REVERSIONS and _is_non_target(r),
+        "non_target",
+        "Institutional or non-residential use — school, shelter, garage, "
+        "warehouse or similar.")
+    print(f"Non-target: marked {n} of {pre_inst} out of scope (none dropped)")
 
     # Drop non-residential buildings with no units and no hotel signals
     MIXED_RES_CLASSES = {"RC", "RD", "RM", "RH", "RK", "RI", "RR", "RX", "RW", "RB", "RZ", "R1", "R4"}
@@ -949,8 +982,10 @@ def build_geojson(
             return False
         return True
     pre_empty = len(pipeline)
-    pipeline = [r for r in pipeline if not _is_empty_non_hotel(r)]
-    print(f"Empty non-hotel filter: {pre_empty} -> {len(pipeline)} (removed {pre_empty - len(pipeline)} buildings with no units/hotel signals)")
+    n = _set_out_of_scope(
+        pipeline, _is_empty_non_hotel, "no_units",
+        "No residential units, no Class B rooms and no hotel signal of any kind.")
+    print(f"Empty non-hotel: marked {n} of {pre_empty} out of scope (none dropped)")
 
     # Drop non-H buildings where Class B is negligible relative to Class A
     def _negligible_class_b(r):
@@ -964,8 +999,11 @@ def build_geojson(
             return False
         return class_b <= 3 and class_b / (class_a + class_b) < 0.05
     pre_neg = len(pipeline)
-    pipeline = [r for r in pipeline if not _negligible_class_b(r)]
-    print(f"Negligible Class B filter: {pre_neg} -> {len(pipeline)} (removed {pre_neg - len(pipeline)} residential buildings with <=3 Class B rooms)")
+    n = _set_out_of_scope(
+        pipeline, _negligible_class_b, "negligible_class_b",
+        "Three or fewer Class B rooms in a residential building of twenty or "
+        "more units — too few to be the point of a deal.")
+    print(f"Negligible Class B: marked {n} of {pre_neg} out of scope (none dropped)")
 
     # Index pipeline by BBL
     pipe_by_bbl = {r["bbl"]: r for r in pipeline}
@@ -1074,6 +1112,10 @@ def build_geojson(
             # True where DOB has no footprint for this lot, so the map draws a
             # point at a geocoded address instead of the building's outline.
             "no_footprint": bool(record.get("_no_footprint")),
+            # Why a building that the old filters would have deleted is still
+            # here. Empty on everything in scope.
+            "out_of_scope": record.get("out_of_scope") or "",
+            "out_of_scope_reason": record.get("out_of_scope_reason") or "",
             "location_precision": record.get("_location_precision", "footprint"),
             # Hotel Trades Council roster; filled in by match_htc_union below.
             "htc_union": False,
@@ -1337,7 +1379,14 @@ def build_geojson(
         has_other_operator = bool(
             occupant_name and record.get("current_use") in OCCUPIED_PRODUCT_USES
         )
-        if seg_tier == "legal_transient" and has_active_operator:
+        # Out of scope is its own segment, so the view can leave it off by
+        # default without the building being absent from the file. It is
+        # tested first: a warehouse that happens to hold a Class B room is
+        # still a warehouse, and the reason it is out of scope is the more
+        # useful thing to show.
+        if record.get("out_of_scope"):
+            properties["segment"] = "out_of_scope"
+        elif seg_tier == "legal_transient" and has_active_operator:
             properties["segment"] = "active_hotel"
         elif seg_tier == "legal_transient" and has_other_operator:
             properties["segment"] = "active_other"
