@@ -345,7 +345,14 @@ jobs:
         # that, and far below the 350-minute job cap this would otherwise
         # run to — every other pull step here is capped and these four were
         # not, which is the only way a sweep can hang a run all afternoon.
-        timeout-minutes: 45
+        #
+        # Measured rather than guessed: a local probe on 1 Oct reported 4,459
+        # targets, 2,627 cached and 1,832 to look up, and managed 25 lookups
+        # in the first 40 seconds of querying — about 50 minutes for the lot,
+        # which overran the 45 this first said. Later runs are far cheaper;
+        # this one is expensive because the dataset grew from 2,632 to 4,496
+        # when the filters became labels, so every new building is cold.
+        timeout-minutes: 90
 
       - name: Sweep hotel names (Google Places)
         id: p_hotelnames
