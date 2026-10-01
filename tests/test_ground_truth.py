@@ -167,9 +167,16 @@ def test_the_build_says_what_it_read(build):
     sources = build.get("sources")
     assert sources, "the collection publishes no provenance"
     assert sources["pluto"]["pulled_on"], "PLUTO has no pull date"
+    # This used to assert the opposite — that the manifest admitted Places
+    # data was refreshed by hand — because it was, and saying so was the best
+    # available. The three Places sweeps and the City Record pull are in
+    # refresh-data.yml now, so the honest assertion is the stronger one: there
+    # is nothing left that only a person remembering keeps current.
     manual = [k for k, v in sources.items() if not v["refreshed_by_ci"]]
-    assert "google_current_use" in manual, \
-        "Places data is refreshed by hand; the manifest must say so"
+    assert manual == [], \
+        f"sources nothing on a schedule refreshes: {manual}"
+    assert sources["google_current_use"]["pulled_on"], \
+        "the current-use sweep reports no pull date"
 
 
 def test_the_tier_split_is_sane(by_bbl):
