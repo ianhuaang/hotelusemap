@@ -189,7 +189,19 @@ NAME_RULES = [
 ]
 
 # A restaurant at the base of a 40-storey tower says nothing about the tower.
+# Google types that carry no information about who is in the building.
+NO_INFORMATION_TYPES = frozenset({
+    "premise", "subpremise", "point_of_interest", "establishment",
+    "geocode", "street_address", "route", "political",
+})
+
 TENANT_TYPES = frozenset({
+    # Street-level trades the list was missing. Each one was reaching
+    # _occupancy_state as a building occupant: "service" alone accounted for
+    # 283 of them, and it is the type behind the bike shop at 859 7th Avenue.
+    "service", "art_gallery", "finance", "event_venue",
+    "performing_arts_theater", "transportation_service",
+    "electric_vehicle_charging_station", "massage", "massage_spa",
     "restaurant", "cafe", "coffee_shop", "bar", "bakery", "meal_takeaway",
     "meal_delivery", "store", "clothing_store", "convenience_store",
     "grocery_store", "supermarket", "drugstore", "pharmacy", "gym",
@@ -319,6 +331,15 @@ def classify(place: dict) -> tuple[str, str, str, str]:
 
     if type_set & TENANT_TYPES:
         return "ground_floor_tenant", "Ground-floor tenant only", "low", f"type={sorted(type_set & TENANT_TYPES)[0]}"
+
+    # Types that describe Google's index rather than an occupant: "premise"
+    # means the listing is an address, "point of interest" a pin with no
+    # category, "establishment" that it is a business and nothing more. They
+    # used to land in "other", which the occupancy state read as a finding —
+    # so a building whose only hit was its own street address reported as
+    # established.
+    if primary in NO_INFORMATION_TYPES:
+        return "unknown", "Unknown", "low", f"type={primary}"
 
     if primary:
         return "other", place.get("primaryTypeDisplayName", {}).get("text", primary), "low", f"type={primary}"

@@ -1220,6 +1220,34 @@ def enrich_pipeline(
             record["shelter_notice_count"] = notice.get("notice_count", 0)
             record["shelter_notice_evidence"] = notice.get("notices", [])[:3]
 
+        # The City Record is not the only place a shelter announces itself.
+        # 130 3rd Street's own Google occupant is called "Refugee Shelter" and
+        # it carried no flag at all, so the Hide-active-shelters control could
+        # not reach it and it sat in the target list with 16 Class B rooms.
+        # Four more read the same way, two of them in sourcing segments.
+        #
+        # Only where the sweep itself concluded shelter or supportive housing
+        # — a name alone is how "Gimme Shelter Productions" at 15 East 20th
+        # Street would arrive, which is a media company. The suffix list is
+        # for exactly that shape: a word that marks the name as a business
+        # rather than a facility.
+        if not record.get("shelter_status"):
+            cu_row = current_use.get(bbl) or {}
+            cu_use = cu_row.get("current_use", "")
+            cu_name = (cu_row.get("google_name") or "")
+            low = cu_name.lower()
+            not_a_facility = any(w in low for w in (
+                "production", "records", "music", "film", "studio", "band", "tours"))
+            if cu_use == "shelter" or (
+                cu_use == "supportive_housing"
+                and re.search(r"\bshelters?\b", low)
+                and not not_a_facility
+            ):
+                record["shelter_status"] = "active"
+                record["shelter_status_basis"] = (
+                    f"the current-use sweep found {cu_name} here" if cu_name
+                    else "the current-use sweep classified this building as a shelter")
+
         # Current use on the ground (Google Places, address-verified)
         cu = current_use.get(bbl)
         # A row with no occupant now means "asked, nothing came back", which is

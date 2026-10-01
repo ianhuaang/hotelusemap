@@ -294,13 +294,13 @@ RESIDENTIAL_CLASS_PREFIX = re.compile(r"^(R[A-Z0-9]|[ABCD]\d)")
 def _city_records_know_use(record: dict) -> str:
     """What the records say is inside, or "" if they say nothing."""
     if (record.get("hpd_class_a") or 0) > 0 or (record.get("hpd_class_b") or 0) > 0:
-        return "HPD registers dwelling units here"
+        return "HPD registers dwelling units"
     if (record.get("unitsres") or 0) > 0:
-        return "PLUTO records residential units here"
+        return "PLUTO records residential units"
     if record.get("coo_dwelling_units"):
-        return "the certificate of occupancy carries a dwelling-unit count"
+        return "the C of O carries a dwelling-unit count"
     if record.get("hpd_managing_agent"):
-        return "HPD registers a managing agent for it"
+        return "HPD registers a managing agent"
     if RESIDENTIAL_CLASS_PREFIX.match(str(record.get("bldgclass") or "").upper()):
         return "the building class is residential"
     return ""
@@ -310,8 +310,15 @@ def _occupancy_state(record: dict) -> str:
     """occupied | clear | onrecord | thin | unchecked."""
     if record.get("current_use_conflict"):
         return "occupied"
+    # "other" is the sweep's dustbin, not a finding. It holds the bike shop
+    # the ground-floor test missed at 859 7th Avenue, a bare "110" at 235 West
+    # 107th, the massage spa at the Hudson, and the building's own street
+    # address handed back as a place. Counting it as an occupant told a reader
+    # the building was established when nothing about it was — 145 buildings,
+    # including a shelter and two closed hotels.
     occupants = record.get("current_use_occupants") or []
-    if any(o.get("use") not in ("ground_floor_tenant", "unknown") for o in occupants):
+    if any(o.get("use") not in ("ground_floor_tenant", "unknown", "other")
+           for o in occupants):
         return "clear"
     if _city_records_know_use(record):
         return "onrecord"
