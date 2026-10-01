@@ -320,6 +320,79 @@ DOOR_USES = frozenset({
 REGISTER_OUTRANKS_DOOR = 10
 
 
+def _coo_fields(floors: dict | None) -> dict:
+    """The published shape of one certificate's floor table."""
+    if not floors:
+        return {}
+    return {
+        "coo_floors": [
+            {k: f.get(k) for k in
+             ("floor", "kind", "use_group", "description", "units_described")}
+            for f in floors.get("floors") or []
+        ],
+        "coo_floor_source": {
+            "effective_date": floors.get("effective_date", ""),
+            "co_type": floors.get("co_type", ""),
+            "is_current": bool(floors.get("is_current")),
+            "years_superseded": floors.get("years_superseded"),
+        },
+        "coo_transient_floors": floors.get("transient_floors") or [],
+        "coo_residential_floors": floors.get("residential_floors") or [],
+        # The one that decides whether the rooms can be run as a block.
+        "coo_transient_contiguous": bool(floors.get("transient_contiguous")),
+        "coo_use_groups": floors.get("use_groups") or [],
+    }
+
+
+def load_coo_floors() -> dict:
+    """The Permissible Use and Occupancy table, by BIN.
+
+    parse_coo_pdf.py has been reading these for a while and nothing consumed
+    the result: 191 certificates parsed, sitting in data/processed and wired
+    to nothing. It is the only public source that says what is on each floor
+    — the zoning use group is in neither ZoLa, PLUTO nor the DOB feed — and it
+    is what decides whether a building's Class B rooms can be run as a block.
+    130 transient rooms on floors 2-6 is a hotel; the same 130 interleaved
+    through 814 flats is not.
+
+    Keyed on BIN because no parsed record carries a BBL. Most buildings have
+    several certificates — 63 of 80 — so the current one wins, then the most
+    recently effective, and the record says which it was and how old.
+    """
+    path = DATA_PROCESSED / "coo_parsed.json"
+    if not path.exists():
+        print("  no coo_parsed.json — run src/parse_coo_pdf.py --all")
+        return {}
+
+    def effective(row):
+        raw = str(row.get("effective_date") or "")
+        parts = raw.split("/")
+        if len(parts) == 3:
+            return f"{parts[2]}-{parts[0].zfill(2)}-{parts[1].zfill(2)}"
+        return ""
+
+    best: dict = {}
+    for row in json.loads(path.read_text()):
+        if not row.get("floors"):
+            continue
+        bin_ = str(row.get("bin") or "").strip()
+        if not bin_:
+            continue
+        held = best.get(bin_)
+        if held is None:
+            best[bin_] = row
+            continue
+        # Current beats superseded; otherwise the later certificate.
+        if bool(row.get("is_current")) != bool(held.get("is_current")):
+            if row.get("is_current"):
+                best[bin_] = row
+        elif effective(row) > effective(held):
+            best[bin_] = row
+
+    print(f"  C of O floor tables: {len(best)} buildings")
+    return best
+
+
 def _occupancy_state(record: dict) -> str:
     """occupied | clear | onrecord | thin | unchecked."""
     if record.get("current_use_conflict"):
@@ -1003,6 +1076,8 @@ def build_geojson(
     # records — and it arrives with tier "unknown" because HPD has nothing on
     # a condominium billing lot. It was dropped here, two filters before the
     # exemption that was meant to keep it.
+    coo_floors = load_coo_floors()
+
     pre_tier = len(pipeline)
     pipeline = [r for r in pipeline
                 if r["tier"] != "unknown"
@@ -1393,6 +1468,12 @@ def build_geojson(
             "height_roof": fp.get("height_roof"),
             "construction_year": fp.get("construction_year"),
             "bin": fp.get("bin", ""),
+            # The certificate's floor table, joined on the BIN the footprint
+            # just supplied — no parsed record carries a BBL, and the pipeline
+            # record has no BIN until here, which is why this cannot live in
+            # enrich.py. Published whole: the question it answers, what is on
+            # the upper floors, does not survive being summarised to a count.
+            **_coo_fields(coo_floors.get(str(fp.get("bin") or "").strip())),
             "source_pulled_on": record["source_pulled_on"],
             "last_sale_date": record.get("last_sale_date"),
             "last_sale_price": record.get("last_sale_price"),
