@@ -1160,6 +1160,22 @@ def build_geojson(
     # building that acquires a J-1 filing, a licence or a Class B registration
     # arrives in "Possibly transient" on the next build whether or not it was
     # being carried in the meantime.
+    # Institutional buildings with no transient capacity at all.
+    #
+    # Nine dormitories and SROs carrying zero Class B rooms and a blocker that
+    # reads "not a hotel target" reached the map in segment "unknown", which
+    # has no checkbox — so the segment gate let them through whatever a reader
+    # ticked, and they sat greyed among the targets looking like part of
+    # whichever segment was on. The 106 dorms and SROs that do register Class
+    # B rooms stay; those are the product the team asked to see.
+    pre_excluded = len(pipeline)
+    pipeline = [r for r in pipeline
+                if r.get("tier") != "excluded"
+                or (r.get("hpd_class_b") or 0) > 0
+                or _never_drop(r)]
+    print(f"Excluded with no rooms: dropped {pre_excluded - len(pipeline)}, "
+          f"{len(pipeline)} remain")
+
     pre_class_only = len(pipeline)
     pipeline = [r for r in pipeline if _has_transient_evidence(r)
                 or r.get("tier") != "partial"
