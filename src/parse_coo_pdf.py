@@ -80,6 +80,49 @@ def _parse_date(s):
     return None
 
 
+def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
+    """The parsed shape of one certificate, whatever format it was read from.
+
+    Shared so that an OCR'd legacy scan and a DOB NOW text layer produce the
+    same record. Everything downstream joins on these keys and must not have
+    to care which parser supplied them.
+    """
+    # Contiguity is asked of the numbered floors only; a cellar or a roof tank
+    # room says nothing about whether the rooms can be run as a block.
+    numbered = [r for r in rows if r["floor"].isdigit()]
+    sleeping = [r for r in rows if r["units_described"]]
+    rooms_by_kind = {}
+    for r in sleeping:
+        rooms_by_kind[r["kind"]] = rooms_by_kind.get(r["kind"], 0) + r["units_described"]
+    t_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "transient"})
+    r_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "residential"})
+    contiguous = (len(t_floors) <= 1) or (t_floors == list(range(t_floors[0], t_floors[-1] + 1)))
+
+    shared = sorted(set(t_floors) & set(r_floors))
+    # A hotel lobby beside a residential lobby on the ground floor is how a
+    # mixed building is supposed to work, and 24 of 41 certificates share
+    # exactly that and nothing else. Counting it as interleaving turned 6 real
+    # problems into 14 flags. Sharing a *guest* floor is the thing that stops
+    # you keying, cleaning and fire-separating a block.
+    shared_guest = [f for f in shared if f > 1]
+
+    return {
+        "file": filename,
+        "readable": True,
+        **header,
+        "use_groups": sorted(use_groups),
+        "rooms_described": rooms_by_kind,
+        "rows": len(rows),
+        "transient_floors": t_floors,
+        "residential_floors": r_floors,
+        "shared_floors": shared,
+        "shared_guest_floors": shared_guest,
+        "lobby_shared_only": bool(shared) and not shared_guest,
+        "transient_contiguous": contiguous,
+        "floors": rows,
+    }
+
+
 def parse(path: Path) -> dict:
     try:
         import pypdf
@@ -145,40 +188,7 @@ def parse(path: Path) -> dict:
             "description": desc.strip()[:120],
         })
 
-    # Contiguity is asked of the numbered floors only; a cellar or a roof tank
-    # room says nothing about whether the rooms can be run as a block.
-    numbered = [r for r in rows if r["floor"].isdigit()]
-    sleeping = [r for r in rows if r["units_described"]]
-    rooms_by_kind = {}
-    for r in sleeping:
-        rooms_by_kind[r["kind"]] = rooms_by_kind.get(r["kind"], 0) + r["units_described"]
-    t_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "transient"})
-    r_floors = sorted({int(r["floor"]) for r in numbered if r["kind"] == "residential"})
-    contiguous = (len(t_floors) <= 1) or (t_floors == list(range(t_floors[0], t_floors[-1] + 1)))
-
-    shared = sorted(set(t_floors) & set(r_floors))
-    # A hotel lobby beside a residential lobby on the ground floor is how a
-    # mixed building is supposed to work, and 24 of 41 certificates share
-    # exactly that and nothing else. Counting it as interleaving turned 6 real
-    # problems into 14 flags. Sharing a *guest* floor is the thing that stops
-    # you keying, cleaning and fire-separating a block.
-    shared_guest = [f for f in shared if f > 1]
-
-    return {
-        "file": path.name,
-        "readable": True,
-        **header,
-        "use_groups": sorted(use_groups),
-        "rooms_described": rooms_by_kind,
-        "rows": len(rows),
-        "transient_floors": t_floors,
-        "residential_floors": r_floors,
-        "shared_floors": shared,
-        "shared_guest_floors": shared_guest,
-        "lobby_shared_only": bool(shared) and not shared_guest,
-        "transient_contiguous": contiguous,
-        "floors": rows,
-    }
+    return summarise(rows, header, path.name, use_groups)
 
 
 def annotate_currency(results: list, feed: dict) -> None:

@@ -2548,8 +2548,64 @@
   },
   {
     "file": "1005687_M000096749.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1005687",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 4,
+    "transient_floors": [
+      6
+    ],
+    "residential_floors": [
+      3,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "15 6 Apartments suites"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 15,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "6 Apartments suites"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "15 6 Apartments suites"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "6 Aprtments suites CIASS  APARTMENT HOTEL OLD CODE =3 Apaif tmentssuites , &2 roams w/aundering services to be provided "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1006188_102579354.PDF",
@@ -3033,8 +3089,70 @@
   },
   {
     "file": "1013509_M000030128.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1013509",
+    "address": "366 West 30th Btreet 20* front",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {
+      "other": 5
+    },
+    "rows": 5,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "on ground Boller Room"
+      },
+      {
+        "floor": "BAS",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "TO Furnished Roons and One Community Kitchen"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "six (6) Furnished Hooms"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Five Furnished Rooms and One Store Room"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "rive (5)  Furnished Roome Note! Sprinkler System approved by Plumbing Division September 26, 1940 (Page 1) Borough Supcr"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1013845_110142756T001.PDF",
@@ -3118,37 +3236,279 @@
   },
   {
     "file": "1013845_M000091322.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
-  },
-  {
-    "file": "1014130_101899171-T-5.PDF",
     "readable": true,
-    "use_groups": [],
+    "bin": "1013845",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
     "rooms_described": {},
-    "rows": 0,
+    "rows": 6,
     "transient_floors": [],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
     "transient_contiguous": true,
-    "floors": [],
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. Boller room. accessory storage"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "&40 137 3&6 Accessory kitchen,dining room, doctor's.off ice. offices, actiyity room Lounge, and tollets: and places (UG-"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "30 20 sleeping rooms"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Ot 19 1g' sleeping rooms and 1 kitchen"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Ot 20 sleeping rooms"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Ot 20 sleeping ro0ms CLASS  SINGLE ROOM OCCUPANCY OLDI-LAW THNEMENT OLDI CODE NOTE:  Premises to be utllizedas a non-pro"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
+  },
+  {
+    "file": "1014130_101899171-T-5.PDF",
+    "readable": true,
+    "bin": "1014130",
+    "address": "222 WEST 23RD STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {},
+    "rows": 8,
+    "transient_floors": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O. 150 60 F-4\u25a1 EATING \uff06 DRINKING ESTABLISHMENT\uff0cBOILER ROOM, STORAGE, PUMP ROOM, PAINT SHOP\uff0c CARP. SHOP, MACH. $ SHOP\uff0c OF"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "3750 LOBBY\uff0c OFFICES\uff0c KITCHEN, RESTAURANT\uff0c STORES (7) SEVEN"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c24 HOTEL ROOMS"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "6 APARTMENTS\uff0c 23 HOTEL ROOMS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 12,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c15 HOTEL ROOMS DOCTORS SUITE, 6 CLUB ROOMS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "8 APARTMENTS\uff0c 1\uff19 HOTEL ROOMS"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS15 HOTEL ROOMS"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c1\uff19HOTEL ROOMS"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
     "file": "1014130_101899171-T-6.PDF",
     "readable": true,
-    "use_groups": [],
+    "bin": "1014130",
+    "address": "222 WEST 23RD STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
     "rooms_described": {},
-    "rows": 0,
-    "transient_floors": [],
+    "rows": 8,
+    "transient_floors": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
     "transient_contiguous": true,
-    "floors": [],
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O. 150 60 F-4 EATING \uff06 DRINKING ESTABLISHMENT\uff0cBOILER ROOM, STORAGE, PUMP ROOM, PAINT SHOP\uff0c CARP. SHOP, MACH.  SHOP\uff0c OFFI"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "3750 LOBBY\uff0c OFFICES\uff0c KITCHEN, RESTAURANT\uff0c STORES (7) SEVEN"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c24 HOTEL ROOMS"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "6 APARTMENTS\uff0c 23 HOTEL ROOMS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 12,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c15 HOTEL ROOMS DOCTORS SUITE, 6 CLUB ROOMS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "8 APARTMENTS\uff0c 1\uff19 HOTEL ROOMS"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS15 HOTEL ROOMS"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "APARTMENTS\uff0c19HOTEL ROOMS"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
@@ -7001,31 +7361,153 @@
   {
     "file": "1018044_101151968-T-4.PDF",
     "readable": true,
-    "use_groups": [],
+    "bin": "1018044",
+    "address": "143 1 EAST 23RD STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
     "rooms_described": {},
-    "rows": 0,
+    "rows": 6,
     "transient_floors": [],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
     "transient_contiguous": true,
-    "floors": [],
+    "floors": [
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 50 BOILER ROOM PUMP ROOM STORAGE ROOM"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "500 50 SWIMMING POOL LOCKER ROOMS STORAGE ROOMS METER ROOM,\uff0c COMPACTOR ROOM ELECTRIC SERVICE ROOM"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "200 50 RECEPTION/LOBBY RETAIL STORES MAIL ROOM"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "500 50 OFFICE 50 CONFERENCE ROOM 50 COMMUNITY ROOM"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "19 50 NINETEEN \uff081\uff19\uff09 ROOMS LAUNDRY ROOM"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "50 NINETEEN \uff081\uff19\uff09  ROOMS LOUNGE ROOM"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
     "file": "1018044_101151968-T-5.PDF",
     "readable": true,
-    "use_groups": [],
+    "bin": "1018044",
+    "address": "143 1 EAST 23RD STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
     "rooms_described": {},
-    "rows": 0,
+    "rows": 6,
     "transient_floors": [],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
     "transient_contiguous": true,
-    "floors": [],
+    "floors": [
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 50 BOILER ROOM PUMP ROOM STORAGE ROOM"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "500 50 SWIMMING POOL LOCKER ROOMS STORAGE ROOMS METER ROOM,\uff0c COMPACTOR ROOM ELECTRIC SERVICE ROOM"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "200 50 RECEPTION/LOBBY RETAIL STORES MAIL ROOM"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "500 50 OFFICE 50 CONFERENCE ROOM 50 COMMUNITY ROOM"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "19 50 NINETEEN \uff081\uff19\uff09 ROOMS LAUNDRY ROOM"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "50 NINETEEN \uff081\uff19\uff09  ROOMS LOUNGE ROOM"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
@@ -8117,31 +8599,192 @@
   {
     "file": "1022637_102019441-T-1.PDF",
     "readable": true,
-    "use_groups": [],
-    "rooms_described": {},
-    "rows": 0,
-    "transient_floors": [],
+    "bin": "1022637",
+    "address": "125 WEST 45TH STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "J-1"
+    ],
+    "rooms_described": {
+      "transient": 90
+    },
+    "rows": 7,
+    "transient_floors": [
+      9,
+      11,
+      12,
+      13
+    ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": true,
-    "floors": [],
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "LOBBY"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 50 COM 12 GUEST ROOMS (EXCEPT 701,711712)"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 50 COM 12 GUEST ROOMS (EXCEPT 801,811,812)"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "00 10 50 \u25a1 10 GUEST ROOMS (EXCEPT 909,910) 1OTH FLOOR 120 10 50 J-1\u25a1 10 GUEST ROOMS (EXCET \uff11009,1\uff101\uff10)"
+      },
+      {
+        "floor": "11",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "10 50  10 GUEST ROOMS (EXCEPT 1109,1110)"
+      },
+      {
+        "floor": "12",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "10 50  10 GUEST ROOMS"
+      },
+      {
+        "floor": "13",
+        "occupancy_load": 120,
+        "units_described": 90,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "GUEST ROOMS TEMPORARY CERTIFICATE OCCUPANCY TERMS : NINETY (90) DAYS EXPIRES: APRIL 6, 2005"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
     "file": "1022637_102019441-T-2.PDF",
     "readable": true,
-    "use_groups": [],
+    "bin": "1022637",
+    "address": "125 WEST 45TH STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "J-1"
+    ],
     "rooms_described": {},
-    "rows": 0,
-    "transient_floors": [],
+    "rows": 8,
+    "transient_floors": [
+      9,
+      11,
+      12,
+      13
+    ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": true,
-    "floors": [],
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "OG 50 50  ACCESSORY OFFICE, CASH ROOM LOCKER ROOM MECHANICAL EQUIPMENT ROOM, STORAGE, COMPACTOR ROOM, BOILER ROOM"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "LOBBY"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "00 12 50 COM 12 GUEST ROOMS"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 50 COM 12 GUEST ROOMS"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "12 50  10 GUEST ROOMS 1OTH FLOOR 120 10 50 J-1 10 GUEST ROOMS"
+      },
+      {
+        "floor": "11",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "10 50  10 GUEST ROOMS"
+      },
+      {
+        "floor": "12",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "10 50  10 GUEST ROOMS"
+      },
+      {
+        "floor": "13",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "GUEST ROOMS"
+      }
+    ],
+    "source": "ocr",
     "is_current": null
   },
   {
@@ -11226,8 +11869,115 @@
   },
   {
     "file": "1028948_M000102746.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1028948",
+    "address": "R7-2 20I6 BROADWAY AKA 140 WEST 69TH STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "J-2"
+    ],
+    "rooms_described": {
+      "residential": 67
+    },
+    "rows": 9,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "BOILER ROOM ANd STORAGE AND LOCKERS"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "ONE (1)  CLASS \"A* DOCTOR 'S APARTMENT OFFICES OFEICES OF BLDG. LOUNGE. STORES. -AND NOTE: RESTAURANTS 74 PERSONS MAXIMU"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": 6,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "SIX (6) CLASS A APARTMENTS"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": 14,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "ROOMING UNITS FOURTEEN (14)"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 13,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "APARTMENTS TEIRTEEN (13) TEN (IO) ROOMING UNITS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "NINE (9) CLASS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": 14,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "A APARTMENTS FOURTEEN (14) ROOMING UNITS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": 12,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "TWELVE (12) CLASS APARTMENTS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": 7,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "SEVEN (7) ROOMING (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1028948_M00102746A.PDF",
@@ -11483,8 +12233,143 @@
   },
   {
     "file": "1030741_M000092804.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1030741",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {},
+    "rows": 12,
+    "transient_floors": [],
+    "residential_floors": [
+      2,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 20 Kitchen, boiler room, clean and dirty linen, staff dining, laundry bldg, maintenance storage. locker rooms , toil"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "200 Lounge, dining room, toilet 2 kitchen apartments and crafts room 3rd-6th 40ed 36ed. Bedrooms, sitting areas ot F1o0r"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "10",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "11",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "12",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "13",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "14",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed.10ea.1 19ed. J-2 Apartments"
+      },
+      {
+        "floor": "15",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "36ed, 9ea. 19ea. J--2 Apartments"
+      },
+      {
+        "floor": "PEN",
+        "occupancy_load": 65,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "16 Apartments boiler. room CLASS MUUTIPLE DWELLING OLI CCDE THIS CERTIEICATE OE OJOUEANCY LUST BE POSIED OF THE DEPARTME"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1030845_121048053-02.PDF",
@@ -11655,8 +12540,61 @@
   },
   {
     "file": "1030942_M000035155.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1030942",
+    "address": "34.-344 He3t 7lst street 1182",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {
+      "other": 55
+    },
+    "rows": 4,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "dn ground Boiler roon, storage, tenants! roon unG workshop ac Tuudry to nultiple dweliing lst stury 40 (Fourteen (l4) ) "
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": 19,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "(41058622 (19) rooms 8ingle Room"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 18,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "(Eighteun (18) rooms tingle Room Occupancy"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": 18,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "(Eignteun (18) roors Single Foom (occupz.lcy 5th, 6th & 40 (Ninetetr(is) rooms Single Room Ttn stories ech (Qccupancy on"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1030985_M000052950.PDF",
@@ -11665,8 +12603,83 @@
   },
   {
     "file": "1030985_M000093725.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1030985",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A"
+    ],
+    "rooms_described": {
+      "residential": 3
+    },
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Boller room an storcge Ground"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "Three (3) apartments"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Four (4) aartents"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Four (4) @oartments"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 7,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Four (4) qoartments"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Cl.  apartments HERETOFORE COIVERIED CLASSIA OD CODE fhUST eE PeSTED  TTH FHE RULES ED MARCH 3IST, 1307 STECIEY-PARXIMC "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1032217_121183334-04.PDF",
@@ -12631,13 +13644,166 @@
   },
   {
     "file": "1033936_M101662452-T.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1033936",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "B",
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 7,
+    "transient_floors": [],
+    "residential_floors": [
+      3,
+      4,
+      5,
+      6
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "OG 140 F4 DINING ROOM 2 NON-RESIDENTTAL 2 KITCHEN 2 MECHANICAL ROOM LOCKER ROOM 2 D-2 LAUNDRIES BOILER!. OIL TANK. TELEP"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "100 139 J--2 BUILDING LOBBIES BUILDING MANAGEMENT OFFICE. COMMUNITY ROOMS MEDICAL OFFTCES 2 STORAGE ROOMS"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "other",
+        "description": "13 23 J-- 2 PARTMENTS: TELEPHONE/ ELECTRICAL CLOSET"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "14 23  APARTMENTS TELEPHONE/ ELECTRICAL CLOSET"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "12 23 ^ APARTMENTS: TELEPHONE/ ELECTRICAL CLOSET"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "14 23 J--2 APARTMENTS: TELEPHONE! ELECTRICAL CLOSET"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "14 23 -- 2 APARTMENTS TELEPHONE/ ELECTRICAL CLOSET: STORAGE (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1033936_M101662452.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1033936",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "G",
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 5,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      4,
+      8
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "residential",
+        "description": "O.. 140 D-2 F-4 DINING ROOM KITCHEN NON--RESIDENTIAL 2 D-2 MECHANICAL ROOM LOCKER ROOM 2 D-2 LAUNDRIES 2 BOILIOIL-TANKIT"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "139  J-2 BUILDING LOBBIES1 100  BLDG. MGMT. OEFICE COMMUNITY ROOMS 2 STORAGE ROOMS MEDICAL OFFICES 2ND & 3RD 40 13 23 J-"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "T40 12 23 J-2 : APARTMENTS TEL ELECTRICAL CLOSET 5TH! 40 40 14 14 23 B-2 J-2 APARTMENTS T/E CL 6TH &... 7TH LOORS 40 13 "
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "12 23  APARTMENTS: TEL ELECTRICAL CLOSET"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "other",
+        "description": "13 23 J-- 2 PTS: T/E CLOSET 2 STORAGE (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1034021_M000003638.PDF",
@@ -12666,8 +13832,97 @@
   },
   {
     "file": "1034127_M000048207.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1034127",
+    "address": "3lo yest gzra street",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {
+      "other": 32
+    },
+    "rows": 8,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Three () sinsle raou occurancy units"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "roor accupancy unlt or three (z) Or tRO (?) rooms each. one (1) sinzle"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 6,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "rooms Erd' six (6) single-singie room occupancy, rooms"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": 5,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1034128_M000033157.PDF",
@@ -15163,23 +16418,540 @@
   },
   {
     "file": "1040751_M00108554A.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1040751",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "B",
+      "E"
+    ],
+    "rooms_described": {
+      "residential": 51,
+      "other": 5
+    },
+    "rows": 20,
+    "transient_floors": [],
+    "residential_floors": [
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 7,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "5. (7) CL- **  APARTMENT ACCESSORY EMPLOYEES CAFETERIA HOUSEKEEPING AND BUSINESS OFFICES"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "(1) CL* APARTMENT"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 14,
+        "units_described": 6,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(6) CL- \"* APARTMENTS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "other",
+        "description": "(1) MAID'S ROOM"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "(3) CL. \"\" APARTMENTS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": 6,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(6) CL- \"* APARTMENTS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "other",
+        "description": "(1) MAID'S ROOM"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "12 (4) CL- \"* APARTMENTS"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(4) CL. \"* APARTMENTS"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "other",
+        "description": "(1) MAID'S ROOM"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "10 (3) CL- \"\" APARTMENTS"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": null,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "E",
+        "kind": "residential",
+        "description": "(4) CL- \"\"  APARTMENTS"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "E",
+        "kind": "other",
+        "description": "(1) MAID'S ROOM"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "11 (3) Cl- \"a* APARTMENTS"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": null,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(4) CL. * APARTMENTS"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "other",
+        "description": "(1) MAID'S ROOM"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "13 (1) CL- \"\" APARTMENT"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(1) (6) CL. *\" MAID'S I ROOM APARTMENTS"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": null,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "IOTH FLOOR 40 10 (3) CL- \"A\" APARTMENTS"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": null,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "B",
+        "kind": "residential",
+        "description": "(1) (5) CL- \"\" MAID'S ROOM APARTMENTS (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1040809_M000110499.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1040809",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {
+      "transient": 1
+    },
+    "rows": 6,
+    "transient_floors": [
+      1,
+      3
+    ],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "STORAGE. LAUNDRY ROOM SERVICE AND UTILTTIES IST SUB 100 200 BARBER SHOP. CAFETERIA!"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "LOCKER ROOMS STORAGE, SERVICES AND UTILITIES"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 270,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "CATERING! :: WEDGEWOOD ROOM KITCHENS. BARBER SHOP, LOCKER.ROOHS!\u2018STORAGE SERVICES AND UTILITIES"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "340 DINING ROOM CAFE AND. BAF 10. HOTEL OFFICES. WRITTNG LOBBY: LOUNGE $ ROOM STORES"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 60,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "1 BANOUET ROOM \"150 UG#5 I' BANOUET .ROOM BALLROOMS,, LOUNGES K SERVICE"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "70 ONE (1) HOUSEKEEPER-S (11) MAIDS! ROOMS. CHAMBER+ELEVEN HOTEL OFFICE, MAIDS* (CONTINUED) OPEN SracE uSEs M..G. HG CHA"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1040809_M00110499A.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1040809",
+    "address": "2-6 EAST 61 STREET S.E.C. OF 5TH AVENUE",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "C"
+    ],
+    "rooms_described": {},
+    "rows": 8,
+    "transient_floors": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      13
+    ],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "C",
+        "kind": "transient",
+        "description": "HOTEL ROOMS LASS A APARTMENTS 22 HAIR DRESSING VALET"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "14 HOTEL ROOMS CLASS  A APARTMENTS"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "transient",
+        "description": "12 CLASS  APARTMENTS HOTEL ROOMS"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "10 CLASS AAPARTMENTS HOTEL ROOMS"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "12 HOTEL ROOMS CLASS A APARTMENTS"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "10 HOTEL ROOMS CLASS A APARTMENT3 1OTH FLOOR 40 12 CLASS A APARTMENTS HOTEL ROOMS"
+      },
+      {
+        "floor": "11",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "transient",
+        "description": "16 CLASS \"APARTMENTS HOTEL 12TH FLOGR 40 HOTEL ROOMS CLASS A APARTMENTS"
+      },
+      {
+        "floor": "13",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "transient",
+        "description": "12 CLASS  APARTMENTS (14 TEN) 20 HOTEL ROOMS"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1040906_M000087246.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1040906",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "E"
+    ],
+    "rooms_described": {},
+    "rows": 12,
+    "transient_floors": [
+      2,
+      3,
+      5,
+      6,
+      9,
+      10,
+      12,
+      16
+    ],
+    "residential_floors": [
+      4
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": 120,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "fobby of bujlding"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "T-2 tlass \"a\" hotel apartmentss brr., meeting Rms., library"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "2 tlass a* hotel apartaents"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 10,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "I-2 class \"\" hetel apartments"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 10,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "1-2 1ass \"at hotel apartuents"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 10,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "aan hotel apartuents Ttn Ficor tiass \"\" hotel apartaerts"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "\u2191-2 class \"at hctel apertrents"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "class nit hotel apartrients"
+      },
+      {
+        "floor": "10",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "transient",
+        "description": "c1ass \"\" hotel apartnents 1lth Floor T-2 class  \"A\" hotel apertnents"
+      },
+      {
+        "floor": "12",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "T-2 tiass *At notel apartments 13th -1o0r class \"an notel apart=ents 14th oor 5-2 class \"it hotel apartments 15tn F1=or "
+      },
+      {
+        "floor": "16",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "2 \"an hotel anartnents Pentnouse -2 tlass nat otel apartments"
+      },
+      {
+        "floor": "ROO",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "E",
+        "kind": "other",
+        "description": "liecnanical guipment Tewborary Certiicate  br Uccapancy Date: Septeaber 6, 1985"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1040906_M000087421.PDF",
@@ -15193,8 +16965,123 @@
   },
   {
     "file": "1041291_M102254472.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1041291",
+    "address": "880 FIFTH AVENUE",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A"
+    ],
+    "rooms_described": {
+      "residential": 31,
+      "other": 7
+    },
+    "rows": 10,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      7,
+      8,
+      9
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "OG GARAGE FOR FORTY THREE (43) MOTOR EQUIPMENT VEHICLES & MECHANICAL"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "25 GARAGE FOR FORTY SEVEN (47) MOTOR EOUIPMENT. TENANTS VEHICLES MECHANICAL LAUNDRY & STORAGE"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 50,
+        "units_described": 1,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "80 ONE (1) APARTMENT,"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 3,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "THREE (3) DR'S APARTMENTS"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 7,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "& OFFICES. SEVEN. (7) MAIDS' ROOMS & SEVEN (7) DR'S OFFICES"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 9,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "2NDFLOOR 40 9& NINE (9) APARTMENTS & 1/2 I/2 ONE HALF APARTMENT"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": 9,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "& NINE (9) MAID'S ROOMS 3RD--6TH 40 10& TEN (IO) APARTMENTS & FLOORS 1/2 ONE HALF (1.2) APARTMENT ON EACH FLOOR"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": 9,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "9& NINE (9) PARTMENTS 1/2 ONE HALF (1/2) APARTMENT"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "6* RESL 9-1/2 APARTMENTS 1/2 \u2605APARTMENT 8CD ONLY"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "10& TEN (IO) APARTMENTS & 1/2 ONE HALF (1/2) APARTMENT (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1041378_121059610-14.PDF",
@@ -15957,8 +17844,86 @@
   },
   {
     "file": "1051335_M000101314.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1051335",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {
+      "residential": 12
+    },
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "0. BOILER ROOM. METERS ROoM.. STORAGE :.&'RECREATION"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "()+ RES. THREE APARTMENTS UPPER HALE OE DUPEX APARTMENT"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES.1FOUR APARTMENTS"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES.I 1 FOUR (4) APARTMENTS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES.1 FOUR (4). APARTMENTS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": 4,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES.IFOUR (4) APARTMENTS RESIDENTIAL OldI code OF IHE DEPARTHENI PRO.HULGATED MARCH $IST, 1967. S37 3H1 HIIn 33.253, 1!:"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1054680_M000033298.PDF",
@@ -15967,8 +17932,105 @@
   },
   {
     "file": "1055156_M000092087.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1055156",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A",
+      "G"
+    ],
+    "rooms_described": {},
+    "rows": 8,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "residential",
+        "description": "O.. Elev. machine room laundry, refuse rom CL.  apartments"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Ot7 CL.  apartments"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 10,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "CL.  apartments"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Ot7 10 CL.  apartments"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Ot7 10 CL.  apartments"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 10,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "CL.  apartments"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Ot7 10 CL:  apartments"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Ot7 10 CL.  apartments HERETOFORE CLASSIA MULTIPLE DWELLING ERECTED O.L.T NN INE BUNUNGNAF"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1055472_102138820-10.PDF",
@@ -16307,13 +18369,160 @@
   },
   {
     "file": "1055665_M000095152.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1055665",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "BAS",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "mech. rooms/office Managers apt 8 SR0 rooms 2 aublic rooms"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "Ot 82  8 sRO.roOmS 3 office.\"3 rec, room 2 public rooms"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 14,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "14  3 publ1c rooms 14 SR0 r0oms"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 14,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "14 $-2 14 sR0 rooms 3 pubiic rooms"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 14,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "14 14 J--2 3 pubiic rooms 14 sR0 r0oms"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "14 14 14  14 SRQ... FOOmS 3 public rooms CLASS  ESIDENTIAL OLD LAW TENEMENI S.R.O HTHI THE IS CEFTAIOMTE Y 3E PNSTE0 CA "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1056020_M000094878.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1056020",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      3,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "SOG Rec. area/.mech, area"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "Res. 4 Apartments"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 7,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Res. 4 Aportments"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "Res. 4 Apartments"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "Res. 4 Apartments"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "Res. 4 Apartments OLD!LAW TENEMENT OLDI CODE ITI THE FIES OF THE DERAPInrTI +t 31sI1967"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1056065_M000032746.PDF",
@@ -16521,13 +18730,186 @@
   },
   {
     "file": "1057068_M000100113.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1057068",
+    "address": "1897 Lot 305 xest 97th street",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G",
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      2,
+      4,
+      5,
+      6,
+      7
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "residential",
+        "description": "O.. 69 D-2 Boiler room accessory offices, comm. rm. and kitchen Ist Foor 40 R8 J-2 1 Apt.. \"' sleeplng rooms accessory o"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  15 sleeping rooms Br& Floor 40 32 J-2 15 sleeping rooms"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  1s sleeping rooms"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  15 sleeping rooms"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "1s sleepina rooms"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32 3.  15 sleeping rooms TEHFORERYI CERTIEICATE  OF OCCUPANCY TERMS: NENETY 90) DAYS EXPIRES: MAY 24.11992"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1057068_M000100413.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1057068",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G",
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 8,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      4,
+      5,
+      6
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 69 D-2 Boiler room, accessory offices, comm. room & kit"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "88  I Apartment, 7 sleeping comm. room & laundry rooms. accessory office"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  1s sleeping rooms"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "32 JIN 15 sleeping rooms"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  15 sleeping rooms"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  15 sleeping rooms"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "32  15 sleeping rooms"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "32 J-N 15 sleeping rooms NEW CODE THIS CERTIFICATE OF OCCU ANCY WUSt BE FoSED OF JHE DEPARTNENT PROMULGATED MARCH 31ST, "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1057320_104641746-12.PDF",
@@ -16653,8 +19035,65 @@
   },
   {
     "file": "1057322_M101314953.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1057322",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "J-1"
+    ],
+    "rooms_described": {
+      "transient": 2
+    },
+    "rows": 4,
+    "transient_floors": [
+      1,
+      2
+    ],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": 2,
+        "units_column_raw": null,
+        "use_group": "J-1",
+        "kind": "transient",
+        "description": "1 2  TWO (2) SUPERINTENDENTS? AND ELEVATOR MACHTNE ROOMS: AARTMENTSEOILER.COMPACTOR MANAGEMENT OFFICES"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 11,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "25 J  I HOTEL LOBEY RECEPTION ROOM: HOTEL ROOMS AND PORCH"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 15,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "30 J --- I HOTEL ROOMS (EACH FLOOR) THRU EACH EACH"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": ") FLOOR TNCLUSIVE FIRE DIPARTMNT APRDVALS: SPRINKIER SYSTEM INTERIOR ETRE ALARMI SEPTEMBER 191941 WATCHMAN'STIME DEIECTO"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1057985_M000097598.PDF",
@@ -16663,8 +19102,81 @@
   },
   {
     "file": "1057985_M000097728.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1057985",
+    "address": "i09 west i2gth street Ns 75* 0\" west of Lenox Avenue",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "A"
+    ],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      2
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Accessory offices kitchen & serving canference roan dining roam dining rom 2 single roan occupancy"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "A",
+        "kind": "residential",
+        "description": "Class \"\" apartments Iaunge: single roam occupancy"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 12 single roam occupancy lounge"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 12,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 single roam occupancy 18 lounge"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 12,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 single roam occupancy 18 1ounge"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "40 18 12 12 single roam occupancy 1ounge OLD LA TENEENT CLASS  MULTIPIE DWELIING"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1058396_121326298-06.PDF",
@@ -16984,8 +19496,78 @@
   },
   {
     "file": "1061221_M000108790.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1061221",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      1
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "GRND 164 DINING AREA OFFICES. TRAINING COMMUNITY ROOM : STORE! STORAGE MECH/ THRIFT BUILDING SERVICES"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES MANAGERS APARTMENT COMM STORES OFFICE COM"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "20 20 20 RES PHILANTHROPIC COMM FACILITY INSTITUTION WITH SLEEPING RECREATION ROOMS ' ACCOMMODATIONS DINING ROOMS. COMM "
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "20 20 20 RES COMM FACILTY- PHILANTHROPIC SLEEPING ACCOMODATIONS INSTITUTION WITH DINING ROOMS OMM RECREATION ROOMS! KITC"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 105,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "25 17 17 10 RES CLASS \"A\" SRO SUITE CLASS \"B' SROS OFFICE, COMM ITCHENS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "10 RES CLASS cLaSS \"Bt SROS SRO SUITE 17 OFFICE Comm (CONTINUED)"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1061221_M00108790A.PDF",
@@ -17019,8 +19601,69 @@
   },
   {
     "file": "1061934_M000102305.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1061934",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 5,
+    "transient_floors": [],
+    "residential_floors": [
+      1
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "OG BOILER -ROOM++1+ ID*t.4 &+?? STORAGE, LAUNDRY"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "10 11.. res SINGLE' ROOM OCCUPANCY SUPERINTENDENT APARTMENT"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 12 Res SINgLE' ROOM OCCUPANCY"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 12  Res SINGLE ROOM OCCUPANCY"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "12 12 Res OCCUPANCY SINGLE..ROOM STH FLOOR 40 12 12 ReS SINGEB. ROOM OCCUPANCY OLD CODE WIAHIN TH SE: R IHIS CERTE DE C "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1061936_M000048199.PDF",
@@ -17059,13 +19702,133 @@
   },
   {
     "file": "1078471_M000106650.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1078471",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "J-2"
+    ],
+    "rooms_described": {},
+    "rows": 3,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "OG   ROOMING LIN"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "ROOMING UNIT"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "2 ROOMING UNIT OTAL   5 ROOMING UNITS THIS CERTIFICATE QF OCCUPAIGY MUST EE POSTED 33703 OF THE DEPARTMEHI FRORULAIEO : "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1078471_M000106657.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1078471",
+    "address": "456-458 WEST 35th STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [
+      2,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": 65,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "BOILER .ROOM, LAUNDRY. STORAGE, METER ROOM COMMUNITY 'ROOM: : TOIIETS & KITGHEH"
+      },
+      {
+        "floor": "BAS",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "RES FRONT DESK. OFFICE, ELEVATOR.LOBBY"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "11 RES CIASS \"A\" APTS SRO ROOHING UNITS"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "11 RES CTASSA:APTS 7 .SRO ROOMING' UNITS HIHL 40 10 11 RES .CIASS  SRO..ROOMING. UNITS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "11 RES IL' SRO ROOMING UNITS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "11 11 RES 1I SRO ROOMING UNITS TOTALJ -- 5. IASS \"AF APTS 45 9RO ROOMING UIITS THIS CI RTIFICATE IF DCCUPANCY KIUST BE P"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1080117_M000000301.PDF",
@@ -17793,8 +20556,112 @@
   },
   {
     "file": "1080813_M000098997.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1080813",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "D"
+    ],
+    "rooms_described": {},
+    "rows": 9,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      7
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "On. 1/2 1/2 custodian's apartment flivina room & kitchenett boiler room, inciner oil strge. area strge & mattress 'strge"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "1/2 lj2 Custadian's apartment (bedroom & bath) center, students & Faculty children's day care laundry rooms, strge. corr"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 60,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "8 Apartments, mail & study room & lobby package rooms, chapel,"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "14 14 Apartments"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "14 14 Apartments"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 140,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "14 14 Apartments"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "14 1 Aoartments"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "D",
+        "kind": "residential",
+        "description": "20 22 2 .U.\"S. 18 R.U.IS Bth Floar 40 8 Apartments 9tn F100x 40 20 22 2 D.U.'s. 18 R.U.'s"
+      },
+      {
+        "floor": "10",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "D",
+        "kind": "other",
+        "description": "18 20 1 .U.. 17 R.U. ts"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1080813_M00098997A.PDF",
@@ -18740,8 +21607,114 @@
   },
   {
     "file": "1083722_M000094191.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1083722",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {
+      "transient": 90
+    },
+    "rows": 9,
+    "transient_floors": [
+      9,
+      10,
+      11,
+      12,
+      15,
+      16
+    ],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "0.. 10 OFFICE, EMPLOYEE'S LUNCH ROOM BOILER ROOM. STORAGE. STEHARD'S CARPENTER'S AND PAINT SHOPS, BAKERY AND UTILITIES"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "325 RESTAURANT, GRIILE ROOH AND BAR, LOBBY AND STORES"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "150 BUILDING OFFICE, OFFICES, LANGUAGE SCHOOL MEETING ROOM & 50"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "39 HOTEL ROOMS"
+      },
+      {
+        "floor": "10",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "39 HOTEL ROOMS"
+      },
+      {
+        "floor": "11",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "39 HOTEL ROOMS"
+      },
+      {
+        "floor": "12",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "39 HOTEL ROOMS"
+      },
+      {
+        "floor": "15",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "39 HOTEL ROOMS"
+      },
+      {
+        "floor": "16",
+        "occupancy_load": 40,
+        "units_described": 90,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "transient",
+        "description": "34 HOTEL ROOMS TEMPRARY CERTIFICATE OF OCEUPANCY TERM: AENIN (90) TAYS DATE= ;AUGUSf 22, 1989 THIS CERTFCATE G: DECUPEHI"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1084615_103798552.PDF",
@@ -55023,8 +57996,78 @@
   },
   {
     "file": "1088437_M000100037.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1088437",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {},
+    "rows": 6,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 15 Garage for 150 or uore vehicles"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "105 10 Tv Studio (no aud) 10 Off1ces 10 control raom 10 cous"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "24 storage 39 offices"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "112 Offices recordina  tudios eguip. roor.s storage. strops"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "250 Office spate"
+      },
+      {
+        "floor": "PEN",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "Floor 100 73 Office COMMERCIAL NEW CODE THIS CERTIMCATE DF OCOUPAICY MUST BE POSTED OF THE BEPARTMENT PROMULGATED MARCH "
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1088437_M000101191.PDF",
@@ -55038,8 +58081,61 @@
   },
   {
     "file": "1088437_M000107316.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "1088437",
+    "address": "442 WEST 42ND $TREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "G"
+    ],
+    "rooms_described": {},
+    "rows": 4,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "G",
+        "kind": "other",
+        "description": "O.. 23 BOILER ROOM ROOMS: TOILETS STORAGE DRESSING"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 108,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "129 THEATRE 2ND 1 FLOOR 108 28 OFFICE-STUDIO"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 108,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "28 OFFICE. STUDIO; CLASSROOM"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 108,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "28 DANCE STUDIOS QOMMERCIAL qLD COrE FUEL OIL INSIAILATICN AFFRCVED EY THE FIRE IEFARIMENT DECEMEER 7,1954 FIRE DEFARIME"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "1088896_121329222-16.PDF",
@@ -59655,8 +62751,139 @@
   },
   {
     "file": "3000556_B300598226.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "3000556",
+    "address": "5O NEVINS STREET",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 12,
+    "transient_floors": [],
+    "residential_floors": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "OG RES BOILER ROOM, ENGINE ROOM, STORAC"
+      },
+      {
+        "floor": "BAS",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 RES STAFF LIBRARY, OFFICE LOUNGES ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "01",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES OFFICES LOUNGES. ACTIVITY ROOMS ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "MEZ",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "40 RES OFFICES (ACCESSORY TO RESIDENTIA"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 30\u00b0 34 RES 3O BEDROOMS, LOUNGE OFFICE, ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 30 34 RES 3O BEDROOMS, LOUNGE OFFICE, ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 30 34 RES 3O BEDROOMS, LOUNGE OFFICE ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 30 34 RES 3O BEDROOMS, LOUNGE OFFICE ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "06",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "34 30 34 RES 3O BEDROOMS, LOUNGE OFFICE ACCESSORY TO RESIDENTIAL"
+      },
+      {
+        "floor": "07",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "RES DINING ROOMS, KITCHEN OFFICES 136 PUB ACCESSORY TO RESIDENTIAL DINING ROOM"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "RES ACTIVITY ROOM, LOUNGE, LAUNDRY"
+      },
+      {
+        "floor": "ROO",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "residential",
+        "description": "ACCESSORY TO RESIDENTIAL ELEVATOR ROOM"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "3002054_320374304-09.PDF",
@@ -61285,8 +64512,67 @@
   },
   {
     "file": "3335928_B000238796.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "3335928",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [],
+    "rooms_described": {},
+    "rows": 5,
+    "transient_floors": [],
+    "residential_floors": [],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "PUBLIC LORRI. CFICE SECONE 78 COHM COMM 78 R00HS. 0FFICES RHS"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "THIRD 40 79 79 COMM 79 ROONS"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "69 CO COMR 69 69 ROOMS RS STETH 40 40 69 69 COMM 69 ROOHS"
+      },
+      {
+        "floor": "08",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "SEVENTH 40 69 COHM 69 ROOHS"
+      },
+      {
+        "floor": "09",
+        "occupancy_load": 57,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "",
+        "kind": "other",
+        "description": "COHM COMH 37 ROOMS ROGMS HLNEAETE TEHTH 40 35 COHM 35 ROS FHELFTE 31 COMH 31 THE MUTIE DLWG: L CONFORS TO SECTOHGTOF COE"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "3336603_B000204838.PDF",
@@ -61300,8 +64586,79 @@
   },
   {
     "file": "3345981_B300285313.PDF",
-    "readable": false,
-    "reason": "scanned image, no text layer"
+    "readable": true,
+    "bin": "3345981",
+    "effective_date": "03/10/2003",
+    "address": "173 South 9th Street",
+    "co_type": "Legacy (OCR)",
+    "use_groups": [
+      "F",
+      "J-2"
+    ],
+    "rooms_described": {
+      "residential": 8
+    },
+    "rows": 5,
+    "transient_floors": [],
+    "residential_floors": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": true,
+    "floors": [
+      {
+        "floor": "01",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "F",
+        "kind": "other",
+        "description": "# 200 -4 Synagogue"
+      },
+      {
+        "floor": "02",
+        "occupancy_load": 10,
+        "units_described": 2,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "Two (2) Dwelling Units"
+      },
+      {
+        "floor": "03",
+        "occupancy_load": 40,
+        "units_described": 2,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "# 10  Two (2) Dwelling Units"
+      },
+      {
+        "floor": "04",
+        "occupancy_load": 40,
+        "units_described": 2,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "# 10  Two (2) Dwelling Units"
+      },
+      {
+        "floor": "05",
+        "occupancy_load": 40,
+        "units_described": 2,
+        "units_column_raw": null,
+        "use_group": "J-2",
+        "kind": "residential",
+        "description": "#  Two (2) Dwelling Units"
+      }
+    ],
+    "source": "ocr",
+    "is_current": null
   },
   {
     "file": "3392395_301597118-18.PDF",

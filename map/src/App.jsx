@@ -1364,7 +1364,7 @@ function FilterPanel({
   const toggleSegment = (key) => setActiveSegments((prev) => ({ ...prev, [key]: !prev[key] }));
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
-      <div className="p-4 border-b border-gray-100">
+      <div className="px-4 py-3 border-b border-gray-100">
         <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Use</h1>
         {dataDate && (() => {
           const days = dataDate.daysAgo;
@@ -1380,17 +1380,17 @@ function FilterPanel({
         })()}
       </div>
 
-      <div className="p-4 space-y-4">
+      <div className="px-4 py-3 space-y-3">
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Building segments</div>
-          <div className="space-y-1">
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Building segments</div>
+          <div className="space-y-0.5">
             {SEGMENTS.map((seg) => {
               const active = activeSegments[seg.key];
               return (
                 <button
                   key={seg.key}
                   onClick={() => toggleSegment(seg.key)}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-0.5 rounded-lg transition-colors cursor-pointer text-left"
                   // No left accent bar: with the row flush to the panel gutter it
                   // collided with the checkbox. Active state is already carried by
                   // the tinted background and the filled, segment-coloured box.
@@ -1426,8 +1426,8 @@ function FilterPanel({
 
         {/* Overlays */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Overlays</div>
-          <div className="space-y-1.5">
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Overlays</div>
+          <div className="space-y-0.5">
             <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
               <input
                 type="checkbox"
@@ -1536,8 +1536,8 @@ function FilterPanel({
 
         {/* Refinements */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Refinements</div>
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Refinements</div>
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
             <input
               type="checkbox"
               checked={distressOnly}
@@ -1559,7 +1559,7 @@ function FilterPanel({
             <InfoTip text="Show only buildings with financial distress indicators: tax liens, lis pendens/judgments, high ECB fines, or significant HPD violations. Combined with legal transient status, these are the strongest signals of a motivated owner." />
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
             <input
               type="checkbox"
               checked={noOperatorOnly}
@@ -1581,7 +1581,7 @@ function FilterPanel({
             <InfoTip text="Show only buildings where we couldn't find an active hotel operation via Google Places. These have legal transient capacity but no identifiable operator — a potential management opportunity. Based on Google Places coverage, not a verified fact." />
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
             <input
               type="checkbox"
               checked={hideCondos}
@@ -1603,7 +1603,7 @@ function FilterPanel({
             <InfoTip text="Exclude condominium buildings. Condos require board approval or commercial condo owner negotiation — a different deal structure than single-owner rentals." />
           </label>
 
-          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-1.5">
+          <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
             <input
               type="checkbox"
               checked={hideRestricted}
@@ -1625,7 +1625,7 @@ function FilterPanel({
             <InfoTip text="Exclude SRO (HR, RS), dormitory (H8) and hostel (HH) building classes. These register Class B rooms and so score well, but SRO stock is rent-regulated and dorms and hostels are a different operating model. On by default." />
           </label>
 
-          <div className="flex items-center justify-between px-2.5 mt-2">
+          <div className="flex items-center justify-between px-2.5 mt-1.5">
             <span className="text-xs text-gray-700">Min units</span>
             <input
               type="number"
@@ -1635,7 +1635,7 @@ function FilterPanel({
               className="w-16 px-2 py-1 text-xs font-mono text-gray-700 bg-gray-50 border border-gray-200 rounded-md text-right outline-none focus:ring-2 focus:ring-gray-300"
             />
           </div>
-          <div className="flex items-center justify-between px-2.5 mt-1.5">
+          <div className="flex items-center justify-between px-2.5 mt-1">
             <span className="text-xs text-gray-700">Min Class B</span>
             <input
               type="number"

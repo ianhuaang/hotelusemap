@@ -335,6 +335,12 @@ def _coo_fields(floors: dict | None) -> dict:
             "co_type": floors.get("co_type", ""),
             "is_current": bool(floors.get("is_current")),
             "years_superseded": floors.get("years_superseded"),
+            # Whether this was read by OCR off a scanned certificate rather
+            # than lifted from a text layer. Published because the reader is
+            # deciding on a building: an OCR'd description is a reading of a
+            # 1960s typescript, and "ROOMING UNITS FOURTEEN (14)" came out of
+            # an image, not a field.
+            "ocr": floors.get("source") == "ocr",
         },
         "coo_transient_floors": floors.get("transient_floors") or [],
         "coo_residential_floors": floors.get("residential_floors") or [],
@@ -342,6 +348,11 @@ def _coo_fields(floors: dict | None) -> dict:
         "coo_transient_contiguous": bool(floors.get("transient_contiguous")),
         "coo_use_groups": floors.get("use_groups") or [],
     }
+
+
+def _coo_rank(row: dict, effective) -> tuple:
+    """Which of two certificates for one building to believe."""
+    return (bool(row.get("is_current")), row.get("source") != "ocr", effective(row))
 
 
 def load_coo_floors() -> dict:
@@ -379,14 +390,12 @@ def load_coo_floors() -> dict:
         if not bin_:
             continue
         held = best.get(bin_)
-        if held is None:
-            best[bin_] = row
-            continue
-        # Current beats superseded; otherwise the later certificate.
-        if bool(row.get("is_current")) != bool(held.get("is_current")):
-            if row.get("is_current"):
-                best[bin_] = row
-        elif effective(row) > effective(held):
+        # Current beats superseded. Then a text layer beats OCR: both describe
+        # the same certificate, but one was read from a field and the other
+        # from a photograph of a typewriter, and a building with both should
+        # not lose the clean reading to a scan of equal standing. Then the
+        # later certificate.
+        if held is None or _coo_rank(row, effective) > _coo_rank(held, effective):
             best[bin_] = row
 
     print(f"  C of O floor tables: {len(best)} buildings")
