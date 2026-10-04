@@ -1364,17 +1364,18 @@ function FilterPanel({
   const toggleSegment = (key) => setActiveSegments((prev) => ({ ...prev, [key]: !prev[key] }));
   return (
     <div className="absolute top-4 left-4 w-72 bg-white/95 backdrop-blur rounded-xl shadow-xl border border-gray-200 z-20">
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h1 className="text-sm font-bold text-gray-900 tracking-tight">NYC Transient Use</h1>
+      <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between gap-2">
+        <h1 className="text-sm font-bold text-gray-900 tracking-tight shrink-0">NYC Transient Use</h1>
         {dataDate && (() => {
           const days = dataDate.daysAgo;
           const color = days <= 7 ? "text-emerald-600" : days <= 30 ? "text-amber-600" : "text-red-600";
           const bg = days <= 7 ? "bg-emerald-50" : days <= 30 ? "bg-amber-50" : "bg-red-50";
-          const label = days === 0 ? "Today" : days === 1 ? "1 day ago" : `${days} days ago`;
+          const label = days === 0 ? "today" : days === 1 ? "1d" : `${days}d`;
           return (
-            <div className={`${bg} rounded px-1.5 py-0.5 mt-1 inline-flex items-center gap-1.5`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${days <= 7 ? "bg-emerald-500" : days <= 30 ? "bg-amber-500" : "bg-red-500"}`} />
-              <span className={`text-[10px] ${color} font-medium`}>Data: {dataDate.formatted} ({label})</span>
+            <div title={`Data from ${dataDate.formatted} — ${days} days ago`}
+                 className={`${bg} rounded px-1.5 py-0.5 inline-flex items-center gap-1 shrink-0`}>
+              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${days <= 7 ? "bg-emerald-500" : days <= 30 ? "bg-amber-500" : "bg-red-500"}`} />
+              <span className={`text-[10px] ${color} font-medium whitespace-nowrap`}>{dataDate.formatted} · {label}</span>
             </div>
           );
         })()}
@@ -1382,7 +1383,7 @@ function FilterPanel({
 
       <div className="px-4 py-3 space-y-3">
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Building segments</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider leading-none mb-1.5">Building segments</div>
           <div className="space-y-0.5">
             {SEGMENTS.map((seg) => {
               const active = activeSegments[seg.key];
@@ -1390,7 +1391,7 @@ function FilterPanel({
                 <button
                   key={seg.key}
                   onClick={() => toggleSegment(seg.key)}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-0.5 rounded-lg transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-0 rounded-lg transition-colors cursor-pointer text-left"
                   // No left accent bar: with the row flush to the panel gutter it
                   // collided with the checkbox. Active state is already carried by
                   // the tinted background and the filled, segment-coloured box.
@@ -1426,7 +1427,7 @@ function FilterPanel({
 
         {/* Overlays */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Overlays</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider leading-none mb-1.5">Overlays</div>
           <div className="space-y-0.5">
             <label className="flex items-center gap-2.5 cursor-pointer px-2.5">
               <input
@@ -1536,7 +1537,7 @@ function FilterPanel({
 
         {/* Refinements */}
         <div>
-          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Refinements</div>
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider leading-none mb-1.5">Refinements</div>
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
             <input
               type="checkbox"
@@ -1650,35 +1651,41 @@ function FilterPanel({
         {/* Score is now purely legal — no weight config needed */}
 
         {/* Add to list actions */}
-        <div className="space-y-2 pt-2 border-t border-gray-100">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Add to export list</div>
+        <div className="space-y-1.5 pt-2 border-t border-gray-100">
+          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider leading-none">Add to export list</div>
           <button
             onClick={onAddAllVisible}
-            className="w-full px-3 py-2 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors text-left"
+            className="w-full px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors text-left"
           >
             + All visible buildings
             <span className="text-gray-400 ml-1">({featureCount})</span>
           </button>
-          <div className="flex gap-2">
+          {/* Three categories on one row. Spelled short because the panel is
+              288px wide and the full labels wrapped to two lines, which cost
+              more height than the row they were meant to save. */}
+          <div className="flex gap-1.5">
             <button
               onClick={() => onAddCategory("has_prior_op")}
-              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 cursor-pointer transition-colors"
+              title="Add every building with a researched prior operator"
+              className="flex-1 px-1 py-1.5 text-[11px] rounded-lg border border-purple-200 text-purple-700 hover:bg-purple-50 cursor-pointer transition-colors"
             >
-              + Prior operators
+              + Prior ops
             </button>
             <button
               onClick={() => onAddCategory("has_reversion")}
-              className="flex-1 px-2 py-1.5 text-[11px] rounded-lg border border-red-200 text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
+              title="Add every building inside the post-2021 reversion window"
+              className="flex-1 px-1 py-1.5 text-[11px] rounded-lg border border-red-200 text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
             >
-              + Reversion window
+              + Reversion
+            </button>
+            <button
+              onClick={() => onAddCategory("_split_use")}
+              title="Add every building with split transient and residential use"
+              className="flex-1 px-1 py-1.5 text-[11px] rounded-lg border border-cyan-200 text-cyan-700 hover:bg-cyan-50 cursor-pointer transition-colors"
+            >
+              + Split use
             </button>
           </div>
-          <button
-            onClick={() => onAddCategory("_split_use")}
-            className="w-full px-2 py-1.5 text-[11px] rounded-lg border border-cyan-200 text-cyan-700 hover:bg-cyan-50 cursor-pointer transition-colors"
-          >
-            + Split use
-          </button>
         </div>
       </div>
     </div>
