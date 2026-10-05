@@ -497,20 +497,31 @@ def _occupancy_state(record: dict) -> str:
 #
 # Deliberately narrow. The obvious wording — anything mentioning a hotel or a
 # lobby — catches 83 buildings, most of them blocks of flats redoing an
-# entrance. Rooms or an explicit change to hotel use catches 10, nine of which
+# entrance. Rooms or an explicit change to hotel use catches 27, of which 24
 # are already trading and doing normal upkeep, leaving exactly one that the
 # segment was describing wrongly.
+#
+# The counts here read 10 and nine until the scan was pointed at the full
+# permit history instead of the five most recent filings — see
+# load_guestroom_works. The conclusion survived the recount, which is the part
+# worth knowing: finding 17 more buildings moved no building into a sourcing
+# segment, because every one of them is a hotel already trading. The Waldorf
+# at 301 Park Avenue is $70m of room renovation that nobody could see.
 GUESTROOM_WORK = re.compile(
     r"guest ?rooms?|key count|hotel rooms?|convert.{0,30}\bhotel\b|\bhotel\b.{0,20}convert",
     re.I)
 WORKS_LOOKBACK_MONTHS = 18
 
 
-def _guestroom_works(record: dict) -> dict | None:
-    """The largest recent permit that is work on the rooms, or None."""
+def _guestroom_works(permits: list | None) -> dict | None:
+    """The largest recent permit that is work on the rooms, or None.
+
+    Takes the permit list rather than the record, because the list on the
+    record is not the one to ask — see load_guestroom_works.
+    """
     cutoff = (date.today() - timedelta(days=WORKS_LOOKBACK_MONTHS * 30)).isoformat()
     best = None
-    for q in record.get("permits") or []:
+    for q in permits or []:
         when = q.get("action_date") or ""
         if when < cutoff or not GUESTROOM_WORK.search(q.get("description") or ""):
             continue
@@ -524,6 +535,47 @@ def _guestroom_works(record: dict) -> dict | None:
         "description": (best.get("description") or "")[:200],
         "status": best.get("status") or "",
     }
+
+
+# The same truncation that hid the Wellington's demolition, one signal over.
+#
+# This scanned record["permits"], which enrich.py cuts to the five most recent
+# filings — `record["permits"] = permits[:5]`, after sorting by action_date —
+# while leaving permit_count reporting the full total. So the rule searched a
+# recency window, not a permit history, and nothing in the output said so.
+#
+# It is backwards where it matters most. A hotel being rebuilt files a lot of
+# permits, so the more active the construction the more likely the evidence of
+# construction is pushed out of the window. 2 Lexington Avenue — the Gramercy,
+# the one building this signal exists to catch — carries 58 of them. Two
+# scaffold filings on 2 Oct 2026 evicted the $13.3m "guestrooms on floors
+# 3-16th" permit, and the building went back to reading as an available target
+# at a legal score of 80 while MCR was still inside it.
+#
+# Presence is not the only thing truncation got wrong. 22 East 29th Street
+# published $21,984 of mechanical work as its room works while a $96,240
+# "Interior remodeling of Hotel Guestrooms" sat one slot past the cut.
+#
+# load_permits rather than a third copy of the row parsing: it applies the same
+# job-type filter and builds the same shape this rule already expects, and it
+# resolves the file through provenance.resolve like everything else here. The
+# truncated list stays exactly as it was — it is what the panel displays, and
+# display is not the question this asks.
+def load_guestroom_works() -> dict:
+    """The largest recent room-work permit per BBL, off the full history."""
+    from src.enrich import load_permits
+
+    path = provenance.resolve("permits", DATA_RAW)
+    if not path.exists():
+        print("  Guest-room works: no permits file — signal unavailable")
+        return {}
+    found = {}
+    for bbl, permits in load_permits(path).items():
+        works = _guestroom_works(permits)
+        if works:
+            found[bbl] = works
+    print(f"  Guest-room works: {len(found)} buildings")
+    return found
 
 
 # Something about this building, other than the code the city stamps on the
@@ -1140,6 +1192,7 @@ def build_geojson(
     # a condominium billing lot. It was dropped here, two filters before the
     # exemption that was meant to keep it.
     coo_floors = load_coo_floors()
+    guestroom_works = load_guestroom_works()
     demolitions = load_demolitions()
 
     pre_tier = len(pipeline)
@@ -1676,7 +1729,7 @@ def build_geojson(
         # Rooms being rebuilt right now. Emitted whatever the segment, so the
         # nine operating hotels doing upkeep carry it too — it is a fact about
         # the building either way.
-        works = _guestroom_works(record)
+        works = guestroom_works.get(str(record["bbl"]))
         if works:
             properties["guestroom_works"] = works
 

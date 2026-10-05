@@ -387,6 +387,86 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
         "carry what they found")
 
 
+# --- the room-work signal reads a history, not a recency window -------------
+
+def test_room_work_survives_newer_filings():
+    """The regression that happened, as a test.
+
+    _guestroom_works scanned record["permits"], which enrich.py cuts to the
+    five most recent filings. 2 Lexington Avenue — the Gramercy, closed since
+    2020 and the one building this signal exists to catch — carries 58 of
+    them. Two scaffold permits filed on 2 Oct 2026 pushed the $13.3m
+    "guestrooms on floors 3-16th" permit out of the window, and the building
+    went back to reading as an available target while MCR was still inside it.
+
+    Backwards exactly where it matters: a hotel being rebuilt files a lot of
+    permits, so the more active the construction the likelier the evidence of
+    it is evicted.
+    """
+    from datetime import date, timedelta
+
+    from src.build_geojson import _guestroom_works
+
+    works = {
+        "job_type": "Alteration",
+        "description": "General Construction renovations related to guestrooms on floors 3-16th",
+        "action_date": (date.today() - timedelta(days=60)).isoformat(),
+        "cost": 13_182_381,
+        "status": "Plan Examiner Review",
+    }
+    # Scaffold, facade, standpipe — the ordinary traffic of a live site, all
+    # filed after the permit that says what the site is for.
+    noise = [{
+        "job_type": "Alteration",
+        "description": "Installation of suspended scaffold for facade work and/or inspection",
+        "action_date": (date.today() - timedelta(days=d)).isoformat(),
+        "cost": 0,
+        "status": "Permit Issued",
+    } for d in range(1, 21)]
+    permits = sorted(noise + [works], key=lambda q: q["action_date"], reverse=True)
+
+    found = _guestroom_works(permits)
+    assert found, "20 newer scaffold filings buried the room works"
+    assert found["cost"] == 13_182_381
+
+    # The shape of the bug, stated so this test cannot pass by accident: the
+    # five most recent filings are exactly what used to be handed in here.
+    assert _guestroom_works(permits[:5]) is None, (
+        "the fixture no longer reproduces the truncation, so the assertion "
+        "above proves nothing")
+
+
+def test_the_room_work_scan_is_not_handed_the_truncated_list():
+    """And is not wired back to it later.
+
+    The companion to the test above: that one proves the rule survives a full
+    history, this one proves a full history is what it gets. load_demolitions
+    carries the same fix for the same reason one signal over — a Full
+    Demolition filing is rarely among the three most recent either, which is
+    how 859 7th Avenue sat second on the target list with a demolition
+    approved against it.
+    """
+    import re
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    enrich = (root / "src/enrich.py").read_text()
+    build = (root / "src/build_geojson.py").read_text()
+
+    # Not guarding a ghost: the truncation this is about still exists, and is
+    # still right for what it is for, which is what the panel displays.
+    assert re.search(r'record\["permits"\]\s*=\s*permits\[:\d+\]', enrich), (
+        "enrich.py no longer truncates record['permits']; this guard may no "
+        "longer apply")
+
+    assert "def load_guestroom_works" in build, (
+        "the by-BBL room-work index is gone; the scan has nothing to read but "
+        "the truncated list")
+    assert not re.search(r"_guestroom_works\(\s*record", build), (
+        "the room-work scan is reading the record's five most recent permits "
+        "again — it needs the full history, see load_guestroom_works")
+
+
 def test_registration_is_not_evidence_of_trading():
     """The two questions the build must keep apart.
 
