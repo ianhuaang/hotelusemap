@@ -28,6 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, DATA_PROCESSED
+from src import provenance
 
 PDF_DIR = DATA_RAW / "coo_pdfs"
 
@@ -248,8 +249,11 @@ def main() -> None:
     annotate_currency(out, _feed_latest())
 
     if len(paths) > 1:
-        dest = DATA_PROCESSED / "coo_parsed.json"
-        existing = json.loads(dest.read_text()) if dest.exists() else []
+        # Read whatever the last run left, write today's. The merge is
+        # unchanged; only the name it lands under is.
+        src_path = provenance.resolve("coo_parsed", DATA_PROCESSED)
+        dest = DATA_PROCESSED / f"coo_parsed_{date.today():%Y%m%d}.json"
+        existing = json.loads(src_path.read_text()) if src_path.exists() else []
         records = merge_parsed(existing, out)
         dest.write_text(json.dumps(records, indent=2))
         print(f"{readable} of {len(paths)} certificates parsed -> {dest}")

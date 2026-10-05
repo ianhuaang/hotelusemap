@@ -383,9 +383,12 @@ def load_coo_floors() -> dict:
     several certificates — 63 of 80 — so the current one wins, then the most
     recently effective, and the record says which it was and how old.
     """
-    path = DATA_PROCESSED / "coo_parsed.json"
+    # Dated like every other source so the manifest can report its vintage.
+    # It carried no date for a long time, which left the one source CI cannot
+    # refresh as the one source whose age the build could not state.
+    path = provenance.resolve("coo_parsed", DATA_PROCESSED)
     if not path.exists():
-        print("  no coo_parsed.json — rebuild it with both readers:")
+        print(f"  no {path.name} — rebuild it with both readers:")
         print("    python3 src/parse_coo_pdf.py --all        # the text layers")
         print("    python3 src/parse_coo_scan.py --merge-only # the scans, from the cache")
         return {}

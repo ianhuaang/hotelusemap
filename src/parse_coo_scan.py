@@ -30,6 +30,7 @@ Usage:
 """
 
 import json
+from datetime import date
 import os
 import re
 import sys
@@ -44,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # script (python3 src/parse_coo_scan.py) or imported as src.parse_coo_scan.
 sys.path.insert(0, str(Path(__file__).parent))
 from config import DATA_RAW, DATA_PROCESSED
+from src import provenance
 from parse_coo_pdf import summarise, annotate_currency, merge_parsed, _feed_latest
 
 PDF_DIR = DATA_RAW / "coo_pdfs"
@@ -420,8 +422,9 @@ def _merge_into_parsed(got: int = 0) -> None:
     is the record; this reads it and nothing else, so it is safe to run on
     its own after an interrupted pass rather than OCR'ing the archive again.
     """
-    dest = DATA_PROCESSED / "coo_parsed.json"
-    existing = json.loads(dest.read_text()) if dest.exists() else []
+    src_path = provenance.resolve("coo_parsed", DATA_PROCESSED)
+    dest = DATA_PROCESSED / f"coo_parsed_{date.today():%Y%m%d}.json"
+    existing = json.loads(src_path.read_text()) if src_path.exists() else []
     # Everything ever read, this pass and any earlier one.
     fresh = list(_read_cache().values())
 
@@ -447,7 +450,7 @@ def main() -> None:
         _merge_into_parsed()
         return
 
-    dest = DATA_PROCESSED / "coo_parsed.json"
+    dest = provenance.resolve("coo_parsed", DATA_PROCESSED)
     if args[0] == "--all":
         existing = json.loads(dest.read_text()) if dest.exists() else []
         done = {r["file"] for r in existing if r.get("floors")}
