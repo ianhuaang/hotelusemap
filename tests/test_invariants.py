@@ -387,6 +387,78 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
         "carry what they found")
 
 
+# --- the City Record walk reads every page, in a fixed order -----------------
+
+def _paged(rows, page_size=1000, short_at=None):
+    """A Socrata stand-in: hands back a window, optionally short one page."""
+    def fetch(params):
+        assert params.get("$order"), "the walk asked for a page with no sort key"
+        offset = params["$offset"]
+        limit = params["$limit"]
+        window = rows[offset:offset + limit]
+        if short_at is not None and offset == short_at:
+            window = window[:limit // 2]
+        return window
+    return fetch
+
+
+def test_the_city_record_walk_asks_for_a_stable_order():
+    """Unordered paging was skipping notices.
+
+    Socrata promises no consistent row order between unordered requests, so an
+    $offset walk over $q="shelter" read some rows twice and never read others.
+    The sweep returned 20 buildings on 29 Sep, 14 on 1 Oct and fewer on 5 Oct
+    with nothing in the code changing and no notice withdrawn by the city. 17
+    Battery Place lost a 2008 notice to it and 317 West 45th Street a 2023 one
+    graded active, which put a building running as a shelter back in the
+    sourcing list.
+    """
+    from src.enrich_city_record import fetch_notices
+
+    seen = []
+
+    def fetch(params):
+        seen.append(params)
+        return []
+
+    fetch_notices(fetch=fetch)
+    assert seen, "the walk made no request at all"
+    assert seen[0].get("$order") == ":id", (
+        "the City Record walk pages without a sort key; Socrata will skip rows")
+
+
+def test_the_city_record_walk_does_not_skip_a_short_page():
+    """A short page is not the end of the data.
+
+    Socrata returns fewer rows than asked for under load. The walk advanced by
+    the page size rather than by what arrived, so the difference was skipped,
+    and it stopped on any short page, so everything after one was lost.
+    """
+    from src.enrich_city_record import fetch_notices
+
+    rows = [{"n": i} for i in range(2500)]
+
+    whole = fetch_notices(fetch=_paged(rows))
+    assert whole == rows, f"a clean walk lost rows: {len(whole)} of {len(rows)}"
+
+    # The server goes short on the second page and carries on.
+    patchy = fetch_notices(fetch=_paged(rows, short_at=1000))
+    assert patchy == rows, (
+        f"a short page cost {len(rows) - len(patchy)} rows; the walk either "
+        "skipped past them or stopped early")
+
+
+def test_the_city_record_walk_refuses_to_truncate_silently():
+    """It fails rather than publishing a partial sweep."""
+    import pytest as _pytest
+
+    from src.enrich_city_record import MAX_PAGES, PAGE_SIZE, fetch_notices
+
+    endless = _paged([{"n": i} for i in range((MAX_PAGES + 2) * PAGE_SIZE)])
+    with _pytest.raises(RuntimeError, match="did not terminate"):
+        fetch_notices(fetch=endless)
+
+
 # --- the room-work signal reads a history, not a recency window -------------
 
 def test_room_work_survives_newer_filings():

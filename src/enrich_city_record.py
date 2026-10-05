@@ -181,35 +181,85 @@ def grade(notices: list[dict], today: date) -> tuple[str, str]:
     return "uncertain", f"last published {newest}, no award on file"
 
 
-def fetch_notices() -> list[dict]:
-    """Every City Record notice mentioning a shelter, 2003 to now."""
+PAGE_SIZE = 1000
+# The search returns a few thousand notices. 200 pages is two hundred thousand,
+# far above anything this query can return, so reaching it means the walk is not
+# terminating and the run should fail rather than publish a partial sweep.
+MAX_PAGES = 200
+
+
+def _fetch_page(params: dict) -> list[dict]:
+    """One page from Socrata, retried."""
     token = os.environ.get("SOCRATA_APP_TOKEN", "")
     ctx = ssl.create_default_context(cafile=certifi.where())
-    out, offset = [], 0
-    while True:
-        params = urllib.parse.urlencode({"$q": "shelter", "$limit": 1000, "$offset": offset})
-        req = urllib.request.Request(
-            f"https://data.cityofnewyork.us/resource/{DATASET}.json?{params}",
-            headers={"X-App-Token": token} if token else {},
-        )
-        # Socrata drops a long page under load often enough that a single
-        # timeout would otherwise cost the whole pull.
-        for attempt in range(4):
-            try:
-                with urllib.request.urlopen(req, timeout=120, context=ctx) as fh:
-                    batch = json.loads(fh.read())
-                break
-            except Exception as exc:  # noqa: BLE001
-                if attempt == 3:
-                    raise
-                log(f"    retrying page at offset {offset} after "
-                    f"{type(exc).__name__}")
-                time.sleep(2 ** attempt)
+    req = urllib.request.Request(
+        f"https://data.cityofnewyork.us/resource/{DATASET}.json?"
+        f"{urllib.parse.urlencode(params)}",
+        headers={"X-App-Token": token} if token else {},
+    )
+    # Socrata drops a long page under load often enough that a single timeout
+    # would otherwise cost the whole pull.
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=120, context=ctx) as fh:
+                return json.loads(fh.read())
+        except Exception as exc:  # noqa: BLE001
+            if attempt == 3:
+                raise
+            log(f"    retrying page at offset {params.get('$offset')} after "
+                f"{type(exc).__name__}")
+            time.sleep(2 ** attempt)
+    return []
+
+
+def fetch_notices(fetch=_fetch_page) -> list[dict]:
+    """Every City Record notice mentioning a shelter, 2003 to now.
+
+    Paged on a stable sort key, which it was not. The query was $q="shelter"
+    walked by $offset with no $order at all, and Socrata promises no consistent
+    row order between unordered requests -- so rows move between pages while the
+    walk is in progress, and an offset that assumes they stay put reads some
+    twice and never reads others.
+
+    It showed as a sweep that returned a different number of buildings every
+    run with nothing in the code changing: 20 on 29 Sep, 14 on 1 Oct, fewer on
+    5 Oct, and no notices withdrawn by the city in between. 17 Battery Place
+    lost a 2008 notice that way, and 317 West 45th Street lost a 2023 one
+    graded active -- which took a building running as a shelter back out of the
+    default-hidden set and into the sourcing list.
+
+    :id is Socrata's own row identifier, present on every dataset and unique,
+    so ordering on it makes the walk deterministic without this needing to know
+    anything about the City Record's own columns.
+
+    Two more things the walk got wrong, both of which silently shortened it:
+
+    It advanced by the page size rather than by the rows it actually received,
+    so a short page -- which Socrata will return under load without being at
+    the end of the data -- skipped the difference. It advances by len(batch)
+    now, which cannot skip whatever the server did not send.
+
+    And it stopped on any short page, treating "fewer than asked for" as
+    "that was the last of them". Those are different things. It stops on an
+    empty page instead, which costs one extra request per run and is the only
+    answer the server gives that means end-of-data.
+    """
+    out: list[dict] = []
+    offset = 0
+    for _ in range(MAX_PAGES):
+        batch = fetch({
+            "$q": "shelter",
+            "$order": ":id",
+            "$limit": PAGE_SIZE,
+            "$offset": offset,
+        })
+        if not batch:
+            return out
         out += batch
-        if len(batch) < 1000:
-            break
-        offset += 1000
-    return out
+        offset += len(batch)
+    raise RuntimeError(
+        f"City Record paging did not terminate after {MAX_PAGES} pages "
+        f"({len(out)} rows); refusing to publish a partial sweep")
 
 
 def facility_sites(notices: list[dict]) -> dict[str, list[dict]]:
