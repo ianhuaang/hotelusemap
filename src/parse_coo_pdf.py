@@ -123,6 +123,24 @@ def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
     }
 
 
+def merge_parsed(existing: list, fresh: list) -> list:
+    """Fold freshly parsed certificates into what is already on file.
+
+    A record carrying a floor table wins; otherwise the one already held
+    stays. Both readers write coo_parsed.json and they read different halves
+    of the archive — this module sees the text layers, parse_coo_scan the
+    scans — so whichever runs second must not file an unreadable stub over
+    the other's result. This module used to rebuild the file from its own
+    parse and write it whole, which meant one `--all` run would drop all 40
+    OCR'd certificates and the 30 floor tables they carry, silently.
+    """
+    merged = {r["file"]: r for r in existing}
+    for r in fresh:
+        if r.get("floors") or r["file"] not in merged:
+            merged[r["file"]] = r
+    return list(merged.values())
+
+
 def parse(path: Path) -> dict:
     try:
         import pypdf
@@ -231,8 +249,13 @@ def main() -> None:
 
     if len(paths) > 1:
         dest = DATA_PROCESSED / "coo_parsed.json"
-        dest.write_text(json.dumps(out, indent=2))
+        existing = json.loads(dest.read_text()) if dest.exists() else []
+        records = merge_parsed(existing, out)
+        dest.write_text(json.dumps(records, indent=2))
         print(f"{readable} of {len(paths)} certificates parsed -> {dest}")
+        held = sum(1 for r in records if r.get("source") == "ocr")
+        if held:
+            print(f"  kept {held} OCR'd certificate(s) this parser cannot read")
         mixed = [r for r in out if r.get("readable") and r.get("shared_guest_floors")]
         lobby = [r for r in out if r.get("readable") and r.get("lobby_shared_only")]
         print(f"  sharing a guest floor with permanent residents: {len(mixed)}")

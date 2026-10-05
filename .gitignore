@@ -1,6 +1,16 @@
 cache/
 data/raw/*
-data/processed/
+data/processed/*
+
+# The OCR'd certificates. parse_coo_scan.py reads 448 scanned C of O PDFs that
+# DOB BIS serves as images, and CI cannot regenerate any of it: BIS 403s
+# automation, and neither the PDFs nor this cache were ever in the repo. The
+# 40 readable results reach the map through coo_parsed.json, which is tracked
+# — but that file is one `parse_coo_pdf.py --all` away from being rewritten,
+# and without this cache the only way back was to re-OCR the archive for half
+# an hour on a machine that still had the PDFs. 95KB to make the merge
+# reproducible from a clean checkout.
+!data/processed/coo_ocr_cache.jsonl
 __pycache__/
 *.pyc
 .env

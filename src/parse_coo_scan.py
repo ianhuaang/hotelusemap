@@ -44,7 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # script (python3 src/parse_coo_scan.py) or imported as src.parse_coo_scan.
 sys.path.insert(0, str(Path(__file__).parent))
 from config import DATA_RAW, DATA_PROCESSED
-from parse_coo_pdf import summarise, annotate_currency, _feed_latest
+from parse_coo_pdf import summarise, annotate_currency, merge_parsed, _feed_latest
 
 PDF_DIR = DATA_RAW / "coo_pdfs"
 
@@ -427,12 +427,11 @@ def _merge_into_parsed(got: int = 0) -> None:
 
     annotate_currency(fresh, _feed_latest())
     # Replace each file's old unreadable stub, keep everything else as it was.
-    merged = {r["file"]: r for r in existing}
-    for r in fresh:
-        if r.get("floors") or r["file"] not in merged:
-            merged[r["file"]] = r
-    dest.write_text(json.dumps(list(merged.values()), indent=2))
-    bins = {r.get("bin") for r in merged.values() if r.get("floors")}
+    # Shared with parse_coo_pdf so the two readers cannot disagree about which
+    # record survives — they write the same file from opposite ends.
+    records = merge_parsed(existing, fresh)
+    dest.write_text(json.dumps(records, indent=2))
+    bins = {r.get("bin") for r in records if r.get("floors")}
     print(f"\n{got} newly readable by OCR -> {dest}")
     print(f"  buildings with a floor table now: {len(bins)}")
 

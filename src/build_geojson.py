@@ -372,7 +372,9 @@ def load_coo_floors() -> dict:
     """
     path = DATA_PROCESSED / "coo_parsed.json"
     if not path.exists():
-        print("  no coo_parsed.json — run src/parse_coo_pdf.py --all")
+        print("  no coo_parsed.json — rebuild it with both readers:")
+        print("    python3 src/parse_coo_pdf.py --all        # the text layers")
+        print("    python3 src/parse_coo_scan.py --merge-only # the scans, from the cache")
         return {}
 
     def effective(row):
