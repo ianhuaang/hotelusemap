@@ -1,0 +1,186 @@
+{
+  "acris_owners": [
+    {
+      "date": "20260923",
+      "rows": 1350
+    }
+  ],
+  "alt_addresses": [
+    {
+      "date": "20260923",
+      "rows": 15175
+    }
+  ],
+  "city_record_shelter": [
+    {
+      "date": "20260929",
+      "rows": 20
+    },
+    {
+      "date": "20261001",
+      "rows": 14
+    }
+  ],
+  "coo": [
+    {
+      "date": "20260923",
+      "rows": 191281
+    }
+  ],
+  "coo_parsed": [
+    {
+      "date": "20261004",
+      "rows": 448
+    }
+  ],
+  "dob_occupancy": [
+    {
+      "date": "20260821",
+      "rows": 3794
+    },
+    {
+      "date": "20260902",
+      "rows": 3795
+    },
+    {
+      "date": "20260929",
+      "rows": 3796
+    }
+  ],
+  "ecb_violations": [
+    {
+      "date": "20260923",
+      "rows": 217415
+    }
+  ],
+  "footprints": [
+    {
+      "date": "20260902",
+      "rows": 836287
+    }
+  ],
+  "google_current_use": [
+    {
+      "date": "20260921",
+      "rows": 2066
+    },
+    {
+      "date": "20260923",
+      "rows": 2451
+    },
+    {
+      "date": "20260929",
+      "rows": 2624
+    }
+  ],
+  "google_hclass_hotels": [
+    {
+      "date": "20260921",
+      "rows": 4
+    }
+  ],
+  "google_hotel_names": [
+    {
+      "date": "20260921",
+      "rows": 482
+    }
+  ],
+  "hotel_licenses": [
+    {
+      "date": "20260821",
+      "rows": 764
+    },
+    {
+      "date": "20260902",
+      "rows": 764
+    }
+  ],
+  "hpd": [
+    {
+      "date": "20260902",
+      "rows": 306610
+    }
+  ],
+  "hpd_registrations": [
+    {
+      "date": "20260821",
+      "rows": 3724
+    },
+    {
+      "date": "20260928",
+      "rows": 3751
+    }
+  ],
+  "hpd_violations": [
+    {
+      "date": "20260923",
+      "rows": 275151
+    }
+  ],
+  "htc_union": [
+    {
+      "date": "20260921",
+      "rows": 377
+    }
+  ],
+  "landmarks": [
+    {
+      "date": "20260821",
+      "rows": 31999
+    },
+    {
+      "date": "20260902",
+      "rows": 31999
+    },
+    {
+      "date": "20260923",
+      "rows": 31999
+    }
+  ],
+  "lis_pendens": [
+    {
+      "date": "20260923",
+      "rows": 282
+    }
+  ],
+  "permits": [
+    {
+      "date": "20260902",
+      "rows": 509456
+    }
+  ],
+  "pluto": [
+    {
+      "date": "20260902",
+      "rows": 98580
+    }
+  ],
+  "rent_stabilization": [
+    {
+      "date": "20260821",
+      "rows": 38718
+    },
+    {
+      "date": "20260902",
+      "rows": 38718
+    }
+  ],
+  "sales": [
+    {
+      "date": "20260902",
+      "rows": 429922
+    }
+  ],
+  "tax_benefits": [
+    {
+      "date": "20260821",
+      "rows": 92666
+    }
+  ],
+  "tax_liens": [
+    {
+      "date": "20260923",
+      "rows": 203906
+    }
+  ]
+}

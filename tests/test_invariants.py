@@ -334,7 +334,10 @@ def test_every_fetching_step_has_a_time_cap():
     steps = re.split(r"\n      - name: ", workflow.read_text())[1:]
 
     COMPUTE_ONLY = {"src/pipeline.py", "src/enrich.py", "src/build_geojson.py",
-                    "src/report_step_budget.py"}
+                    "src/report_step_budget.py",
+                    # Counts rows in files the pulls already wrote. The only
+                    # thing it opens is the local disk.
+                    "src/source_volume.py"}
     uncapped = []
     for step in steps:
         run = re.search(r"run: python (src/\S+\.py)", step)
@@ -385,6 +388,106 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
     assert max(builds) > sweep, (
         "nothing rebuilds after the sweeps, so the published file would not "
         "carry what they found")
+
+
+# --- a source that arrives short is not a source that arrives ---------------
+
+def _vol():
+    from src import source_volume
+    return source_volume
+
+
+def test_a_source_that_craters_is_caught():
+    """The failure the completeness gate cannot see.
+
+    That gate checks whether a pull *failed*. city_record_shelter did not
+    fail: it returned 20 rows, then 14, then fewer, exiting zero every time,
+    and 317 West 45th Street lost an active shelter notice to it — a building
+    running as a shelter went back into the sourcing list with nothing said.
+    """
+    v = _vol()
+    counts = {"pluto": 98_580, "htc_union": 377, "city_record_shelter": 14}
+    history = {
+        "pluto": [{"date": "20260901", "rows": 98_580}],
+        "htc_union": [{"date": "20260901", "rows": 377}],
+        "city_record_shelter": [{"date": "20260901", "rows": 20},
+                                {"date": "20260929", "rows": 20}],
+    }
+    alerts = _with_history(v, history, counts)
+    fell = {a["source"] for a in alerts}
+    assert "city_record_shelter" in fell, "the shelter crater was not caught"
+    assert "pluto" not in fell and "htc_union" not in fell, (
+        f"a steady source was reported as having fallen: {fell}")
+
+
+def test_htc_union_is_detectable_even_though_it_cannot_block():
+    """It is outside the completeness gate on purpose, and still has to show.
+
+    A build without union data is worth more than no build, so an empty scrape
+    must not stop a publish. It drives a -15 penalty, so it must also not pass
+    in silence: the run says so and the alert carries the flag that decides
+    which of the two happens.
+    """
+    v = _vol()
+    alerts = _with_history(
+        v,
+        {"htc_union": [{"date": "20260901", "rows": 377}]},
+        {"htc_union": 0},
+    )
+    assert len(alerts) == 1, "an empty union scrape went unreported"
+    assert alerts[0]["source"] == "htc_union"
+    assert alerts[0]["ratio"] == 0
+
+
+def test_one_bad_run_does_not_become_the_new_normal():
+    """The baseline is the median of the window, not the last run.
+
+    A check that compares against the previous run congratulates a source for
+    staying at the floor it fell to. 20, 20, 20, 14 has a median of 20, so the
+    run after the shelter bug is still measured against what the source used
+    to return.
+    """
+    v = _vol()
+    history = [{"date": d, "rows": r} for d, r in
+               (("20260901", 20), ("20260908", 20), ("20260915", 20), ("20260922", 14))]
+    assert v.baseline(history) == 20, (
+        f"a bad run moved the baseline to {v.baseline(history)}")
+
+
+def test_a_tiny_source_losing_one_row_is_not_an_alarm():
+    """google_hclass_hotels has four rows, so one row is 25% of it."""
+    v = _vol()
+    alerts = _with_history(
+        v,
+        {"google_hclass_hotels": [{"date": "20260901", "rows": 4}]},
+        {"google_hclass_hotels": 3},
+    )
+    assert alerts == [], "a four-row source losing one row raised an alarm"
+
+
+def _with_history(v, history, counts):
+    """Run check() against a stand-in history rather than the real file."""
+    real = v._history
+    v._history = lambda: history
+    try:
+        return v.check(counts)
+    finally:
+        v._history = real
+
+
+def test_the_baseline_file_ships_with_the_pipeline():
+    """A check with no history is a check that passes on its first bad run."""
+    import json
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "data" / "source_counts.json"
+    assert path.exists(), "no recorded source counts; the check has no baseline"
+    hist = json.loads(path.read_text())
+    from src import provenance
+
+    registered = {k for k, _p, _d, _c in provenance.SOURCES}
+    missing = sorted(registered - set(hist))
+    assert not missing, f"registered sources with no recorded count: {missing}"
 
 
 # --- the City Record walk reads every page, in a fixed order -----------------

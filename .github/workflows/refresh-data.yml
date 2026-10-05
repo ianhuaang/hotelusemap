@@ -293,6 +293,17 @@ jobs:
           fi
           echo "All 15 sources completed."
 
+      # Completing is not the same as arriving whole. This compares what each
+      # source returned against the median of its last runs and refuses to
+      # publish on one that quietly shrank — the failure the step above cannot
+      # see, because a pull that returns 14 rows instead of 20 exits zero.
+      #
+      # --record appends this run's counts, so the baseline is the pipeline's
+      # own history rather than a number somebody typed. data/source_counts.json
+      # is committed; the publish step below carries it back with the build.
+      - name: Check every source arrived whole
+        run: python src/source_volume.py --record
+
       # Every cap here was set just above the previous run time, so each one
       # eventually failed. This prints how close each step came, so drift shows
       # up as a warning weeks before it becomes a failed run.
