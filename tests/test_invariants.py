@@ -417,12 +417,37 @@ def test_registration_is_not_evidence_of_trading():
         "entitlement, and the name has to say so")
 
     # has_active_operator decides possession. It may not consult the register.
-    # To the dedented close of the bool(...) call, not to the first ")" on a
-    # line — the lazy version captured only `record.get("hotel_name")` and a
-    # register field added below it sailed through.
-    m = re.search(r"has_active_operator = bool\(\n(.*?)\n        \)", src, re.S)
-    assert m, "has_active_operator has moved; this guard needs rewriting"
-    possession = m.group(1)
+    #
+    # The whole block that decides it, from the operator-name test to the
+    # dedented close of the assignment — not the bool(...) body alone.
+    #
+    # Twice now the narrow reading has failed. The first was lazy about where
+    # the call ended, captured only `record.get("hotel_name")` and let a
+    # register field added below it sail through. The second was this: a
+    # recorded closure now vetoes the call from in front of it, reading two
+    # locals of its own, so `= bool(` stopped matching at all — and matching
+    # the new shape alone would have left those locals unguarded, which is the
+    # same hole one statement further out.
+    #
+    # Anything in this block can decide possession. That is what the guard is
+    # about, so that is what it reads.
+    m = re.search(
+        r"\n        op_name = .*?\n        has_active_operator = .*?\n        \)\n",
+        src, re.S)
+    assert m, "the possession block has moved; this guard needs rewriting"
+
+    # Prose, not logic. The comments in here explain which inputs are the
+    # Places sweep wearing different hats, and a comment naming a register
+    # field to say the decision ignores it must not read as it consulting one.
+    possession = "\n".join(
+        line for line in m.group(0).splitlines()
+        if not line.lstrip().startswith("#"))
+
+    # The call itself still has to be in there. Without this the guard would
+    # pass just as happily on a block that had stopped deciding anything.
+    assert "has_active_operator = " in possession and "bool(" in possession, (
+        "the possession block no longer computes has_active_operator")
+
     for register_field in ("hpd_class_b", "hpd_class_a", "unitsres", "coo_dwelling_units"):
         assert register_field not in possession, (
             f"has_active_operator reads {register_field}; a registration says what a "
