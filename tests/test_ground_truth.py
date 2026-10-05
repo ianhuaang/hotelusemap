@@ -151,6 +151,122 @@ def test_no_departure_is_reported_as_a_current_operator(by_bbl):
     assert not failures, "Prior operators promoted to current:\n  " + "\n  ".join(failures)
 
 
+# --- a closure outranks a listing --------------------------------------------
+#
+# Google Places keeps serving a hotel listing long after the hotel shuts, and
+# three of the four clauses that decide "somebody is operating here" trace to
+# that one sweep. The Court closed in 2020, its listing still names it, and it
+# shipped in "Transient, hotel" -- out of the sourcing segment, and visible on
+# the map only because the Reversion overlay reaches past the segment filter.
+# These three guard the rule that fixed it, and the exception that keeps Row
+# NYC where it is.
+
+def test_a_recorded_closure_is_not_an_operating_hotel(by_bbl):
+    """The general rule, so the next stale listing fails here too.
+
+    Named buildings are checked below; this one has no names in it on
+    purpose. A curated closure year and no live DCWP licence is the whole
+    test, and a building that arrives tomorrow meeting it will be caught
+    without anybody remembering to add a row.
+    """
+    from src.build_geojson import LIVE_LICENCE_STATUSES, POST_2021_REVERSIONS
+
+    failures = []
+    for bbl, entry in POST_2021_REVERSIONS.items():
+        p = by_bbl.get(bbl)
+        if not p or not entry.get("closure_year"):
+            continue
+        if (p.get("hotel_license_status") or "") in LIVE_LICENCE_STATUSES:
+            continue
+        if p.get("segment") == "active_hotel":
+            failures.append(
+                f"{bbl} {p.get('address')}: closed {entry['closure_year']}, no live "
+                f"licence, still active_hotel on {p.get('operator_name') or 'no operator name'}"
+            )
+    assert not failures, (
+        "closures reported as operating hotels:\n  " + "\n  ".join(failures))
+
+
+def test_the_closure_cases_tier_where_the_research_says(by_bbl):
+    """The three buildings the rule was written for, and what each must be.
+
+    Row NYC is the one that must NOT move. It closed in Aug 2025 and holds an
+    Active DCWP licence, so the city still recognises somebody as entitled to
+    run it and its own entry says it may reopen. Dropping licensure from this
+    test was measured once and moved 34 buildings into available capacity,
+    among them the Ritz-Carlton Central Park -- the exception is the lesson
+    from that, and it is worth a test of its own because it looks like an
+    oversight.
+    """
+    expected = {
+        "1008947505": ("transient", "130 East 39th -- The Court / St. Giles"),
+        "1001060017": ("transient", "320 Pearl -- Hampton Inn Seaport"),
+        "1010167501": ("active_hotel", "700 8th Ave -- Row NYC, Active licence"),
+    }
+    missing = [f"{bbl} ({what})" for bbl, (_, what) in expected.items()
+               if bbl not in by_bbl]
+    assert not missing, f"closure cases dropped from the build: {missing}"
+
+    wrong = [
+        f"{bbl} ({what}): expected {segment}, got {by_bbl[bbl].get('segment')}"
+        for bbl, (segment, what) in expected.items()
+        if by_bbl[bbl].get("segment") != segment
+    ]
+    assert not wrong, "closure cases tiered wrong:\n  " + "\n  ".join(wrong)
+
+
+def test_a_vetoed_listing_says_the_sources_disagree(by_bbl):
+    """Re-tiering is half of it; the score has to hear about it too.
+
+    current_use_conflict is -35, the largest single term, and the panel shows
+    it as a reason code. A building moved out of active_hotel while still
+    presenting an unchallenged "Hotel" label would be quieter than before the
+    fix, not louder.
+    """
+    from src.build_geojson import LIVE_LICENCE_STATUSES, POST_2021_REVERSIONS
+
+    failures = []
+    for bbl, entry in POST_2021_REVERSIONS.items():
+        p = by_bbl.get(bbl)
+        if not p or not entry.get("closure_year"):
+            continue
+        if (p.get("hotel_license_status") or "") in LIVE_LICENCE_STATUSES:
+            continue
+        if p.get("current_use") == "hotel" and not p.get("current_use_conflict"):
+            failures.append(f"{bbl} {p.get('address')}: reads Hotel against a recorded closure")
+    assert not failures, (
+        "closures the score never heard about:\n  " + "\n  ".join(failures))
+
+
+def test_a_shelter_in_the_research_reaches_the_field(by_bbl):
+    """The claim has to be a field, or no control can act on it.
+
+    The Court reads "Currently migrant shelter" in its note and shipped with
+    shelter_status empty, so Hide active shelters could not reach it. The note
+    is prose a person writes; the grade beside it is what the filter reads.
+    """
+    from src.build_geojson import POST_2021_REVERSIONS
+
+    failures = []
+    for bbl, entry in POST_2021_REVERSIONS.items():
+        shelter = entry.get("shelter")
+        p = by_bbl.get(bbl)
+        if not shelter or not p:
+            continue
+        if p.get("shelter_status") != shelter:
+            failures.append(
+                f"{bbl} {p.get('address')}: research says {shelter}, "
+                f"field says {p.get('shelter_status') or 'nothing'}")
+        if not p.get("shelter_status_basis"):
+            failures.append(f"{bbl} {p.get('address')}: graded {shelter} and cites nothing")
+    assert not failures, "shelter research that never reached a field:\n  " + "\n  ".join(failures)
+
+    # The two the control has to catch, and the one it must leave alone.
+    assert by_bbl["1008947505"].get("shelter_status") == "active", "The Court"
+    assert by_bbl["1008060076"].get("shelter_status") == "active", "371 7th Ave"
+    assert by_bbl["1010167501"].get("shelter_status") == "historical", "Row NYC"
+
+
 def test_a_reversion_is_red_only_when_a_record_backs_it(by_bbl):
     for bbl, p in by_bbl.items():
         rev = p.get("reversion")

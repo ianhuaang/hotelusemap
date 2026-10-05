@@ -117,6 +117,8 @@ POST_2021_REVERSIONS = {
         "note": "Closed during pandemic ~2020. Sold Jan 2023 for $50M. Currently migrant shelter.",
         "sale_price": 50_000_000,
         "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
+        "shelter": "active",
+        "shelter_basis": "the reversion research found a migrant shelter here, with nothing on record ending it",
     },
     # Lot 0034 became billing lot 7504 on the same conversion the note below
     # describes. 234 East 46th Street, R4, 20 floors.
@@ -136,6 +138,12 @@ POST_2021_REVERSIONS = {
         "note": "Closed 2022, used as migrant shelter. Acquired Dec 2025 for $260M per city records. Reported as a Slate + Breaking Ground purchase converting to 579 affordable apartments.",
         "sale_price": 260_000_000,
         "source": "DOF rolling sales, corroborated by the ACRIS deed on this BBL",
+        # The sale is dated and the conversion is reported, but neither ends
+        # the shelter use: a 579-unit conversion runs for years and the entry
+        # names no date the shelter stopped. Active until something says
+        # otherwise, which is the reading that keeps it out of a target list.
+        "shelter": "active",
+        "shelter_basis": "the reversion research found a migrant shelter here, with nothing on record ending it",
     },
     "1010167501": {
         "former_hotel": "Row NYC",
@@ -143,6 +151,11 @@ POST_2021_REVERSIONS = {
         "note": "Last NYC migrant hotel, closed Aug 2025. 1,332 rooms. Conversion status TBD — may reopen as hotel or convert to residential.",
         "sale_price": None,
         "source": None,
+        # Graded rather than flagged. This is the one entry that names the
+        # date the shelter use stopped, so it is history, and Hide active
+        # shelters should not reach a building the city still licenses.
+        "shelter": "historical",
+        "shelter_basis": "migrant hotel until Aug 2025, per the reversion research",
     },
     "1010487502": {
         "former_hotel": "Hudson Hotel",
@@ -884,6 +897,14 @@ def apply_roster_current_use(features: list[dict]) -> int:
 OCCUPIED_PRODUCT_USES = frozenset({
     "student_housing", "hostel", "sro", "private_club",
 })
+
+# A DCWP licence that is live now, as opposed to one that existed once.
+# DCWP publishes five states and only these two mean the city currently
+# recognises somebody as entitled to run a hotel here; Surrendered, Failed to
+# Renew and Voided all say the opposite, and reading has_hotel_license alone
+# cannot tell them apart. "Ready for Renewal" is licensed and pending, not
+# lapsed -- 253 buildings hold one, against 245 Active.
+LIVE_LICENCE_STATUSES = frozenset({"Active", "Ready for Renewal"})
 
 
 EVIDENCE = [
@@ -1736,6 +1757,29 @@ def build_geojson(
             properties["has_reversion"] = True
             properties["reversion_unverified"] = not verified
 
+            # The shelter fact, as a field rather than as a sentence.
+            #
+            # Three of these entries record a shelter in the note and nowhere
+            # else. The Court reads "Currently migrant shelter" and shipped
+            # with shelter_status empty, so Hide active shelters could not
+            # reach it, the score could not price it, and the only place the
+            # fact existed was prose a filter cannot read. Parsing that
+            # sentence was the other option and is worse: a person writes the
+            # note, and the control would break the first time somebody
+            # rephrased it.
+            #
+            # Graded, not just flagged, in the vocabulary enrich.py already
+            # uses -- active where nothing on record ends the shelter use,
+            # historical where the entry names the date it stopped.
+            #
+            # Never overwrites a City Record grade. That one is published by
+            # the city and dated; this is research on a building, and where
+            # both have an opinion the city's wins.
+            shelter = reversion_info.get("shelter")
+            if shelter and not properties.get("shelter_status"):
+                properties["shelter_status"] = shelter
+                properties["shelter_status_basis"] = reversion_info.get("shelter_basis", "")
+
         if record.get("class_b_split"):
             properties["class_b_split"] = record["class_b_split"]
 
@@ -1759,12 +1803,51 @@ def build_geojson(
         op_looks_like_hotel = any(
             w in op_name for w in ("hotel", "inn ", "suites", "hostel", "motel")
         )
-        has_active_operator = bool(
+        # A recorded closure outranks a listing nobody has revisited.
+        #
+        # Three of the four clauses below are Google Places wearing different
+        # hats -- hotel_name, the operator name, and current_use all trace to
+        # the same sweep -- and Places keeps serving a hotel years after the
+        # hotel shut. 130 East 39th closed in 2020 and its listing still reads
+        # "The Court - A St Giles Hotel", which put a converted building into
+        # "Transient, hotel" and out of the sourcing segment it belongs to.
+        # 320 Pearl Street is the same failure with the mask off: its listing
+        # is an apartment, and the word count in the name was enough.
+        #
+        # The curated reversion entries are dated, building-specific research
+        # saying the hotel use ended, and where one exists it is the better
+        # answer. Only those carry a closure year -- the rule-derived
+        # reversion_window has no date behind it and vetoes nothing.
+        #
+        # A live DCWP licence is the exception and keeps the building where it
+        # is. Row NYC closed in Aug 2025 and holds an Active licence: the city
+        # still recognises somebody as entitled to run it and the entry says
+        # it may reopen. That is a present-tense fact from a source CI
+        # refreshes weekly, which is more than the sweep can say -- and the
+        # comment above already records what happened the last time licensure
+        # was dropped from this test.
+        closure_year = (reversion_info or {}).get("closure_year")
+        licensed_now = (record.get("hotel_license_status") or "") in LIVE_LICENCE_STATUSES
+        closure_vetoes_operator = bool(
+            properties.get("reversion_kind") and closure_year and not licensed_now
+        )
+        has_active_operator = (not closure_vetoes_operator) and bool(
             record.get("hotel_name")
             or record.get("has_hotel_license")
             or op_looks_like_hotel
             or record.get("current_use") == "hotel"
         )
+        # Two sources disagree about what is in the building, which is the
+        # thing current_use_conflict exists to say. It is the largest single
+        # term in the score at -35 and reaches the panel as a reason code, so
+        # saying it is most of the work.
+        #
+        # Raised only where the veto fired. Where a live licence corroborates
+        # the listing the sources agree, and penalising Row NYC for a closure
+        # its own licence contradicts would be this same mistake pointed the
+        # other way.
+        if closure_vetoes_operator and record.get("current_use") == "hotel":
+            properties["current_use_conflict"] = True
         # The same question one step wider. has_active_operator only knows how
         # to see a hotel, so a building with a dormitory, hostel, SRO or club
         # trading in it read as having nobody in it at all: 99 Washington
