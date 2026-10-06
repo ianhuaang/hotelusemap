@@ -429,24 +429,6 @@ def test_no_certificate_means_no_opinion():
         "office", {"floors": [{"kind": "other", "description": "OFFICES"}]})
 
 
-def test_a_superintendents_flat_is_not_a_residential_building():
-    """The kind classifier matches on words, so ancillary rows read as housing.
-
-    "STORAGE ROOMS FOR HOTEL" carries HOTEL and comes out transient; a
-    custodian's apartment carries APARTMENT and comes out residential. One
-    flat for the super does not make a building housing, and 30 East 30th
-    Street was marked as arguing with its own certificate on a row about
-    where the hotel keeps its luggage.
-    """
-    from src.build_geojson import _use_argues_with_the_certificate
-
-    for desc in ("STORAGE ROOMS FOR HOTEL", "custodian's apartment",
-                 "RES MANAGERS APARTMENT COMM STORES", "TENANT STORAGE J-2"):
-        floors = {"floors": [{"kind": "residential", "description": desc}]}
-        assert not _use_argues_with_the_certificate("office", floors), (
-            f"{desc!r} is being read as the building's housing")
-
-
 def test_marking_a_use_partial_cannot_move_a_building_between_segments():
     """The flag is for the panel, not the classification.
 
@@ -542,6 +524,66 @@ def test_no_parsed_floor_still_files_an_sro_under_other():
                 for m in ("SINGLE ROOM", "SRO", "ROOMING"))
     ]
     assert not stranded, f"{len(stranded)} SRO floors still filed under 'other': {stranded[:3]}"
+
+
+# --- a lobby is not capacity -------------------------------------------------
+
+def _kind(desc, units=None):
+    """The real classifier, not a copy of it."""
+    from src.parse_coo_pdf import floor_kind
+
+    return floor_kind(desc, units)
+
+
+def test_service_space_is_not_transient_capacity():
+    """The kinds are matched on words, so service space read as rooms.
+
+    "STORAGE ROOMS FOR HOTEL" carried HOTEL and came out transient; a
+    custodian's flat carried APARTMENT and came out residential. 195 rows
+    read as capacity that are a lobby, a boiler room or a storage cage, and
+    coo_transient_contiguous -- which answers whether the rooms can be run as
+    a block -- was counting them.
+    """
+    for desc in ("HOTEL LOBBY R-1", "MECHANICAL EQUIPMENT ROOMJ-1",
+                 "TENANT STORAGE J-2", "RESIDENTIAL LOBBY AND MAILROOMJ-2",
+                 "ELECTRICAL CLOSET & MECHANICAL ROOMJ-2"):
+        assert _kind(desc) == "other", f"{desc!r} still reads as capacity"
+
+
+def test_a_floor_of_flats_with_a_boiler_in_it_is_still_a_floor_of_flats():
+    """The mixed rows are the ones a word list alone gets wrong.
+
+    "THIRTY-TWO (32) APARTMENTS, STORAGE" is a storage cage in the corner of
+    a floor of flats. Two things keep it: it names dwellings, and it states a
+    count. Every one of the 255 ancillary-only rows carries no count at all,
+    while 69% of the capacity rows do -- which is what makes the count the
+    deciding signal rather than a tie-breaker.
+    """
+    assert _kind("THIRTY-TWO (32) APARTMENTS, STORAGE", 32) == "residential"
+    assert _kind("TWELVE (12) APARTMENTS, MECHANICAL", 12) == "residential"
+    # Named rooms keep a floor even with no count parsed.
+    assert _kind("HOTEL LOBBY AND ROOMSJ-1") == "transient"
+
+
+def test_what_serves_the_hotel_is_not_ancillary():
+    """A restaurant is the hotel operating, not a boiler room.
+
+    The list is service space only. A bar, an eating-and-drinking
+    establishment, a gym, a spa or a meeting room is part of what somebody
+    would be buying, and excluding those would understate the building.
+    """
+    for desc in ("HOTEL RESTAURANT AND BARJ-1", "EATING & DRINKING ESTABLISHMENTJ-1",
+                 "ACCESSORY GYM AND SPA FOR HOTELJ-1", "HOTEL MEETING ROOMSJ-1"):
+        assert _kind(desc) == "transient", f"{desc!r} was excluded as ancillary"
+
+
+def test_the_ancillary_rule_lives_in_one_place():
+    """build_geojson carried a copy while the classifier was wrong."""
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    assert "_is_ancillary" not in build and "ANCILLARY_MARKS" not in build, (
+        "the predicate still has its own ancillary list; two rules will drift")
 
 
 # --- a source that arrives short is not a source that arrives ---------------

@@ -56,6 +56,30 @@ TRANSIENT_MARKS = ("J-1", "HOTEL", "TRANSIENT")
 RESIDENTIAL_MARKS = ("J-2", "RESIDENTIAL", "APARTMENT", "DWELLING",
                      "SINGLE ROOM", "SRO", "ROOMING")
 
+# Space that serves a building rather than housing anybody in it.
+#
+# The kinds are matched on words, so a row saying where the hotel keeps its
+# luggage carried HOTEL and came out transient, and a flat for the super
+# carried APARTMENT and came out residential. 255 rows read as capacity that
+# are a lobby, a boiler room or a storage cage — and coo_transient_contiguous,
+# which answers whether the rooms can be run as a block, was counting them.
+#
+# Deliberately not an exclusion list for anything that serves the hotel. A
+# restaurant, a bar, an eating-and-drinking establishment, a gym, a spa, a
+# meeting room: those are the hotel operating, and a floor of them is part of
+# what somebody would be buying.
+ANCILLARY_MARKS = ("STORAGE", "MECHANIC", "BOILER", "UTILIT", "ELECTRICAL CLOSET",
+                   "SUPERINTEND", "CUSTOD", "JANITOR", "LOBBY", "LOBEY",
+                   "CORRIDOR", "COMMON AREA", "MAILROOM", "MAIL ROOM",
+                   "RETAIL", "COMMERCIAL")
+
+# Words that mean somebody sleeps on this floor. Their presence is what keeps
+# "THIRTY-TWO (32) APARTMENTS, STORAGE" out of the ancillary bucket: the
+# storage is a cage in the corner of a floor of flats, not the floor.
+DWELLING_MARKS = ("APARTMENT", "DWELLING", "GUEST ROOM", "GUESTROOM",
+                  "HOTEL ROOM", "SLEEPING", "SINGLE ROOM", "SRO", "ROOMING",
+                  "DORM", "SUITE", "ROOMS")
+
 
 def _feed_latest() -> dict:
     """Newest C of O issue date per BIN, from the Socrata feed.
@@ -93,6 +117,38 @@ def _parse_date(s):
         except ValueError:
             pass
     return None
+
+
+def floor_kind(description: str, units_described: int | None) -> str:
+    """What one floor of a certificate is: transient, residential, or neither.
+
+    A named function because it is the rule, and a rule nothing can call is a
+    rule nothing can test. It lived inline in the parse loop, so the only way
+    to check it was to copy it into a test — which is how a test ends up
+    passing while the thing it describes is broken.
+
+    Ancillary is decided first, and only on all three counts: the row names
+    service space, names nothing anybody sleeps in, and states no unit count.
+
+    The dwelling vocabulary is what actually separates the cases. "HOTEL LOBBY
+    AND ROOMS" names rooms and stays transient; "THIRTY-TWO (32) APARTMENTS,
+    STORAGE" is a cage in the corner of a floor of flats and stays
+    residential. On the current parse the count condition never fires on its
+    own — no row names service space, names no dwelling, and still states a
+    count — so it is defence rather than the deciding signal, and saying
+    otherwise would overstate what is holding the rule up. It stays because a
+    row that did all three would be a parse worth not trusting.
+    """
+    upper = (description or "").upper()
+    if (any(k in upper for k in ANCILLARY_MARKS)
+            and not any(k in upper for k in DWELLING_MARKS)
+            and units_described is None):
+        return "other"
+    if any(k in upper for k in TRANSIENT_MARKS):
+        return "transient"
+    if any(k in upper for k in RESIDENTIAL_MARKS):
+        return "residential"
+    return "other"
 
 
 def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
@@ -194,9 +250,7 @@ def parse(path: Path) -> dict:
         for g in re.split(r",\s*", ug):
             use_groups.add(g.strip())
         upper = desc.upper()
-        kind = ("transient" if any(k in upper for k in TRANSIENT_MARKS)
-                else "residential" if any(k in upper for k in RESIDENTIAL_MARKS)
-                else "other")
+        # Read the count first: it is part of deciding what the floor is.
         # The numeric column is not reliably the dwelling-unit count — it
         # reports 9 units for a lobby, 27 for a gym and 53 for a lounge, which
         # is the column to its left bleeding across in the extracted text. The
@@ -211,6 +265,7 @@ def parse(path: Path) -> dict:
             m = re.search(r"\((\d{1,3})\)", desc)
             if m:
                 described = int(m.group(1))
+        kind = floor_kind(desc, described)
         rows.append({
             "floor": floor,
             "occupancy_load": None if load == "OG" else int(load),

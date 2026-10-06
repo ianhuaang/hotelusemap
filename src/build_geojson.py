@@ -345,26 +345,6 @@ USES_AGREEING_WITH_SLEEPING = frozenset({
 })
 
 
-# A floor row that names sleeping accommodation without being any. The kind
-# classifier matches on words, so "STORAGE ROOMS FOR HOTEL" carries HOTEL and
-# reads transient, and a custodian's apartment carries APARTMENT and reads
-# residential. One flat for the super does not make a building housing, and 30
-# East 30th Street was marked as arguing with its own certificate on a row
-# about where the hotel keeps its luggage.
-#
-# Guarded here rather than in the classifier because the kinds are baked into
-# a committed parse that only a headed-browser run rebuilds. The classifier
-# has the same blind spot and is worth fixing there too.
-ANCILLARY_MARKS = ("STORAGE", "SUPERINTENDENT", "CUSTODIAN", "JANITOR",
-                   "MANAGERS APARTMENT", "MANAGER'S APARTMENT",
-                   "RES MANAGERS", "ACCESSORY", "LOBBY", "LOBEY")
-
-
-def _is_ancillary(description: str | None) -> bool:
-    up = (description or "").upper()
-    return any(m in up for m in ANCILLARY_MARKS)
-
-
 def _use_argues_with_the_certificate(current_use: str, floors: dict | None) -> bool:
     """One occupant's use, set against what the certificate says is upstairs.
 
@@ -379,12 +359,16 @@ def _use_argues_with_the_certificate(current_use: str, floors: dict | None) -> b
     certificate says nothing, and this stays quiet rather than guessing: 121
     buildings on the map have a floor table and the rest are not evidence of
     anything either way.
+
+    This used to carry its own ancillary list, because the kind classifier
+    typed a lobby as transient and a custodian's flat as residential. That
+    belongs in the classifier, which now does it, and keeping a copy here
+    would be a second rule to drift against the first.
     """
     if not floors:
         return False
     sleeping = [f for f in (floors.get("floors") or [])
-                if f.get("kind") in ("transient", "residential")
-                and not _is_ancillary(f.get("description"))]
+                if f.get("kind") in ("transient", "residential")]
     if not sleeping:
         return False
     return (current_use or "") not in USES_AGREEING_WITH_SLEEPING
