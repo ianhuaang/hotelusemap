@@ -888,6 +888,66 @@ def match_htc_union(features: list[dict], roster: list[dict]) -> int:
     return hits
 
 
+# Union shops the roster says are trading. "open-limited" is a shop operating
+# on limited terms, which is still somebody operating.
+HTC_OPEN_STATUSES = frozenset({"open", "open-limited"})
+
+
+def promote_roster_operators(features: list[dict]) -> int:
+    """A hotel the union staffs is a hotel somebody is running.
+
+    The segment chain asks whether anybody is in possession and answers from
+    Google Places, a DCWP licence and the operator name. It never asks the
+    Hotel Trades Council, which keeps a roster of the shops it represents and
+    says whether each is open — and the roster is already pulled, already
+    matched to footprints, and already read for current use further down.
+
+    So an operating hotel could sit in "Transient, no operator" while a source
+    on disk named it: 116 Bowery is the Best Western Bowery Hanbee and 30 East
+    30th Street is the 29 E. 29 Hotel NYC, both open, both in the sourcing
+    segment. Somebody googling either address sees a hotel immediately.
+
+    Footprint matches only, the same bar apply_roster_current_use holds. Of
+    the 38 proximity-only matches enough sit on the wrong building that acting
+    on them would invent operators, and that is the failure this is fixing in
+    the other direction. It costs the YOTEL at 500 West 42nd Street, which is
+    a proximity match and stays where it is.
+
+    Runs after match_htc_union because that is when the roster fields exist;
+    the segment is decided in the feature loop, before any of them are set.
+
+    A recorded closure still wins. The roster says the Stewart and the Hudson
+    are closed shops and they stay out of this, but the guard is explicit
+    rather than incidental: a curated closure is dated research, and nothing
+    here should be able to reopen a building it has closed.
+    """
+    promoted = 0
+    for f in features:
+        p = f["properties"]
+        if p.get("segment") != "transient":
+            continue
+        if p.get("htc_match_basis") != "footprint":
+            continue
+        if p.get("htc_shop_type") != "Hotel":
+            continue
+        if p.get("htc_union_status") not in HTC_OPEN_STATUSES:
+            continue
+        if p.get("reversion_kind"):
+            continue
+        p["segment"] = "active_hotel"
+        if not (p.get("operator_name") or "").strip():
+            p["operator_name"] = p.get("htc_union_name", "")
+            p["operator_source"] = "htc_roster"
+        p.setdefault("reason_codes", [])
+        if "htc_roster_operator" not in p["reason_codes"]:
+            p["reason_codes"].append("htc_roster_operator")
+        promoted += 1
+    if promoted:
+        print(f"  Roster names an operator: {promoted} buildings leave "
+              f"'Transient, no operator'")
+    return promoted
+
+
 def apply_roster_current_use(features: list[dict]) -> int:
     """Let a trustworthy roster match answer "what is this building now".
 
@@ -1993,6 +2053,7 @@ def build_geojson(
     roster = load_htc_union()
     union_hits = match_htc_union(features, roster)
     converted = sum(1 for f in features if f["properties"].get("htc_converted_use"))
+    promote_roster_operators(features)
     roster_conflicts = apply_roster_current_use(features)
     if roster:
         inside = sum(1 for f in features

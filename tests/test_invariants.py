@@ -493,6 +493,50 @@ def test_the_seed_ships_so_the_first_run_has_something_to_judge_against():
     assert not missing, f"registered sources with no seeded count: {missing}"
 
 
+def test_a_hotel_the_union_staffs_is_not_a_no_operator_building():
+    """The roster was on disk and the segment chain never asked it.
+
+    116 Bowery is the Best Western Bowery Hanbee and 30 East 30th Street is
+    the 29 E. 29 Hotel NYC, both open shops, both sitting in the segment the
+    tool exists to produce. Somebody googling either address sees a hotel
+    immediately.
+    """
+    from src.build_geojson import promote_roster_operators
+
+    feats = [{"properties": {
+        "bbl": "1", "segment": "transient", "htc_match_basis": "footprint",
+        "htc_shop_type": "Hotel", "htc_union_status": "open-limited",
+        "htc_union_name": "Best Western", "operator_name": ""}}]
+    assert promote_roster_operators(feats) == 1
+    p = feats[0]["properties"]
+    assert p["segment"] == "active_hotel"
+    assert p["operator_source"] == "htc_roster"
+    assert "htc_roster_operator" in p["reason_codes"]
+
+
+def test_the_roster_promotes_on_footprint_matches_only():
+    """A proximity match at 50m can be the building next door.
+
+    It costs the YOTEL at 500 West 42nd Street, which is exactly the kind of
+    building this is for — and inventing an operator from the wrong building
+    is the same failure pointed the other way.
+    """
+    from src.build_geojson import promote_roster_operators
+
+    def one(**kw):
+        base = {"bbl": "1", "segment": "transient", "htc_match_basis": "footprint",
+                "htc_shop_type": "Hotel", "htc_union_status": "open"}
+        base.update(kw)
+        return [{"properties": base}]
+
+    assert promote_roster_operators(one(htc_match_basis="proximity")) == 0
+    assert promote_roster_operators(one(htc_union_status="closed")) == 0
+    assert promote_roster_operators(one(htc_shop_type="Residence")) == 0
+    # A recorded closure outranks the roster: dated research beats a standing list.
+    assert promote_roster_operators(one(reversion_kind="closed")) == 0
+    assert promote_roster_operators(one()) == 1
+
+
 def test_the_baseline_advances_run_to_run():
     """The failure this replaced: a baseline that never moved off its seed.
 
