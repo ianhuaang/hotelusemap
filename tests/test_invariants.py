@@ -390,6 +390,61 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
         "carry what they found")
 
 
+# --- single-room occupancy is somewhere people live -------------------------
+
+def test_the_floor_table_recognises_single_room_occupancy():
+    """It read SRO floors as "other", so they counted as neither.
+
+    209 East 14th Street registers 47 Class B rooms and its certificate says
+    floor two is "TEN ROOMS, SINGLE ROOM OCCUPANCY". That floor was filed
+    under no heading at all, so the building's own record had nothing to say
+    against a corporate-office pin on the door.
+
+    Residential rather than transient on purpose: the rooms are Class B and
+    look like a hotel's, but coo_transient_floors feeds the question of
+    whether they can be run as a block, and an SRO's occupants are the
+    blocker. HOTEL is still tested first, so "SRO HOTEL" stays transient.
+    """
+    from src.parse_coo_pdf import RESIDENTIAL_MARKS, TRANSIENT_MARKS
+
+    def kind(desc):
+        up = desc.upper()
+        return ("transient" if any(k in up for k in TRANSIENT_MARKS)
+                else "residential" if any(k in up for k in RESIDENTIAL_MARKS)
+                else "other")
+
+    for desc in ("TEN ROOMS, SINGLE ROOM OCCUPANCY",
+                 "FOURTEEN (14) SRO ROOMS, THREE (3)",
+                 "ROOMING UNITS FOURTEEN (14)"):
+        assert kind(desc) == "residential", f"{desc!r} reads as {kind(desc)}"
+    assert kind("SRO HOTEL ROOMS") == "transient", (
+        "a row naming a hotel stopped being transient")
+
+
+def test_no_parsed_floor_still_files_an_sro_under_other():
+    """The classifier lives in the parser; the kinds live in the parse.
+
+    Fixing the first does nothing for a build until somebody re-runs the
+    headed-browser pull, which is a hand operation. The committed parse was
+    re-derived from its own descriptions so the fix reaches the next run.
+    """
+    import json
+    from pathlib import Path
+
+    from src import provenance
+    from config import DATA_PROCESSED
+
+    rows = json.loads(provenance.resolve("coo_parsed", DATA_PROCESSED).read_text())
+    stranded = [
+        (r.get("bin"), f.get("floor"), f.get("description"))
+        for r in rows for f in (r.get("floors") or [])
+        if f.get("kind") == "other"
+        and any(m in (f.get("description") or "").upper()
+                for m in ("SINGLE ROOM", "SRO", "ROOMING"))
+    ]
+    assert not stranded, f"{len(stranded)} SRO floors still filed under 'other': {stranded[:3]}"
+
+
 # --- a source that arrives short is not a source that arrives ---------------
 
 def _vol():
