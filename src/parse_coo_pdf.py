@@ -119,7 +119,46 @@ def _parse_date(s):
     return None
 
 
-def floor_kind(description: str, units_described: int | None) -> str:
+# The certificate's own answer, where it gave one. These are occupancy
+# groups, not zoning use groups: J-1 is transient, J-2 and J-3 permanent
+# residence. They survive OCR better than prose and they outrank it.
+#
+# Deliberately not extended to the numeric zoning groups that most of these
+# certificates actually carry — 2, 3, 6, G. Use Group 5 is the transient-hotel
+# group and it would be easy to map the rest by the zoning resolution, but a C
+# of O's zoning group describes what the lot may be put to, not what the floor
+# is, and 146 8 Avenue carries group 3 over twenty sleeping rooms. Guessing
+# from it is the class of error this whole change exists to remove.
+TRANSIENT_GROUPS = ("J-1", "J1")
+RESIDENTIAL_GROUPS = ("J-2", "J2", "J-3", "J3")
+
+# A bare RES in the use column, which is how these certificates abbreviate
+# residential. Matched as a word so it cannot fire inside RESTAURANT or
+# RESIDENCE-adjacent prose that the marks above already handle.
+RES_TOKEN = re.compile(r"\bRES\b")
+
+# The description with the use column un-glued from it.
+#
+# The extractor runs the two together when the column rule is faint:
+# "TWENTY (20) SLEEPING ROOMSRES", "MECHANICAL/UTILITY SPACESU", "COMMERCIAL
+# OFFICE SPACEE". 125 rows in the no-operator segment arrive this way. The
+# damage is not cosmetic — the glued token is the certificate's own answer
+# about the floor, and welded to the end of a word it is unreadable by
+# anything.
+_GLUED = re.compile(
+    r"\b(ROOMS|ROOM|SPACES|SPACE|UNITS|UNIT|ESTABLISHMENT|OFFICE|FACILITY)"
+    r"(RES|J-?[123]|R-?[123]|S-?[12]|F-?[1-4]|[EUMB])\b",
+    re.I,
+)
+
+
+def unglue(description: str) -> str:
+    """Put a space back between a word and the use code stuck to its end."""
+    return _GLUED.sub(lambda m: f"{m.group(1)} {m.group(2)}", description or "")
+
+
+def floor_kind(description: str, units_described: int | None,
+               use_group: str = "") -> str:
     """What one floor of a certificate is: transient, residential, or neither.
 
     A named function because it is the rule, and a rule nothing can call is a
@@ -139,16 +178,47 @@ def floor_kind(description: str, units_described: int | None) -> str:
     otherwise would overstate what is holding the rule up. It stays because a
     row that did all three would be a parse worth not trusting.
     """
-    upper = (description or "").upper()
+    upper = unglue(description or "").upper()
+    # The column lists more than one group on a mixed floor ("J-2, G"), so
+    # every token gets a say rather than only whichever came first.
+    groups = {g.strip().upper().replace(" ", "")
+              for g in re.split(r"[,/]", use_group or "") if g.strip()}
+
     if (any(k in upper for k in ANCILLARY_MARKS)
             and not any(k in upper for k in DWELLING_MARKS)
             and units_described is None):
-        return "other"
+        return "ancillary"
+
+    # The occupancy group outranks the prose: it is the certificate stating
+    # the answer rather than describing the floor.
+    if groups & set(TRANSIENT_GROUPS):
+        return "transient"
+    if groups & set(RESIDENTIAL_GROUPS):
+        return "residential"
+
     if any(k in upper for k in TRANSIENT_MARKS):
         return "transient"
     if any(k in upper for k in RESIDENTIAL_MARKS):
         return "residential"
-    return "other"
+
+    # Sleeping accommodation the lists above do not name. "TWENTY (20)
+    # SLEEPING ROOMS" matched nothing and fell in with the boiler rooms,
+    # because SLEEPING lived only in DWELLING_MARKS, which guards the
+    # ancillary rule and never assigns a kind. Twenty-eight rows across five
+    # buildings in the no-operator segment read that way, every one of them a
+    # floor of people sleeping, all of them invisible.
+    if any(k in upper for k in DWELLING_MARKS):
+        if RES_TOKEN.search(upper):
+            return "residential"
+        # Somewhere people sleep, and nothing on the row says which kind.
+        # Named rather than guessed: this is the bucket to look in when the
+        # vocabulary next falls short.
+        return "sleeping_unclassified"
+
+    # Not "other". That word covered a boiler room and a row nobody could read
+    # with equal confidence, which is exactly how the gap above stayed hidden
+    # for as long as it did.
+    return "unclassified"
 
 
 def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
@@ -265,7 +335,7 @@ def parse(path: Path) -> dict:
             m = re.search(r"\((\d{1,3})\)", desc)
             if m:
                 described = int(m.group(1))
-        kind = floor_kind(desc, described)
+        kind = floor_kind(desc, described, ug)
         rows.append({
             "floor": floor,
             "occupancy_load": None if load == "OG" else int(load),

@@ -21,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.parse_coo_scan import (
-    _floor_of, _split_columns, _classify, _trustworthy, _rows_from_lines,
+    _floor_of, _split_columns, _trustworthy, _rows_from_lines,
 )
 
 
@@ -82,6 +82,19 @@ def test_the_hyphen_in_J2_is_optional_because_ocr_drops_it():
 
 # --- what the row means ------------------------------------------------------
 
+# These read the shared rule now. This module used to carry its own, shorter
+# one: it knew the occupancy group, which the other did not, and knew nothing
+# of SRO rooms, single-room occupancy or ancillary space, which the other did.
+# A lobby on a scanned certificate counted as capacity and the same lobby on a
+# text one did not. The behaviour worth keeping from this side — the group
+# deciding before the prose — survived into the shared rule, and these are
+# what say so.
+def _classify(description, group):
+    from src.parse_coo_pdf import floor_kind
+
+    return floor_kind(description, None, group)
+
+
 def test_the_occupancy_group_decides_before_the_prose():
     # J-1 transient, J-2 permanent. It is the certificate's own answer and it
     # survives OCR better than a sentence does.
@@ -92,7 +105,8 @@ def test_the_occupancy_group_decides_before_the_prose():
 def test_prose_is_read_only_where_there_is_no_group():
     assert _classify("THIRTY (30) HOTEL ROOMS", "") == "transient"
     assert _classify("SIX (6) CLASS A APARTMENTS", "") == "residential"
-    assert _classify("BOILER ROOM AND STORAGE", "") == "other"
+    # "other" split: a boiler room is a finding, an unreadable row is not.
+    assert _classify("BOILER ROOM AND STORAGE", "") == "ancillary"
 
 
 # --- the gate ----------------------------------------------------------------

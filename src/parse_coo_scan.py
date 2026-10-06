@@ -46,7 +46,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
 from config import DATA_RAW, DATA_PROCESSED
 from src import provenance
-from parse_coo_pdf import summarise, annotate_currency, merge_parsed, _feed_latest
+from parse_coo_pdf import (summarise, annotate_currency, merge_parsed, _feed_latest,
+                           floor_kind)
 
 PDF_DIR = DATA_RAW / "coo_pdfs"
 
@@ -259,23 +260,14 @@ def _split_columns(rest: str):
     return load, group, rest.strip(" .:-")
 
 
-def _classify(description: str, group: str) -> str:
-    """Transient, residential or other.
-
-    The occupancy group is read first where there is one: it is the
-    certificate's own answer, and survives OCR better than prose. J-1 is
-    transient, J-2 permanent residence.
-    """
-    if group in ("J-1", "J1"):
-        return "transient"
-    if group in ("J-2", "J-3", "J2", "J3"):
-        return "residential"
-    upper = description.upper()
-    if any(k in upper for k in ("J-1", "HOTEL", "TRANSIENT")):
-        return "transient"
-    if any(k in upper for k in ("J-2", "RESIDENTIAL", "APARTMENT", "DWELLING", "ROOMING")):
-        return "residential"
-    return "other"
+# _classify lived here: a second rule, shorter than the first and disagreeing
+# with it. It read the occupancy group, which floor_kind did not, and knew
+# nothing of SRO rooms, single-room occupancy or ancillary space, which
+# floor_kind did. So a lobby on a scanned certificate counted as capacity and
+# a lobby on a text one did not, and which answer a building got depended on
+# how its certificate happened to be filed.
+#
+# One rule now, in parse_coo_pdf, taking the group this one was right to read.
 
 
 def _rows_from_lines(lines: list):
@@ -340,7 +332,7 @@ def _rows_from_lines(lines: list):
             "units_described": described,
             "units_column_raw": None,
             "use_group": group,
-            "kind": _classify(desc, group),
+            "kind": floor_kind(desc, None, group),
             "description": desc[:120],
         })
     return out, groups
