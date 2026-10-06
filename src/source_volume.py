@@ -149,7 +149,13 @@ def advance(previous: Path | None, counts: dict[str, int],
     the manifest should say so; the median over the window is what stops it
     becoming the standard the next run is judged against.
     """
-    hist = {k: list(v) for k, v in _history(previous).items()}
+    # Registered sources only. The seed carries a _README saying it is a seed,
+    # which is right there and wrong in a published manifest — the dry run
+    # found it riding into the build as a 25th "source". Filtering on the
+    # registry also means a source retired from SOURCES stops being carried
+    # forward run after run.
+    known = {k for k, _p, _d, _ci in provenance.SOURCES}
+    hist = {k: list(v) for k, v in _history(previous).items() if k in known}
     stamp = today or date.today().strftime("%Y%m%d")
     for key, n in counts.items():
         entries = [e for e in hist.get(key, []) if e.get("date") != stamp]

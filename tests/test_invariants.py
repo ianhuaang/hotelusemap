@@ -561,6 +561,21 @@ def test_the_seed_ships_so_the_first_run_has_something_to_judge_against():
     assert not missing, f"registered sources with no seeded count: {missing}"
 
 
+def test_the_published_history_carries_sources_and_nothing_else():
+    """The seed says it is a seed, in a key that is not a source.
+
+    advance() read the seed whole, so _README rode into the build manifest as
+    a 25th source. Caught by rebuilding the batch from cached pulls rather
+    than by any test, which is the argument for doing that before a run.
+    """
+    from src import provenance, source_volume
+
+    known = {k for k, _p, _d, _ci in provenance.SOURCES}
+    hist = source_volume.advance(None, {"pluto": 1}, today="20261006")
+    stray = sorted(set(hist) - known)
+    assert not stray, f"these are published as sources and are not: {stray}"
+
+
 def test_the_baseline_advances_run_to_run():
     """The failure this replaced: a baseline that never moved off its seed.
 
