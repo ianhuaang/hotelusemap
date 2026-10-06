@@ -293,16 +293,38 @@ jobs:
           fi
           echo "All 15 sources completed."
 
+      # The history this reads against lives in the last published build,
+      # which is in the app repo. A shallow clone of its own, deliberately
+      # not the one the publish step makes: that one is taken immediately
+      # before pushing so it cannot go stale, and a clone held open for the
+      # two hours this job runs would.
+      #
+      # A failure here is not fatal. Without the previous manifest the check
+      # falls back to the committed seed and still gates; it just gates
+      # against numbers that have stopped moving, and says so.
+      - name: Fetch the last published build, for the volume baseline
+        id: prev
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          KASA_SOURCING_TOKEN: ${{ secrets.KASA_SOURCING_TOKEN }}
+        run: |
+          git clone --depth 1 --quiet \
+            "https://x-access-token:${KASA_SOURCING_TOKEN}@github.com/ianhuaang/kasa-sourcing.git" /tmp/prev
+          test -s /tmp/prev/map/public/buildings.geojson
+
       # Completing is not the same as arriving whole. This compares what each
       # source returned against the median of its last runs and refuses to
       # publish on one that quietly shrank — the failure the step above cannot
       # see, because a pull that returns 14 rows instead of 20 exits zero.
       #
-      # --record appends this run's counts, so the baseline is the pipeline's
-      # own history rather than a number somebody typed. data/source_counts.json
-      # is committed; the publish step below carries it back with the build.
+      # The baseline is the pipeline's own history, carried in the published
+      # manifest under source_volume and advanced by each build. It used to be
+      # written to data/source_counts.json with --record, which was wrong:
+      # nothing commits that file back, so it died with the runner and the
+      # baseline never moved off its seed.
       - name: Check every source arrived whole
-        run: python src/source_volume.py --record
+        run: python src/source_volume.py --previous /tmp/prev/map/public/buildings.geojson
 
       # Every cap here was set just above the previous run time, so each one
       # eventually failed. This prints how close each step came, so drift shows
@@ -405,6 +427,8 @@ jobs:
         run: python src/enrich.py
 
       - name: Build GeoJSON
+        env:
+          PREVIOUS_BUILD: /tmp/prev/map/public/buildings.geojson
         run: python src/build_geojson.py
 
       # Between building and publishing on purpose. These read the artifact

@@ -5,6 +5,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 
 import json
 import math
+import os
 from collections import Counter
 import re
 from datetime import date, timedelta
@@ -14,6 +15,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, DATA_PROCESSED, is_hotel_class
 from src import provenance
+from src import source_volume
 
 TODAY = date.today().strftime("%Y%m%d")
 
@@ -432,6 +434,13 @@ def load_coo_floors() -> dict:
 #
 # It never reached the build because only the three most recent permits per
 # building are published and a demolition filing is rarely among them.
+# Set by refresh-data.yml to the shallow clone of the app repo it reads the
+# previous manifest from. Absent on a laptop, where the seed is used instead.
+def _previous_build() -> Path | None:
+    env = os.environ.get("PREVIOUS_BUILD")
+    return Path(env) if env else None
+
+
 def load_demolitions() -> dict:
     """The latest Full Demolition filing per lot, by BBL."""
     path = provenance.resolve("permits", DATA_RAW)
@@ -2004,6 +2013,7 @@ def build_geojson(
     # would add megabytes to say one thing. source_pulled_on stays on the
     # feature because the app reads it; this is what it leaves out.
     sources = provenance.manifest()
+    volume_counts = source_volume.measure()
     print("Sources this build read:")
     print(provenance.summarise(sources))
     stale = [k for k, v in sources.items() if not v["refreshed_by_ci"] and v["pulled_on"]]
@@ -2020,6 +2030,14 @@ def build_geojson(
         # current. Without it the file carries one date -- the newest PLUTO
         # pull -- over sources that were not pulled with PLUTO at all.
         "sources": sources,
+        # How much each source returned, this run and the last seven.
+        #
+        # Beside the provenance rather than inside it: `sources` is one flat
+        # record per source saying which file was read, and this is a time
+        # series. It lives here because the build artifact is the only thing
+        # that survives a run — data/ on the runner does not — so the history
+        # has to travel with what gets published or it does not travel.
+        "source_volume": source_volume.advance(_previous_build(), volume_counts),
         "funnel": funnel,
         "features": features,
     }

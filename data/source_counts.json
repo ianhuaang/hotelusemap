@@ -1,4 +1,12 @@
 {
+  "_README": [
+    "SEED ONLY \u2014 not live state, not written by CI.",
+    "The live volume history is published in the build manifest under",
+    "'source_volume' in map/public/buildings.geojson of the app repo, and",
+    "advances on every run. This file is read only when no published",
+    "manifest is available: the first run after 2026-10-06, and local runs.",
+    "Seeded from the dated pulls on disk as of 2026-10-04."
+  ],
   "acris_owners": [
     {
       "date": "20260923",

@@ -468,26 +468,85 @@ def test_a_tiny_source_losing_one_row_is_not_an_alarm():
 def _with_history(v, history, counts):
     """Run check() against a stand-in history rather than the real file."""
     real = v._history
-    v._history = lambda: history
+    v._history = lambda previous=None: history
     try:
         return v.check(counts)
     finally:
         v._history = real
 
 
-def test_the_baseline_file_ships_with_the_pipeline():
+def test_the_seed_ships_so_the_first_run_has_something_to_judge_against():
     """A check with no history is a check that passes on its first bad run."""
     import json
     from pathlib import Path
 
     path = Path(__file__).resolve().parents[1] / "data" / "source_counts.json"
-    assert path.exists(), "no recorded source counts; the check has no baseline"
+    assert path.exists(), "no seed counts; the check has no baseline to start from"
     hist = json.loads(path.read_text())
+    assert "_README" in hist, (
+        "the seed does not say it is a seed; it was mistaken for live state once "
+        "already")
     from src import provenance
 
     registered = {k for k, _p, _d, _c in provenance.SOURCES}
     missing = sorted(registered - set(hist))
-    assert not missing, f"registered sources with no recorded count: {missing}"
+    assert not missing, f"registered sources with no seeded count: {missing}"
+
+
+def test_the_baseline_advances_run_to_run():
+    """The failure this replaced: a baseline that never moved off its seed.
+
+    --record wrote the history to a file on the runner and nothing committed
+    it back, so every run re-read the same seeded numbers. The history travels
+    in the published manifest now, which is the one artefact that outlives a
+    run. Two consecutive builds, each reading the one before it.
+    """
+    import json
+
+    v = _vol()
+    one = tmp_build(None, {"pluto": 99_580}, "20261013")
+    two = tmp_build(one, {"pluto": 100_200}, "20261020")
+
+    seeded = v.baseline(v._history(None)["pluto"])
+    after_two = v.baseline(json.loads(two.read_text())[v.MANIFEST_KEY]["pluto"])
+    assert after_two != seeded, (
+        f"the baseline is still the seed ({seeded:,}) after two runs")
+
+    rows = [e["rows"] for e in json.loads(two.read_text())[v.MANIFEST_KEY]["pluto"]]
+    assert 99_580 in rows, (
+        "the second run did not build on the first one's history, so each run "
+        "is starting over")
+
+    # And the gate still bites against the advanced baseline, not just the seed.
+    alerts = v.check({"pluto": 60_000}, previous=two)
+    assert any(a["source"] == "pluto" for a in alerts), (
+        "a crater went unreported once the baseline had moved")
+
+
+def test_a_build_carries_its_volume_history_where_the_next_run_can_read_it():
+    """The manifest key is the contract between one run and the next."""
+    import re
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    assert re.search(r'"source_volume":\s*source_volume\.advance\(', build), (
+        "the build no longer publishes its volume history; the next run has "
+        "nothing to read and falls back to the seed forever")
+
+
+def tmp_build(previous, counts, day):
+    """A stand-in for what build_geojson writes."""
+    import json
+    import tempfile
+    from pathlib import Path
+
+    v = _vol()
+    out = Path(tempfile.mkdtemp()) / f"build_{day}.geojson"
+    out.write_text(json.dumps({
+        "type": "FeatureCollection", "sources": {},
+        v.MANIFEST_KEY: v.advance(previous, counts, today=day), "features": [],
+    }))
+    return out
 
 
 # --- the City Record walk reads every page, in a fixed order -----------------

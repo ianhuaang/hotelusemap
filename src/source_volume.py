@@ -19,8 +19,8 @@ actually happened here:
 All three look identical downstream to "the city has no record". The only
 thing that separates them is how much arrived last time.
 
-    python3 src/source_volume.py           # check against the baseline
-    python3 src/source_volume.py --record  # check, then append this run
+    python3 src/source_volume.py                       # check against the seed
+    python3 src/source_volume.py --previous BUILD.json # against a published build
 """
 
 from __future__ import annotations
@@ -36,7 +36,19 @@ sys.path.insert(0, str(ROOT))
 
 from src import provenance  # noqa: E402
 
-HISTORY = ROOT / "data" / "source_counts.json"
+# The seed, and only the seed.
+#
+# This used to be where the history lived, and CI wrote it with --record on
+# every run. Nothing committed it back, so the file on the runner disappeared
+# with the runner and the baseline never moved off these numbers. The history
+# travels in the published manifest now; this is read when there is no
+# published manifest to read — the first run after that change, and any local
+# run. It is never written by CI.
+SEED = ROOT / "data" / "source_counts.json"
+
+# Where the history lives in the published build, beside `sources`. Provenance
+# says which file a source was read from; this says how much was in it.
+MANIFEST_KEY = "source_volume"
 
 # How far a source may fall below its own baseline before this says so.
 #
@@ -92,25 +104,65 @@ def measure() -> dict[str, int]:
     return counts
 
 
-def _history() -> dict[str, list]:
-    if not HISTORY.exists():
+def _read_manifest_history(previous: Path | None) -> dict[str, list] | None:
+    """The volume history carried by a previously published build."""
+    if not previous or not Path(previous).exists():
+        return None
+    try:
+        data = json.loads(Path(previous).read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
+    hist = data.get(MANIFEST_KEY)
+    return hist if isinstance(hist, dict) else None
+
+
+def _history(previous: Path | None = None) -> dict[str, list]:
+    """Prefer the last published manifest; fall back to the seed.
+
+    The fallback is what makes the first run after this change work, and what
+    lets this be run on a laptop. Once a build has published a manifest the
+    seed stops being consulted.
+    """
+    from_manifest = _read_manifest_history(previous)
+    if from_manifest is not None:
+        return from_manifest
+    if not SEED.exists():
         return {}
     try:
-        return json.loads(HISTORY.read_text())
+        return json.loads(SEED.read_text())
     except (json.JSONDecodeError, OSError):
         return {}
 
 
 def baseline(entries: list[dict]) -> int | None:
     """The median of the recorded runs, or None with nothing to go on."""
-    rows = [e["rows"] for e in entries[-WINDOW:] if isinstance(e.get("rows"), int)]
+    rows = [e["rows"] for e in entries[-WINDOW:]
+            if isinstance(e, dict) and isinstance(e.get("rows"), int)]
     return int(statistics.median(rows)) if rows else None
 
 
-def check(counts: dict[str, int] | None = None) -> list[dict]:
+def advance(previous: Path | None, counts: dict[str, int],
+            today: str | None = None) -> dict[str, list]:
+    """The history a build should publish: the last one, plus this run.
+
+    Appended whatever the verdict. A run that fell is part of the record and
+    the manifest should say so; the median over the window is what stops it
+    becoming the standard the next run is judged against.
+    """
+    hist = {k: list(v) for k, v in _history(previous).items()}
+    stamp = today or date.today().strftime("%Y%m%d")
+    for key, n in counts.items():
+        entries = [e for e in hist.get(key, []) if e.get("date") != stamp]
+        entries.append({"date": stamp, "rows": n})
+        hist[key] = entries[-WINDOW:]
+    return hist
+
+
+def check(counts: dict[str, int] | None = None,
+          previous: Path | None = None) -> list[dict]:
     """Every source against its baseline. Returns the ones that fell."""
     counts = measure() if counts is None else counts
-    hist = _history()
+    hist = _history(previous)
     gated = {k: ci for k, _p, _d, ci in provenance.SOURCES}
     alerts = []
 
@@ -140,28 +192,18 @@ def check(counts: dict[str, int] | None = None) -> list[dict]:
     return alerts
 
 
-def record(counts: dict[str, int], today: str | None = None) -> None:
-    """Append this run, keeping the file to the window it is read over.
-
-    Recorded whatever the verdict. A run that fell is part of the history and
-    the file should say so; the median is what stops it setting the standard.
-    """
-    hist = _history()
-    stamp = today or date.today().strftime("%Y%m%d")
-    for key, n in counts.items():
-        entries = [e for e in hist.get(key, []) if e.get("date") != stamp]
-        entries.append({"date": stamp, "rows": n})
-        hist[key] = entries[-WINDOW:]
-    HISTORY.parent.mkdir(parents=True, exist_ok=True)
-    HISTORY.write_text(json.dumps(hist, indent=2, sort_keys=True) + "\n")
-    print(f"\n  Recorded {len(counts)} source counts to {HISTORY.name}")
-
-
 def main() -> None:
+    # --previous points at the last published build, which is where the
+    # history is. Without it the seed is used and the run still gates, it
+    # just gates against numbers that stopped moving.
+    previous = None
+    if "--previous" in sys.argv:
+        previous = Path(sys.argv[sys.argv.index("--previous") + 1])
+        if not previous.exists():
+            print(f"  no previous build at {previous} — falling back to {SEED.name}")
+
     counts = measure()
-    alerts = check(counts)
-    if "--record" in sys.argv:
-        record(counts)
+    alerts = check(counts, previous=previous)
 
     # htc_union is pulled by CI but deliberately outside the completeness
     # gate: a build without union data is worth more than no build. That
