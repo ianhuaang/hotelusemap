@@ -392,65 +392,94 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
 
 # --- one occupant is not a building -----------------------------------------
 
-def test_a_use_that_argues_with_the_rooms_is_marked_partial():
-    """209 East 14th read "Office" over 47 Class B rooms.
+def test_a_use_the_certificate_argues_with_is_marked_partial():
+    """209 East 14th read "Office" over a certificate saying floor two is
+    ten rooms of single-room occupancy.
 
-    One of its eight occupants is a theatre company; seven are shops at street
-    level, and its certificate says floor two is ten rooms of single-room
-    occupancy. The occupant list was right and the headline over it was not.
+    The Class B count was the first test here and it could not carry this:
+    118 of the 217 no-operator buildings that have registered rooms stand on
+    that one HPD field and nothing else, so judging a use by it is circular
+    for most of the segment it matters to. The certificate is independent.
     """
-    from src.enrich import _use_argues_with_the_rooms
+    from src.build_geojson import _use_argues_with_the_certificate
 
-    rooms = {"hpd_class_b": 47}
-    assert _use_argues_with_the_rooms({"current_use": "office"}, rooms)
-    assert _use_argues_with_the_rooms({"current_use": "religious"}, rooms)
-    # A use that corroborates the rooms is not partial, however few occupants
-    # carry it -- which is the case _use_holds_building gets wrong here. It is
-    # False for 55 Church Street and 1535 Broadway, where the hotel is one
-    # occupant beside seven ground-floor shops and electing it is right.
-    assert not _use_argues_with_the_rooms({"current_use": "hotel"}, rooms)
-    assert not _use_argues_with_the_rooms({"current_use": "student_housing"}, rooms)
-    # A building with no registered rooms has nothing to argue with.
-    assert not _use_argues_with_the_rooms({"current_use": "office"}, {"hpd_class_b": 0})
+    housing = {"floors": [{"kind": "residential",
+                           "description": "TEN ROOMS, SINGLE ROOM OCCUPANCY"}]}
+    assert _use_argues_with_the_certificate("office", housing)
+    assert _use_argues_with_the_certificate("religious", housing)
+    # A use the certificate supports is not partial, however few occupants
+    # carry it -- and residential is one of them, because a certificate
+    # showing dwelling units does not argue with a residential reading.
+    assert not _use_argues_with_the_certificate("hotel", housing)
+    assert not _use_argues_with_the_certificate("residential", housing)
+
+
+def test_no_certificate_means_no_opinion():
+    """Affirmative evidence only.
+
+    121 buildings on the map have a floor table. The rest are not evidence of
+    anything either way, and a rule that treated silence as disagreement
+    would be guessing about 90% of the map.
+    """
+    from src.build_geojson import _use_argues_with_the_certificate
+
+    assert not _use_argues_with_the_certificate("office", None)
+    assert not _use_argues_with_the_certificate("office", {"floors": []})
+    assert not _use_argues_with_the_certificate(
+        "office", {"floors": [{"kind": "other", "description": "OFFICES"}]})
+
+
+def test_a_superintendents_flat_is_not_a_residential_building():
+    """The kind classifier matches on words, so ancillary rows read as housing.
+
+    "STORAGE ROOMS FOR HOTEL" carries HOTEL and comes out transient; a
+    custodian's apartment carries APARTMENT and comes out residential. One
+    flat for the super does not make a building housing, and 30 East 30th
+    Street was marked as arguing with its own certificate on a row about
+    where the hotel keeps its luggage.
+    """
+    from src.build_geojson import _use_argues_with_the_certificate
+
+    for desc in ("STORAGE ROOMS FOR HOTEL", "custodian's apartment",
+                 "RES MANAGERS APARTMENT COMM STORES", "TENANT STORAGE J-2"):
+        floors = {"floors": [{"kind": "residential", "description": desc}]}
+        assert not _use_argues_with_the_certificate("office", floors), (
+            f"{desc!r} is being read as the building's housing")
 
 
 def test_marking_a_use_partial_cannot_move_a_building_between_segments():
     """The flag is for the panel, not the classification.
 
     build_geojson decides segment on current_use == "hotel" and on the
-    occupied product types. A use that contradicts registered transient rooms
-    is neither, so nothing carrying this flag can reach either branch -- which
-    is what makes it shippable without re-deciding the chain.
+    occupied product types. None of those can be marked partial, so nothing
+    carrying this flag reclassifies -- which is what makes it shippable
+    without re-deciding the chain.
     """
-    from src.build_geojson import OCCUPIED_PRODUCT_USES
-    from src.enrich import USES_AGREEING_WITH_ROOMS, _use_argues_with_the_rooms
+    from src.build_geojson import (
+        OCCUPIED_PRODUCT_USES, USES_AGREEING_WITH_SLEEPING,
+        _use_argues_with_the_certificate)
 
     segment_reads = {"hotel"} | set(OCCUPIED_PRODUCT_USES)
-    overlap = segment_reads - USES_AGREEING_WITH_ROOMS
+    overlap = segment_reads - USES_AGREEING_WITH_SLEEPING
     assert not overlap, (
-        f"these uses decide a segment and can still be marked partial: {overlap}. "
-        "Marking one would silently reclassify the building.")
+        f"these uses decide a segment and can still be marked partial: {overlap}")
+    housing = {"floors": [{"kind": "residential", "description": "TEN DWELLING UNITS"}]}
     for use in segment_reads:
-        assert not _use_argues_with_the_rooms({"current_use": use}, {"hpd_class_b": 500})
+        assert not _use_argues_with_the_certificate(use, housing)
 
 
-def test_the_partial_flag_is_actually_wired_to_the_rule():
-    """Testing the rule is not testing that anything calls it.
-
-    The first version of these tests exercised _use_argues_with_the_rooms on
-    its own, so replacing the assignment with a constant False passed all of
-    them. The rule and the field have to be connected, and nothing but reading
-    the connection proves it.
-    """
+def test_the_partial_flag_is_wired_to_the_certificate_rule():
+    """Testing the rule is not testing that anything calls it."""
     import re
     from pathlib import Path
 
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    assert re.search(r'"current_use_partial":\s*_use_argues_with_the_certificate\(',
+                     build), (
+        "current_use_partial is no longer set from the certificate rule")
     enrich = (Path(__file__).resolve().parents[1] / "src/enrich.py").read_text()
-    assert re.search(
-        r'record\["current_use_partial"\]\s*=\s*_use_argues_with_the_rooms\(',
-        enrich), (
-        "current_use_partial is no longer set from _use_argues_with_the_rooms; "
-        "the rule still exists and nothing calls it")
+    assert "_use_argues_with_the_rooms" not in enrich, (
+        "the Class B predicate is still in enrich.py; two rules would drift")
 
 
 def test_the_partial_flag_is_published():
@@ -460,6 +489,59 @@ def test_the_partial_flag_is_published():
     build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
     assert '"current_use_partial"' in build, (
         "current_use_partial is computed and never published")
+# --- single-room occupancy is somewhere people live -------------------------
+
+def test_the_floor_table_recognises_single_room_occupancy():
+    """It read SRO floors as "other", so they counted as neither.
+
+    209 East 14th Street registers 47 Class B rooms and its certificate says
+    floor two is "TEN ROOMS, SINGLE ROOM OCCUPANCY". That floor was filed
+    under no heading at all, so the building's own record had nothing to say
+    against a corporate-office pin on the door.
+
+    Residential rather than transient on purpose: the rooms are Class B and
+    look like a hotel's, but coo_transient_floors feeds the question of
+    whether they can be run as a block, and an SRO's occupants are the
+    blocker. HOTEL is still tested first, so "SRO HOTEL" stays transient.
+    """
+    from src.parse_coo_pdf import RESIDENTIAL_MARKS, TRANSIENT_MARKS
+
+    def kind(desc):
+        up = desc.upper()
+        return ("transient" if any(k in up for k in TRANSIENT_MARKS)
+                else "residential" if any(k in up for k in RESIDENTIAL_MARKS)
+                else "other")
+
+    for desc in ("TEN ROOMS, SINGLE ROOM OCCUPANCY",
+                 "FOURTEEN (14) SRO ROOMS, THREE (3)",
+                 "ROOMING UNITS FOURTEEN (14)"):
+        assert kind(desc) == "residential", f"{desc!r} reads as {kind(desc)}"
+    assert kind("SRO HOTEL ROOMS") == "transient", (
+        "a row naming a hotel stopped being transient")
+
+
+def test_no_parsed_floor_still_files_an_sro_under_other():
+    """The classifier lives in the parser; the kinds live in the parse.
+
+    Fixing the first does nothing for a build until somebody re-runs the
+    headed-browser pull, which is a hand operation. The committed parse was
+    re-derived from its own descriptions so the fix reaches the next run.
+    """
+    import json
+    from pathlib import Path
+
+    from src import provenance
+    from config import DATA_PROCESSED
+
+    rows = json.loads(provenance.resolve("coo_parsed", DATA_PROCESSED).read_text())
+    stranded = [
+        (r.get("bin"), f.get("floor"), f.get("description"))
+        for r in rows for f in (r.get("floors") or [])
+        if f.get("kind") == "other"
+        and any(m in (f.get("description") or "").upper()
+                for m in ("SINGLE ROOM", "SRO", "ROOMING"))
+    ]
+    assert not stranded, f"{len(stranded)} SRO floors still filed under 'other': {stranded[:3]}"
 
 
 # --- a source that arrives short is not a source that arrives ---------------

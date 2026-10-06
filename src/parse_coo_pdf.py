@@ -41,7 +41,20 @@ LOAD_UG = re.compile(r"^(OG|\d+)\s+(?:(\d+)\s+)?([0-9]+[A-Z]?(?:,\s*[0-9]+[A-Z]?
 # 1968 code occupancy groups. J-1 is transient, J-2 is permanent residence —
 # the distinction the whole tool turns on.
 TRANSIENT_MARKS = ("J-1", "HOTEL", "TRANSIENT")
-RESIDENTIAL_MARKS = ("J-2", "RESIDENTIAL", "APARTMENT", "DWELLING")
+# Single-room occupancy is somewhere people live, and the floor table said so
+# in words this did not read: "TEN ROOMS, SINGLE ROOM OCCUPANCY" and "FOURTEEN
+# (14) SRO ROOMS" both came out "other", so eighteen floors of housing were
+# filed under neither heading and 209 East 14th Street's own certificate could
+# not contradict a corporate-office pin on the door.
+#
+# Residential rather than transient, deliberately. The rooms are Class B and
+# look like a hotel's, but they are occupied by people with tenancies, and
+# coo_transient_floors feeds the question of whether the rooms can be run as a
+# block. Calling an SRO floor transient would answer yes to a building whose
+# occupants are the blocker. "HOTEL" is still tested first, so a row reading
+# "SRO HOTEL" stays transient.
+RESIDENTIAL_MARKS = ("J-2", "RESIDENTIAL", "APARTMENT", "DWELLING",
+                     "SINGLE ROOM", "SRO", "ROOMING")
 
 
 def _feed_latest() -> dict:

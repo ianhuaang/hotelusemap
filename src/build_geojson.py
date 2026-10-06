@@ -335,6 +335,61 @@ DOOR_USES = frozenset({
 REGISTER_OUTRANKS_DOOR = 10
 
 
+# Uses that agree with a certificate showing somewhere people sleep. A
+# certificate listing guest rooms or dwelling units does not argue with any of
+# these, so none of them is marked partial however few occupants carry it.
+USES_AGREEING_WITH_SLEEPING = frozenset({
+    "hotel", "hostel", "sro", "student_housing", "institutional_lodging",
+    "private_club", "supportive_housing", "residential",
+    "ground_floor_tenant", "unknown", "",
+})
+
+
+# A floor row that names sleeping accommodation without being any. The kind
+# classifier matches on words, so "STORAGE ROOMS FOR HOTEL" carries HOTEL and
+# reads transient, and a custodian's apartment carries APARTMENT and reads
+# residential. One flat for the super does not make a building housing, and 30
+# East 30th Street was marked as arguing with its own certificate on a row
+# about where the hotel keeps its luggage.
+#
+# Guarded here rather than in the classifier because the kinds are baked into
+# a committed parse that only a headed-browser run rebuilds. The classifier
+# has the same blind spot and is worth fixing there too.
+ANCILLARY_MARKS = ("STORAGE", "SUPERINTENDENT", "CUSTODIAN", "JANITOR",
+                   "MANAGERS APARTMENT", "MANAGER'S APARTMENT",
+                   "RES MANAGERS", "ACCESSORY", "LOBBY", "LOBEY")
+
+
+def _is_ancillary(description: str | None) -> bool:
+    up = (description or "").upper()
+    return any(m in up for m in ANCILLARY_MARKS)
+
+
+def _use_argues_with_the_certificate(current_use: str, floors: dict | None) -> bool:
+    """One occupant's use, set against what the certificate says is upstairs.
+
+    The Class B count was the first test here and it cannot carry this. 118 of
+    the 217 buildings in "Transient, no operator" that have registered rooms
+    stand on that single HPD field and nothing else, so judging a use by it is
+    circular for most of the segment it matters to. The certificate is the one
+    independent record of what the building is for.
+
+    Affirmative evidence only. A certificate that lists guest rooms or dwelling
+    units on a floor says people sleep there, and an office is not that. No
+    certificate says nothing, and this stays quiet rather than guessing: 121
+    buildings on the map have a floor table and the rest are not evidence of
+    anything either way.
+    """
+    if not floors:
+        return False
+    sleeping = [f for f in (floors.get("floors") or [])
+                if f.get("kind") in ("transient", "residential")
+                and not _is_ancillary(f.get("description"))]
+    if not sleeping:
+        return False
+    return (current_use or "") not in USES_AGREEING_WITH_SLEEPING
+
+
 def _coo_fields(floors: dict | None) -> dict:
     """The published shape of one certificate's floor table."""
     if not floors:
@@ -1625,6 +1680,13 @@ def build_geojson(
             # enrich.py. Published whole: the question it answers, what is on
             # the upper floors, does not survive being summarised to a count.
             **_coo_fields(coo_floors.get(str(fp.get("bin") or "").strip())),
+            # Set here rather than in enrich because this is where the
+            # certificate is. True means the sweep elected a use the
+            # building's own certificate argues with, so the panel shows the
+            # occupant list instead of a headline it cannot stand behind.
+            "current_use_partial": _use_argues_with_the_certificate(
+                record.get("current_use", ""),
+                coo_floors.get(str(fp.get("bin") or "").strip())),
             "source_pulled_on": record["source_pulled_on"],
             "last_sale_date": record.get("last_sale_date"),
             "last_sale_price": record.get("last_sale_price"),
@@ -1694,10 +1756,6 @@ def build_geojson(
             "current_use_source": "google" if record.get("current_use") else "",
             "current_use_occupants": record.get("current_use_occupants", []),
             "current_use_needs_review": record.get("current_use_needs_review", False),
-            # True where the sweep elected a use the building's own Class B
-            # registration contradicts. The panel shows the occupant list
-            # instead of a headline it cannot stand behind.
-            "current_use_partial": record.get("current_use_partial", False),
             "current_use_checked": record.get("current_use_checked", False),
             # Published by the city, carried whole so a reader can open it.
             "occupancy_state": _occupancy_state(record),
