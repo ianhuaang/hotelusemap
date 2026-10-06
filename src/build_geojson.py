@@ -1802,6 +1802,34 @@ def build_geojson(
             properties["reversion_kind"] = (
                 "closed" if (record.get("hpd_class_b") or 0) > 0 else "converted"
             )
+            # Whether the window is the thing that matters here.
+            #
+            # reversion_kind has said which of the two a building is since the
+            # day the pair were separated, and the panel reads it. The overlay,
+            # the count and the decision tree do not: they read has_reversion,
+            # which answers a different question — is this on the hand-curated
+            # list — and so they present two opposite situations as one tracked
+            # population of six.
+            #
+            # Converted is the opportunity. The hotel use predates the 2021
+            # text amendment, the building is residential now, and the window
+            # is the route back without a CPC special permit. 20 Broad Street
+            # is 533 Class A units that used to be a hotel.
+            #
+            # Closed is not. Row NYC is 1,332 Class B rooms sitting idle: the
+            # transient use is intact, nothing has been converted, and there is
+            # no window to be inside or outside of. Sending somebody to
+            # underwrite undoing a conversion that never happened is the error
+            # the kinds were split to prevent, and the overlay has been making
+            # it on half of what it shows.
+            #
+            # Published for both mechanisms, not just the curated six. Ten of
+            # the thirteen converted buildings were found by the rule and carry
+            # no has_reversion at all, so the overlay has never shown them —
+            # including 554 Third Avenue, the building the rule was rewritten
+            # for.
+            properties["reversion_window_open"] = properties["reversion_kind"] == "converted"
+            properties["reversion_closed_hotel"] = properties["reversion_kind"] == "closed"
 
         reversion_info = POST_2021_REVERSIONS.get(record["bbl"])
         if reversion_info:

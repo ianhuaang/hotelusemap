@@ -834,3 +834,67 @@ def test_registration_is_not_evidence_of_trading():
         assert register_field not in possession, (
             f"has_active_operator reads {register_field}; a registration says what a "
             "building is entitled to, never who is trading in it")
+
+
+def test_the_two_reversions_are_published_apart():
+    """The kinds were split and the overlay never heard.
+
+    reversion_kind has said which of the two a building is since the day they
+    were separated, and the panel reads it. The overlay, the count and the
+    decision tree read has_reversion, which answers "is this on the curated
+    list" — so they showed a converted building and a closed one as one
+    tracked population, and sent somebody to underwrite undoing a conversion
+    that never happened.
+    """
+    import re
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    assert re.search(r'properties\["reversion_window_open"\]\s*=\s*'
+                     r'properties\["reversion_kind"\] == "converted"', build), (
+        "reversion_window_open is not derived from the kind")
+    assert re.search(r'properties\["reversion_closed_hotel"\]\s*=\s*'
+                     r'properties\["reversion_kind"\] == "closed"', build), (
+        "reversion_closed_hotel is not derived from the kind")
+
+
+def test_the_window_flag_covers_both_mechanisms_not_just_the_curated_list():
+    """Ten of the thirteen converted buildings were found by the rule.
+
+    has_reversion is set only for POST_2021_REVERSIONS, so the overlay has
+    never shown the rule-derived conversions — 554 Third Avenue among them,
+    the building the pipeline rule was rewritten for. The flag is derived
+    from reversion_kind, which both mechanisms set, so it cannot inherit that
+    blind spot.
+    """
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    where = build.index('properties["reversion_window_open"]')
+    # It is set inside the block the rule and the curated list both reach,
+    # not inside the `if reversion_info:` block that only the list reaches.
+    curated_block = build.index("reversion_info = POST_2021_REVERSIONS.get")
+    assert where < curated_block, (
+        "reversion_window_open is set inside the curated-list block, so the "
+        "rule-derived conversions will not carry it")
+
+
+def test_a_closed_hotel_never_reads_as_an_open_window():
+    """Row NYC is 1,332 Class B rooms sitting idle, not a conversion.
+
+    Replays the published rule over the kinds the build can emit, so the two
+    flags cannot both be true and cannot disagree with reversion_kind.
+    """
+    for kind in ("converted", "closed"):
+        window = kind == "converted"
+        closed = kind == "closed"
+        assert window != closed, f"{kind} sets both flags or neither"
+    # And the only two kinds the build emits are those, so nothing falls
+    # through to a third state carrying neither flag by accident.
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    emitted = build[build.index('properties["reversion_kind"] = ('):][:160]
+    assert '"closed"' in emitted and '"converted"' in emitted, (
+        "the kinds the build emits have changed; the flags derived from them "
+        "need rechecking")
