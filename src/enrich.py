@@ -1278,6 +1278,13 @@ def enrich_pipeline(
             record["current_use_occupants"] = cu.get("occupants", [])
             record["current_use_needs_review"] = bool(cu.get("needs_review")) or bool(notice)
             record["current_use_checked"] = True
+            # Whether this use can speak for the building is decided in
+            # build_geojson, where the certificate is. The Class B count was
+            # tried here first and cannot do it: 118 of the 217 no-operator
+            # buildings that carry registered rooms stand on that one HPD
+            # field alone, so using it to judge a use is circular for most of
+            # the segment it matters to. The certificate is the independent
+            # record.
             # A shelter, church or clinic is not a sourcing target no matter
             # how many Class B units it registers — but it has to actually
             # hold the building. The penalty used to fire on any occupant at

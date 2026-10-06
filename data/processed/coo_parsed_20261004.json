@@ -291,7 +291,6 @@
     },
     "rows": 63,
     "transient_floors": [
-      1,
       2
     ],
     "residential_floors": [
@@ -337,11 +336,9 @@
       60,
       61
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -431,7 +428,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, RESIDENTIAL LOBBYR-1"
       },
       {
@@ -936,7 +933,6 @@
     },
     "rows": 63,
     "transient_floors": [
-      1,
       2
     ],
     "residential_floors": [
@@ -982,11 +978,9 @@
       60,
       61
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -1076,7 +1070,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, RESIDENTIAL LOBBYR-1"
       },
       {
@@ -1906,7 +1900,6 @@
     },
     "rows": 28,
     "transient_floors": [
-      1,
       2,
       3,
       6,
@@ -1990,7 +1983,7 @@
         "units_described": null,
         "units_column_raw": 110,
         "use_group": "2, 5",
-        "kind": "transient",
+        "kind": "other",
         "description": "RESIDENTIAL AND HOTEL LOBBY, MAIL"
       },
       {
@@ -2211,7 +2204,6 @@
     "rooms_described": {},
     "rows": 9,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -2241,7 +2233,7 @@
         "units_described": null,
         "units_column_raw": 50,
         "use_group": "6",
-        "kind": "transient",
+        "kind": "other",
         "description": "BANKS, HOTEL LOBBYE"
       },
       {
@@ -2964,12 +2956,12 @@
       "2"
     ],
     "rooms_described": {
-      "other": 6,
-      "residential": 7
+      "residential": 13
     },
     "rows": 4,
     "transient_floors": [],
     "residential_floors": [
+      1,
       2,
       3,
       4
@@ -2985,7 +2977,7 @@
         "units_described": 6,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "SIX (6) SINGLE ROOM OCCUPANCYR-2"
       },
       {
@@ -3031,12 +3023,12 @@
       "2"
     ],
     "rooms_described": {
-      "other": 6,
-      "residential": 7
+      "residential": 13
     },
     "rows": 4,
     "transient_floors": [],
     "residential_floors": [
+      1,
       2,
       3,
       4
@@ -3052,7 +3044,7 @@
         "units_described": 6,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "SIX (6) SINGLE ROOM OCCUPANCYR-2"
       },
       {
@@ -3245,7 +3237,9 @@
     "rooms_described": {},
     "rows": 6,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      5
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -3302,7 +3296,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "Ot 20 sleeping ro0ms CLASS  SINGLE ROOM OCCUPANCY OLDI-LAW THNEMENT OLDI CODE NOTE:  Premises to be utllizedas a non-pro"
       }
     ],
@@ -3917,8 +3911,6 @@
     "rooms_described": {},
     "rows": 36,
     "transient_floors": [
-      1,
-      2,
       3,
       4,
       5,
@@ -4003,7 +3995,7 @@
         "units_described": null,
         "units_column_raw": 399,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -4021,7 +4013,7 @@
         "units_described": null,
         "units_column_raw": 163,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL/LOBBY J-1"
       },
       {
@@ -4295,8 +4287,6 @@
     "rooms_described": {},
     "rows": 36,
     "transient_floors": [
-      1,
-      2,
       3,
       4,
       5,
@@ -4381,7 +4371,7 @@
         "units_described": null,
         "units_column_raw": 399,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -4399,7 +4389,7 @@
         "units_described": null,
         "units_column_raw": 163,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL/LOBBY J-1"
       },
       {
@@ -5236,7 +5226,6 @@
     },
     "rows": 52,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -5378,7 +5367,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY J-1"
       },
       {
@@ -5749,7 +5738,6 @@
     },
     "rows": 52,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -5891,7 +5879,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY J-1"
       },
       {
@@ -6260,7 +6248,6 @@
     },
     "rows": 7,
     "transient_floors": [
-      1,
       2,
       3,
       4
@@ -6295,7 +6282,7 @@
         "units_described": null,
         "units_column_raw": 30,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, RECEPTION AREAR-1"
       },
       {
@@ -6838,7 +6825,6 @@
     },
     "rows": 25,
     "transient_floors": [
-      1,
       3,
       4,
       5,
@@ -6858,7 +6844,7 @@
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -6884,7 +6870,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -7106,7 +7092,6 @@
     },
     "rows": 25,
     "transient_floors": [
-      1,
       3,
       4,
       5,
@@ -7126,7 +7111,7 @@
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -7152,7 +7137,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -7724,7 +7709,6 @@
     },
     "rows": 27,
     "transient_floors": [
-      1,
       2,
       3,
       12,
@@ -7732,8 +7716,7 @@
       14,
       15,
       16,
-      17,
-      21
+      17
     ],
     "residential_floors": [
       3,
@@ -7780,7 +7763,7 @@
         "units_described": null,
         "units_column_raw": 20,
         "use_group": "2, 5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY FOR RESIDENTIAL & HOTEL"
       },
       {
@@ -7807,7 +7790,7 @@
         "units_described": null,
         "units_column_raw": 2,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "MECHANICAL ROOM FOR HOTEL OCCUPANCYJ-1"
       },
       {
@@ -7996,7 +7979,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "MECHANICAL EQUIPMENT ROOMJ-1"
       }
     ],
@@ -8022,7 +8005,6 @@
     },
     "rows": 27,
     "transient_floors": [
-      1,
       2,
       3,
       12,
@@ -8030,8 +8012,7 @@
       14,
       15,
       16,
-      17,
-      21
+      17
     ],
     "residential_floors": [
       3,
@@ -8078,7 +8059,7 @@
         "units_described": null,
         "units_column_raw": 20,
         "use_group": "2, 5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY FOR RESIDENTIAL & HOTEL"
       },
       {
@@ -8105,7 +8086,7 @@
         "units_described": null,
         "units_column_raw": 2,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "MECHANICAL ROOM FOR HOTEL OCCUPANCYJ-1"
       },
       {
@@ -8294,7 +8275,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "MECHANICAL EQUIPMENT ROOMJ-1"
       }
     ],
@@ -8317,7 +8298,9 @@
     "rooms_described": {},
     "rows": 3,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      2
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -8347,7 +8330,7 @@
         "units_described": null,
         "units_column_raw": 10,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "TEN ROOMS, SINGLE ROOM OCCUPANCY"
       }
     ],
@@ -8370,7 +8353,9 @@
     "rooms_described": {},
     "rows": 3,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      2
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -8400,7 +8385,7 @@
         "units_described": null,
         "units_column_raw": 10,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "TEN ROOMS, SINGLE ROOM OCCUPANCY"
       }
     ],
@@ -8606,20 +8591,17 @@
       "J-1"
     ],
     "rooms_described": {
-      "transient": 90
+      "other": 90
     },
     "rows": 7,
     "transient_floors": [
-      9,
-      11,
-      12,
-      13
+      9
     ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "01",
@@ -8663,7 +8645,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "10 50  10 GUEST ROOMS (EXCEPT 1109,1110)"
       },
       {
@@ -8672,7 +8654,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "10 50  10 GUEST ROOMS"
       },
       {
@@ -8681,7 +8663,7 @@
         "units_described": 90,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "GUEST ROOMS TEMPORARY CERTIFICATE OCCUPANCY TERMS : NINETY (90) DAYS EXPIRES: APRIL 6, 2005"
       }
     ],
@@ -8700,16 +8682,13 @@
     "rooms_described": {},
     "rows": 8,
     "transient_floors": [
-      9,
-      11,
-      12,
-      13
+      9
     ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -8717,7 +8696,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "OG 50 50  ACCESSORY OFFICE, CASH ROOM LOCKER ROOM MECHANICAL EQUIPMENT ROOM, STORAGE, COMPACTOR ROOM, BOILER ROOM"
       },
       {
@@ -8762,7 +8741,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "10 50  10 GUEST ROOMS"
       },
       {
@@ -8771,7 +8750,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "10 50  10 GUEST ROOMS"
       },
       {
@@ -8780,7 +8759,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "GUEST ROOMS"
       }
     ],
@@ -8810,8 +8789,6 @@
     "rows": 32,
     "transient_floors": [],
     "residential_floors": [
-      1,
-      2,
       7,
       8,
       9,
@@ -8887,7 +8864,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY AND MAILROOMJ-2"
       },
       {
@@ -8905,7 +8882,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "6",
-        "kind": "residential",
+        "kind": "other",
         "description": "ELECTRICAL CLOSET & MECHANICAL ROOMJ-2"
       },
       {
@@ -9603,7 +9580,6 @@
     },
     "rows": 40,
     "transient_floors": [
-      1,
       2,
       4,
       5,
@@ -9655,7 +9631,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -10015,7 +9991,6 @@
     },
     "rows": 40,
     "transient_floors": [
-      1,
       2,
       4,
       5,
@@ -10067,7 +10042,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -11945,7 +11920,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "NINE (9) CLASS"
       },
       {
@@ -12546,11 +12521,14 @@
     "co_type": "Legacy (OCR)",
     "use_groups": [],
     "rooms_described": {
-      "other": 55
+      "other": 37,
+      "residential": 18
     },
     "rows": 4,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      4
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -12589,7 +12567,7 @@
         "units_described": 18,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "(Eignteun (18) roors Single Foom (occupz.lcy 5th, 6th & 40 (Ninetetr(is) rooms Single Room Ttn stories ech (Qccupancy on"
       }
     ],
@@ -12693,8 +12671,7 @@
       "2B"
     ],
     "rooms_described": {
-      "residential": 10,
-      "other": 5
+      "residential": 15
     },
     "rows": 11,
     "transient_floors": [],
@@ -12810,7 +12787,7 @@
         "units_described": 5,
         "units_column_raw": 5,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "(5) FIVE SINGLE ROOM OCCUPANCYR-1"
       }
     ],
@@ -12830,8 +12807,7 @@
       "2B"
     ],
     "rooms_described": {
-      "residential": 10,
-      "other": 5
+      "residential": 15
     },
     "rows": 11,
     "transient_floors": [],
@@ -12947,7 +12923,7 @@
         "units_described": 5,
         "units_column_raw": 5,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "(5) FIVE SINGLE ROOM OCCUPANCYR-1"
       }
     ],
@@ -13162,7 +13138,6 @@
       12
     ],
     "residential_floors": [
-      1,
       4
     ],
     "shared_floors": [],
@@ -13185,7 +13160,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "TENANT STORAGE J-2"
       },
       {
@@ -13203,7 +13178,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "OFFICES, CONFERENCE ROOM AND LOBBYJ-2"
       },
       {
@@ -13339,7 +13314,6 @@
       12
     ],
     "residential_floors": [
-      1,
       4
     ],
     "shared_floors": [],
@@ -13371,7 +13345,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "TENANT STORAGE J-2"
       },
       {
@@ -13380,7 +13354,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B, 6",
-        "kind": "residential",
+        "kind": "other",
         "description": "OFFICES, CONFERENCE ROOM & LOBBYJ-2"
       },
       {
@@ -13762,7 +13736,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "G",
-        "kind": "residential",
+        "kind": "other",
         "description": "O.. 140 D-2 F-4 DINING ROOM KITCHEN NON--RESIDENTIAL 2 D-2 MECHANICAL ROOM LOCKER ROOM 2 D-2 LAUNDRIES 2 BOILIOIL-TANKIT"
       },
       {
@@ -13838,11 +13812,18 @@
     "co_type": "Legacy (OCR)",
     "use_groups": [],
     "rooms_described": {
-      "other": 32
+      "other": 7,
+      "residential": 25
     },
     "rows": 8,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -13881,7 +13862,7 @@
         "units_described": 5,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
       },
       {
@@ -13890,7 +13871,7 @@
         "units_described": 5,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
       },
       {
@@ -13899,7 +13880,7 @@
         "units_described": 5,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
       },
       {
@@ -13908,7 +13889,7 @@
         "units_described": 5,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
       },
       {
@@ -13917,7 +13898,7 @@
         "units_described": 5,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": ",incl. Five (5) ,single room occupancy.units of ta on each story. singie, $ sinyle room occupancy, rooms Degartment ctch"
       }
     ],
@@ -14103,7 +14084,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "30",
-        "kind": "transient",
+        "kind": "other",
         "description": "OFFICES AND LOBBYJ-1"
       },
       {
@@ -14417,7 +14398,6 @@
     "rooms_described": {},
     "rows": 14,
     "transient_floors": [
-      1,
       2,
       9,
       10
@@ -14449,7 +14429,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, HOTEL OFFICES, LUGGAGE,"
       },
       {
@@ -14580,7 +14560,6 @@
     "rooms_described": {},
     "rows": 14,
     "transient_floors": [
-      1,
       2,
       9,
       10
@@ -14612,7 +14591,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, HOTEL OFFICES, LUGGAGE,"
       },
       {
@@ -16641,14 +16620,13 @@
     },
     "rows": 6,
     "transient_floors": [
-      1,
       3
     ],
     "residential_floors": [],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -16683,7 +16661,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "transient",
+        "kind": "other",
         "description": "340 DINING ROOM CAFE AND. BAF 10. HOTEL OFFICES. WRITTNG LOBBY: LOUNGE $ ROOM STORES"
       },
       {
@@ -17324,7 +17302,6 @@
     "rows": 11,
     "transient_floors": [],
     "residential_floors": [
-      1,
       4
     ],
     "shared_floors": [],
@@ -17383,7 +17360,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2"
       },
       {
@@ -17455,7 +17432,6 @@
     "rows": 11,
     "transient_floors": [],
     "residential_floors": [
-      1,
       4
     ],
     "shared_floors": [],
@@ -17514,7 +17490,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2"
       },
       {
@@ -17594,9 +17570,7 @@
       "transient": 2
     },
     "rows": 10,
-    "transient_floors": [
-      1
-    ],
+    "transient_floors": [],
     "residential_floors": [
       3,
       4,
@@ -17640,7 +17614,7 @@
         "units_described": null,
         "units_column_raw": 16,
         "use_group": "2B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL OFFICE AND LOBBYRES"
       },
       {
@@ -17719,9 +17693,7 @@
       "transient": 2
     },
     "rows": 10,
-    "transient_floors": [
-      1
-    ],
+    "transient_floors": [],
     "residential_floors": [
       3,
       4,
@@ -17765,7 +17737,7 @@
         "units_described": null,
         "units_column_raw": 16,
         "use_group": "2B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL OFFICE AND LOBBYRES"
       },
       {
@@ -18379,9 +18351,7 @@
     "rows": 6,
     "transient_floors": [],
     "residential_floors": [
-      1,
-      2,
-      5
+      1
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -18394,7 +18364,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "mech. rooms/office Managers apt 8 SR0 rooms 2 aublic rooms"
       },
       {
@@ -18412,7 +18382,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "14  3 publ1c rooms 14 SR0 r0oms"
       },
       {
@@ -18439,7 +18409,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "14 14 14  14 SRQ... FOOmS 3 public rooms CLASS  ESIDENTIAL OLD LAW TENEMENI S.R.O HTHI THE IS CEFTAIOMTE Y 3E PNSTE0 CA "
       }
     ],
@@ -18546,12 +18516,16 @@
       "2"
     ],
     "rooms_described": {
-      "other": 73
+      "residential": 73
     },
     "rows": 5,
     "transient_floors": [],
     "residential_floors": [
-      1
+      1,
+      2,
+      3,
+      4,
+      5
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -18573,7 +18547,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN (14) SRO ROOMS, THREE (3)"
       },
       {
@@ -18582,7 +18556,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN (14) SRO ROOMS, THREE (3)"
       },
       {
@@ -18591,7 +18565,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN(14) SRO ROOMS, THREE (3)"
       },
       {
@@ -18600,7 +18574,7 @@
         "units_described": 31,
         "units_column_raw": 31,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "THIRTY-ONE (31)SRO ROOMS AND THREE"
       }
     ],
@@ -18620,12 +18594,15 @@
       "2"
     ],
     "rooms_described": {
-      "other": 42
+      "residential": 42
     },
     "rows": 4,
     "transient_floors": [],
     "residential_floors": [
-      1
+      1,
+      2,
+      3,
+      4
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -18647,7 +18624,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN (14) SRO ROOMS, THREE (3)"
       },
       {
@@ -18656,7 +18633,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN (14) SRO ROOMS, THREE (3)"
       },
       {
@@ -18665,7 +18642,7 @@
         "units_described": 14,
         "units_column_raw": 30,
         "use_group": "2",
-        "kind": "other",
+        "kind": "residential",
         "description": "FOURTEEN (14) SRO ROOMS, THREE (3)"
       }
     ],
@@ -18742,11 +18719,7 @@
     "rows": 6,
     "transient_floors": [],
     "residential_floors": [
-      2,
-      4,
-      5,
-      6,
-      7
+      2
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -18777,7 +18750,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  1s sleeping rooms"
       },
       {
@@ -18786,7 +18759,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  15 sleeping rooms"
       },
       {
@@ -18795,7 +18768,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "1s sleepina rooms"
       },
       {
@@ -18804,7 +18777,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32 3.  15 sleeping rooms TEHFORERYI CERTIEICATE  OF OCCUPANCY TERMS: NENETY 90) DAYS EXPIRES: MAY 24.11992"
       }
     ],
@@ -18824,11 +18797,7 @@
     "rows": 8,
     "transient_floors": [],
     "residential_floors": [
-      1,
-      2,
-      4,
-      5,
-      6
+      1
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -18859,7 +18828,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  1s sleeping rooms"
       },
       {
@@ -18877,7 +18846,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  15 sleeping rooms"
       },
       {
@@ -18886,7 +18855,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  15 sleeping rooms"
       },
       {
@@ -18895,7 +18864,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "J-2",
-        "kind": "residential",
+        "kind": "other",
         "description": "32  15 sleeping rooms"
       },
       {
@@ -19042,7 +19011,7 @@
       "J-1"
     ],
     "rooms_described": {
-      "transient": 2
+      "other": 2
     },
     "rows": 4,
     "transient_floors": [
@@ -19061,7 +19030,7 @@
         "units_described": 2,
         "units_column_raw": null,
         "use_group": "J-1",
-        "kind": "transient",
+        "kind": "other",
         "description": "1 2  TWO (2) SUPERINTENDENTS? AND ELEVATOR MACHTNE ROOMS: AARTMENTSEOILER.COMPACTOR MANAGEMENT OFFICES"
       },
       {
@@ -19202,7 +19171,6 @@
       5
     ],
     "residential_floors": [
-      1,
       2
     ],
     "shared_floors": [
@@ -19274,7 +19242,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY AND ACCESSORY 24"
       },
       {
@@ -19360,7 +19328,6 @@
       5
     ],
     "residential_floors": [
-      1,
       2
     ],
     "shared_floors": [
@@ -19432,7 +19399,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY AND ACCESSORY 24"
       },
       {
@@ -19504,7 +19471,9 @@
     "rows": 6,
     "transient_floors": [],
     "residential_floors": [
-      1
+      1,
+      4,
+      5
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -19553,7 +19522,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "25 17 17 10 RES CLASS \"A\" SRO SUITE CLASS \"B' SROS OFFICE, COMM ITCHENS"
       },
       {
@@ -19562,7 +19531,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "10 RES CLASS cLaSS \"Bt SROS SRO SUITE 17 OFFICE Comm (CONTINUED)"
       }
     ],
@@ -19609,7 +19578,8 @@
     "rows": 5,
     "transient_floors": [],
     "residential_floors": [
-      1
+      1,
+      3
     ],
     "shared_floors": [],
     "shared_guest_floors": [],
@@ -19649,7 +19619,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "12 12  Res SINGLE ROOM OCCUPANCY"
       },
       {
@@ -19763,6 +19733,7 @@
     "rows": 6,
     "transient_floors": [],
     "residential_floors": [
+      1,
       2,
       4,
       5
@@ -19796,7 +19767,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "11 RES CIASS \"A\" APTS SRO ROOHING UNITS"
       },
       {
@@ -20191,7 +20162,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBYCOM"
       },
       {
@@ -20429,7 +20400,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBYCOM"
       },
       {
@@ -20690,7 +20661,6 @@
     },
     "rows": 22,
     "transient_floors": [
-      1,
       3,
       4,
       7,
@@ -20760,7 +20730,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, STORAGE ROOMR-1"
       },
       {
@@ -20929,7 +20899,6 @@
     },
     "rows": 22,
     "transient_floors": [
-      1,
       3,
       4,
       7,
@@ -20999,7 +20968,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, STORAGE ROOMR-1"
       },
       {
@@ -21297,7 +21266,6 @@
     "rooms_described": {},
     "rows": 13,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -21346,7 +21314,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY"
       },
       {
@@ -21452,7 +21420,6 @@
     "rooms_described": {},
     "rows": 13,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -21501,7 +21468,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY"
       },
       {
@@ -22096,7 +22063,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "LOBBY, OFFICE J-2"
       },
       {
@@ -23146,7 +23113,6 @@
     },
     "rows": 23,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -23200,7 +23166,7 @@
         "units_described": null,
         "units_column_raw": 1,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "ACCESSORY STORAGEJ-2"
       },
       {
@@ -23263,7 +23229,7 @@
         "units_described": null,
         "units_column_raw": 38,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY J-1"
       },
       {
@@ -23397,7 +23363,6 @@
     },
     "rows": 23,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -23451,7 +23416,7 @@
         "units_described": null,
         "units_column_raw": 1,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "ACCESSORY STORAGEJ-2"
       },
       {
@@ -23514,7 +23479,7 @@
         "units_described": null,
         "units_column_raw": 38,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "LOBBY J-1"
       },
       {
@@ -23649,7 +23614,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -23685,7 +23649,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -23818,7 +23781,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -23827,7 +23790,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -24368,7 +24331,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -24404,7 +24366,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -24546,7 +24507,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -24555,7 +24516,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -25096,7 +25057,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -25132,7 +25092,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -25274,7 +25233,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -25283,7 +25242,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -25824,7 +25783,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -25860,7 +25818,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -26002,7 +25959,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -26011,7 +25968,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -26552,7 +26509,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -26588,7 +26544,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -26730,7 +26685,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -26739,7 +26694,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -27280,7 +27235,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -27316,7 +27270,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -27458,7 +27411,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -27467,7 +27420,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -28008,7 +27961,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -28044,7 +27996,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -28186,7 +28137,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -28195,7 +28146,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -28735,7 +28686,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -28771,7 +28721,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -28904,7 +28853,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -28913,7 +28862,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -29453,7 +29402,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -29489,7 +29437,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -29622,7 +29569,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -29631,7 +29578,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -30171,7 +30118,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -30207,7 +30153,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -30340,7 +30285,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -30349,7 +30294,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -30889,7 +30834,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -30925,7 +30869,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -31058,7 +31001,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -31067,7 +31010,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -31607,7 +31550,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -31643,7 +31585,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -31776,7 +31717,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -31785,7 +31726,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -32325,7 +32266,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -32361,7 +32301,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -32494,7 +32433,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -32503,7 +32442,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -33043,7 +32982,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -33079,7 +33017,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -33212,7 +33149,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -33221,7 +33158,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -33762,7 +33699,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -33798,7 +33734,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -33940,7 +33875,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -33949,7 +33884,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -34490,7 +34425,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -34526,7 +34460,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -34659,7 +34592,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -34668,7 +34601,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -35218,7 +35151,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -35254,7 +35186,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -35387,7 +35318,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -35396,7 +35327,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -35946,7 +35877,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -35982,7 +35912,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -36115,7 +36044,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -36124,7 +36053,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -36674,7 +36603,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -36710,7 +36638,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -36843,7 +36770,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -36852,7 +36779,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -37402,7 +37329,6 @@
     },
     "rows": 74,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -37438,7 +37364,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -37580,7 +37505,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -37589,7 +37514,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -38148,7 +38073,6 @@
     },
     "rows": 73,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -38183,7 +38107,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -38271,7 +38194,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -38280,7 +38203,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -38884,7 +38807,6 @@
     },
     "rows": 73,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -38919,7 +38841,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -39007,7 +38928,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -39016,7 +38937,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -39620,7 +39541,6 @@
     },
     "rows": 73,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -39655,7 +39575,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -39743,7 +39662,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -39752,7 +39671,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -40356,7 +40275,6 @@
     },
     "rows": 73,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -40391,7 +40309,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -40479,7 +40396,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -40488,7 +40405,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -41092,7 +41009,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -41125,7 +41041,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -41213,7 +41128,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -41222,7 +41137,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -41808,7 +41723,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -41841,7 +41755,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -41929,7 +41842,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -41938,7 +41851,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -42524,7 +42437,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -42557,7 +42469,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -42645,7 +42556,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -42654,7 +42565,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -43240,7 +43151,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -43273,7 +43183,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -43361,7 +43270,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -43370,7 +43279,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -43965,7 +43874,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -43985,7 +43893,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -44078,7 +43985,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY-RENTAL, RESIDENTIAL"
       },
       {
@@ -44646,7 +44553,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -44666,7 +44572,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -44759,7 +44664,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY-RENTAL, RESIDENTIAL"
       },
       {
@@ -45327,7 +45232,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -45347,7 +45251,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -45440,7 +45343,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY-RENTAL, RESIDENTIAL"
       },
       {
@@ -46008,7 +45911,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -46028,7 +45930,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -46121,7 +46022,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY-RENTAL, RESIDENTIAL"
       },
       {
@@ -46689,7 +46590,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -46709,7 +46609,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -46802,7 +46701,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY-RENTAL, RESIDENTIAL"
       },
       {
@@ -47358,7 +47257,6 @@
     },
     "rows": 32,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -47368,7 +47266,6 @@
       23
     ],
     "residential_floors": [
-      1,
       4,
       5,
       6,
@@ -47382,7 +47279,6 @@
       27
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -47407,7 +47303,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -47416,7 +47312,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -47711,7 +47607,6 @@
     },
     "rows": 43,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -47735,7 +47630,6 @@
       27
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -47859,7 +47753,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -47868,7 +47762,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -48164,7 +48058,6 @@
     },
     "rows": 47,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -48191,7 +48084,6 @@
       35
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -48315,7 +48207,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -48324,7 +48216,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -48656,7 +48548,6 @@
     },
     "rows": 47,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -48683,7 +48574,6 @@
       35
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -48807,7 +48697,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -48816,7 +48706,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -49148,7 +49038,6 @@
     },
     "rows": 55,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -49180,7 +49069,6 @@
       47
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -49304,7 +49192,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -49313,7 +49201,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -49717,7 +49605,6 @@
     },
     "rows": 56,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -49750,7 +49637,6 @@
       47
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -49874,7 +49760,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -49883,7 +49769,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -50296,7 +50182,6 @@
     },
     "rows": 56,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -50329,7 +50214,6 @@
       47
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -50453,7 +50337,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -50462,7 +50346,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -50875,7 +50759,6 @@
     },
     "rows": 56,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -50908,7 +50791,6 @@
       47
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -51032,7 +50914,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -51041,7 +50923,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -51454,7 +51336,6 @@
     },
     "rows": 64,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -51490,7 +51371,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -51614,7 +51494,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -51623,7 +51503,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -52109,7 +51989,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -52145,7 +52024,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -52278,7 +52156,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -52287,7 +52165,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -52827,7 +52705,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -52863,7 +52740,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -52996,7 +52872,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -53005,7 +52881,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -53545,7 +53421,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -53581,7 +53456,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -53714,7 +53588,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -53723,7 +53597,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -54263,7 +54137,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -54299,7 +54172,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -54432,7 +54304,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -54441,7 +54313,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -54981,7 +54853,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -55017,7 +54888,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -55150,7 +55020,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -55159,7 +55029,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -55699,7 +55569,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -55735,7 +55604,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -55868,7 +55736,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -55877,7 +55745,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -56417,7 +56285,6 @@
     },
     "rows": 71,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -56453,7 +56320,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -56586,7 +56452,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -56595,7 +56461,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -57136,7 +57002,6 @@
     },
     "rows": 72,
     "transient_floors": [
-      1,
       3,
       5,
       6,
@@ -57172,7 +57037,6 @@
       56
     ],
     "shared_floors": [
-      1,
       5,
       6,
       20,
@@ -57314,7 +57178,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -57323,7 +57187,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY- RENTAL-RESIDENTIAL"
       },
       {
@@ -58091,7 +57955,9 @@
     "rooms_described": {},
     "rows": 4,
     "transient_floors": [],
-    "residential_floors": [],
+    "residential_floors": [
+      3
+    ],
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
@@ -58121,7 +57987,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "",
-        "kind": "other",
+        "kind": "residential",
         "description": "28 OFFICE. STUDIO; CLASSROOM"
       },
       {
@@ -58560,7 +58426,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "LOBBY J-2"
       },
       {
@@ -58720,7 +58586,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "LOBBY J-2"
       },
       {
@@ -58793,7 +58659,6 @@
     },
     "rows": 32,
     "transient_floors": [
-      1,
       2,
       4,
       5,
@@ -58801,7 +58666,6 @@
       12
     ],
     "residential_floors": [
-      1,
       14,
       15,
       16,
@@ -58813,11 +58677,9 @@
       38,
       42
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -58871,7 +58733,7 @@
         "units_described": null,
         "units_column_raw": 4,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL  LOBBY, LOUNGE, OFFICER-2"
       },
       {
@@ -58898,7 +58760,7 @@
         "units_described": null,
         "units_column_raw": 8,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, LUGGAGE STORAGE, REFUSE"
       },
       {
@@ -59133,7 +58995,6 @@
     },
     "rows": 32,
     "transient_floors": [
-      1,
       2,
       4,
       5,
@@ -59141,7 +59002,6 @@
       12
     ],
     "residential_floors": [
-      1,
       14,
       15,
       16,
@@ -59153,11 +59013,9 @@
       38,
       42
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -59211,7 +59069,7 @@
         "units_described": null,
         "units_column_raw": 4,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL  LOBBY, LOUNGE, OFFICER-2"
       },
       {
@@ -59238,7 +59096,7 @@
         "units_described": null,
         "units_column_raw": 8,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, LUGGAGE STORAGE, REFUSE"
       },
       {
@@ -59473,7 +59331,6 @@
     "rows": 23,
     "transient_floors": [],
     "residential_floors": [
-      1,
       4,
       5,
       6
@@ -59588,7 +59445,7 @@
         "units_described": null,
         "units_column_raw": 2,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBYR-2"
       },
       {
@@ -59717,7 +59574,6 @@
     "rows": 23,
     "transient_floors": [],
     "residential_floors": [
-      1,
       4,
       5,
       6
@@ -59832,7 +59688,7 @@
         "units_described": null,
         "units_column_raw": 2,
         "use_group": "2B",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBYR-2"
       },
       {
@@ -59960,7 +59816,6 @@
     },
     "rows": 20,
     "transient_floors": [
-      1,
       2,
       3,
       4
@@ -59970,11 +59825,9 @@
       5,
       9
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -60046,7 +59899,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY J-2"
       },
       {
@@ -60082,7 +59935,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -60181,7 +60034,6 @@
     },
     "rows": 20,
     "transient_floors": [
-      1,
       2,
       3,
       4
@@ -60191,11 +60043,9 @@
       5,
       9
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -60267,7 +60117,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY J-2"
       },
       {
@@ -60303,7 +60153,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -60663,7 +60513,6 @@
     },
     "rows": 28,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -60707,7 +60556,7 @@
         "units_described": null,
         "units_column_raw": 70,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -60824,7 +60673,7 @@
         "units_described": null,
         "units_column_raw": 27,
         "use_group": "2B",
-        "kind": "transient",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBYJ-1"
       },
       {
@@ -60833,7 +60682,7 @@
         "units_described": null,
         "units_column_raw": 1,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL STORAGE (ACCESSORY USE)B-2"
       },
       {
@@ -60960,7 +60809,6 @@
     },
     "rows": 28,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -61004,7 +60852,7 @@
         "units_described": null,
         "units_column_raw": 70,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY J-1"
       },
       {
@@ -61121,7 +60969,7 @@
         "units_described": null,
         "units_column_raw": 27,
         "use_group": "2B",
-        "kind": "transient",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBYJ-1"
       },
       {
@@ -61130,7 +60978,7 @@
         "units_described": null,
         "units_column_raw": 1,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL STORAGE (ACCESSORY USE)B-2"
       },
       {
@@ -61255,23 +61103,19 @@
     },
     "rows": 12,
     "transient_floors": [
-      1,
       2,
       3,
       4,
       5
     ],
     "residential_floors": [
-      1,
       6,
       7,
       8
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -61298,7 +61142,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2"
       },
       {
@@ -61307,7 +61151,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -61405,23 +61249,19 @@
     },
     "rows": 12,
     "transient_floors": [
-      1,
       2,
       3,
       4,
       5
     ],
     "residential_floors": [
-      1,
       6,
       7,
       8
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -61448,7 +61288,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2"
       },
       {
@@ -61457,7 +61297,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1"
       },
       {
@@ -63308,7 +63148,6 @@
     "rooms_described": {},
     "rows": 8,
     "transient_floors": [
-      1,
       2,
       3,
       4
@@ -63334,7 +63173,7 @@
         "units_described": null,
         "units_column_raw": 66,
         "use_group": "12",
-        "kind": "transient",
+        "kind": "other",
         "description": "5 HOTEL LOUNGE, MAIN ENTRANCE, LOBBY,"
       },
       {
@@ -63413,7 +63252,6 @@
     "rooms_described": {},
     "rows": 8,
     "transient_floors": [
-      1,
       2,
       3,
       4
@@ -63439,7 +63277,7 @@
         "units_described": null,
         "units_column_raw": 66,
         "use_group": "12",
-        "kind": "transient",
+        "kind": "other",
         "description": "5 HOTEL LOUNGE, MAIN ENTRANCE, LOBBY,"
       },
       {
@@ -64681,269 +64519,14 @@
     "transient_floors": [
       1,
       2,
-      5,
       6
     ],
     "residential_floors": [
-      1,
       12,
       13
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
-    "transient_contiguous": false,
-    "floors": [
-      {
-        "floor": "CEL",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": 2,
-        "use_group": "5",
-        "kind": "other",
-        "description": "BICYCLE STORAGE ROOM, STORAGE ROOMB-2"
-      },
-      {
-        "floor": "CEL",
-        "occupancy_load": 50,
-        "units_described": null,
-        "units_column_raw": 43,
-        "use_group": "2, 5",
-        "kind": "other",
-        "description": "PARKING GARAGE (28 SPACES ACCESSORY"
-      },
-      {
-        "floor": "CEL",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": 45,
-        "use_group": "5",
-        "kind": "transient",
-        "description": "RECREATION ROOM (ACCESSORY TO HOTEL)F-3"
-      },
-      {
-        "floor": "CEL",
-        "occupancy_load": 75,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "2, 5",
-        "kind": "other",
-        "description": "WATER METER ROOM, GAS METER ROOM,"
-      },
-      {
-        "floor": "SUB",
-        "occupancy_load": null,
-        "units_described": null,
-        "units_column_raw": 24,
-        "use_group": "5",
-        "kind": "other",
-        "description": "OFFICE, STAFF LOUNGE NOTE: EXHIBITS I &"
-      },
-      {
-        "floor": "SUB",
-        "occupancy_load": null,
-        "units_described": null,
-        "units_column_raw": 49,
-        "use_group": "2, 5",
-        "kind": "other",
-        "description": "PARKING GARAGE (32 SPACES ACCESSORY"
-      },
-      {
-        "floor": "SUB",
-        "occupancy_load": null,
-        "units_described": null,
-        "units_column_raw": 1,
-        "use_group": "2, 5",
-        "kind": "other",
-        "description": "LAUNDRY ROOM, ELEVATOR MACHINE ROOMD-2"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": 25,
-        "use_group": "5",
-        "kind": "transient",
-        "description": "HOTEL LOBBY/LOUNGEF-4"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "2",
-        "kind": "residential",
-        "description": "RESIDENTIAL LOBBY J-2"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": 365,
-        "use_group": "6",
-        "kind": "other",
-        "description": "RETAIL STORESC"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 50,
-        "units_described": null,
-        "units_column_raw": 9,
-        "use_group": "4",
-        "kind": "other",
-        "description": "AMBULATORY DIAGNOSTIC/TREATMENT"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 50,
-        "units_described": null,
-        "units_column_raw": 4,
-        "use_group": "5",
-        "kind": "transient",
-        "description": "OFFICES, HOTEL RECEPTION DESKE"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 75,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "6",
-        "kind": "other",
-        "description": "RPZ CLOSET D-2"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "2, 5",
-        "kind": "transient",
-        "description": "RESIDENTIAL PACKAGE ROOM, HOTEL"
-      },
-      {
-        "floor": "001",
-        "occupancy_load": 50,
-        "units_described": null,
-        "units_column_raw": 6,
-        "use_group": "2, 5",
-        "kind": "other",
-        "description": "PARKING GARAGE (4 SPACES ACCESSORY"
-      },
-      {
-        "floor": "002",
-        "occupancy_load": 100,
-        "units_described": null,
-        "units_column_raw": 74,
-        "use_group": "5",
-        "kind": "other",
-        "description": "PUBLIC ROOF TERRACCEF-2"
-      },
-      {
-        "floor": "002",
-        "occupancy_load": 40,
-        "units_described": null,
-        "units_column_raw": 71,
-        "use_group": "31",
-        "kind": "transient",
-        "description": "5 HOTEL ROOMS, TELECOMMUNICATIONS"
-      },
-      {
-        "floor": "005",
-        "occupancy_load": 75,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "5",
-        "kind": "transient",
-        "description": "HOTEL BOILER ROOM, HOTEL ELECTRICAL"
-      },
-      {
-        "floor": "005",
-        "occupancy_load": 40,
-        "units_described": 6,
-        "units_column_raw": 6,
-        "use_group": "2",
-        "kind": "other",
-        "description": "(6) APTS.TRASH ROOM,"
-      },
-      {
-        "floor": "006",
-        "occupancy_load": 75,
-        "units_described": null,
-        "units_column_raw": null,
-        "use_group": "5",
-        "kind": "transient",
-        "description": "HOTEL ELEVATOR MACHINE ROOMD-2"
-      },
-      {
-        "floor": "007",
-        "occupancy_load": 40,
-        "units_described": 6,
-        "units_column_raw": 6,
-        "use_group": "2",
-        "kind": "other",
-        "description": "(6) APTS. TRASH ROOM,"
-      },
-      {
-        "floor": "012",
-        "occupancy_load": 40,
-        "units_described": null,
-        "units_column_raw": 4,
-        "use_group": "2",
-        "kind": "residential",
-        "description": "1/2 APARTMENTS, TRASH ROOM,"
-      },
-      {
-        "floor": "013",
-        "occupancy_load": 40,
-        "units_described": null,
-        "units_column_raw": 4,
-        "use_group": "2",
-        "kind": "residential",
-        "description": "1/2 APARTMENTS, MECHANICAL ROOMJ-2"
-      }
-    ],
-    "newest_filed": "2013-03-13",
-    "years_superseded": 0.3,
-    "is_current": true
-  },
-  {
-    "file": "3392395_301597118-19.PDF",
-    "readable": true,
-    "address": "75 SMITH STREET",
-    "bin": "3392395",
-    "co_type": "Temporary",
-    "effective_date": "01/10/2013",
-    "use_groups": [
-      "2",
-      "31",
-      "4",
-      "5",
-      "6"
-    ],
-    "rooms_described": {},
-    "rows": 23,
-    "transient_floors": [
-      1,
-      2,
-      5,
-      6
-    ],
-    "residential_floors": [
-      1,
-      5,
-      7,
-      12,
-      13
-    ],
-    "shared_floors": [
-      1,
-      5
-    ],
-    "shared_guest_floors": [
-      5
-    ],
     "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
@@ -65016,7 +64599,7 @@
         "units_described": null,
         "units_column_raw": 25,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY/LOUNGEF-4"
       },
       {
@@ -65025,7 +64608,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY J-2"
       },
       {
@@ -65106,7 +64689,251 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
+        "kind": "other",
+        "description": "HOTEL BOILER ROOM, HOTEL ELECTRICAL"
+      },
+      {
+        "floor": "005",
+        "occupancy_load": 40,
+        "units_described": 6,
+        "units_column_raw": 6,
+        "use_group": "2",
+        "kind": "other",
+        "description": "(6) APTS.TRASH ROOM,"
+      },
+      {
+        "floor": "006",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "5",
         "kind": "transient",
+        "description": "HOTEL ELEVATOR MACHINE ROOMD-2"
+      },
+      {
+        "floor": "007",
+        "occupancy_load": 40,
+        "units_described": 6,
+        "units_column_raw": 6,
+        "use_group": "2",
+        "kind": "other",
+        "description": "(6) APTS. TRASH ROOM,"
+      },
+      {
+        "floor": "012",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": 4,
+        "use_group": "2",
+        "kind": "residential",
+        "description": "1/2 APARTMENTS, TRASH ROOM,"
+      },
+      {
+        "floor": "013",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": 4,
+        "use_group": "2",
+        "kind": "residential",
+        "description": "1/2 APARTMENTS, MECHANICAL ROOMJ-2"
+      }
+    ],
+    "newest_filed": "2013-03-13",
+    "years_superseded": 0.3,
+    "is_current": true
+  },
+  {
+    "file": "3392395_301597118-19.PDF",
+    "readable": true,
+    "address": "75 SMITH STREET",
+    "bin": "3392395",
+    "co_type": "Temporary",
+    "effective_date": "01/10/2013",
+    "use_groups": [
+      "2",
+      "31",
+      "4",
+      "5",
+      "6"
+    ],
+    "rooms_described": {},
+    "rows": 23,
+    "transient_floors": [
+      1,
+      2,
+      6
+    ],
+    "residential_floors": [
+      5,
+      7,
+      12,
+      13
+    ],
+    "shared_floors": [],
+    "shared_guest_floors": [],
+    "lobby_shared_only": false,
+    "transient_contiguous": false,
+    "floors": [
+      {
+        "floor": "CEL",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": 2,
+        "use_group": "5",
+        "kind": "other",
+        "description": "BICYCLE STORAGE ROOM, STORAGE ROOMB-2"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": 43,
+        "use_group": "2, 5",
+        "kind": "other",
+        "description": "PARKING GARAGE (28 SPACES ACCESSORY"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": 45,
+        "use_group": "5",
+        "kind": "transient",
+        "description": "RECREATION ROOM (ACCESSORY TO HOTEL)F-3"
+      },
+      {
+        "floor": "CEL",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "2, 5",
+        "kind": "other",
+        "description": "WATER METER ROOM, GAS METER ROOM,"
+      },
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": 24,
+        "use_group": "5",
+        "kind": "other",
+        "description": "OFFICE, STAFF LOUNGE NOTE: EXHIBITS I &"
+      },
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": 49,
+        "use_group": "2, 5",
+        "kind": "other",
+        "description": "PARKING GARAGE (32 SPACES ACCESSORY"
+      },
+      {
+        "floor": "SUB",
+        "occupancy_load": null,
+        "units_described": null,
+        "units_column_raw": 1,
+        "use_group": "2, 5",
+        "kind": "other",
+        "description": "LAUNDRY ROOM, ELEVATOR MACHINE ROOMD-2"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": 25,
+        "use_group": "5",
+        "kind": "other",
+        "description": "HOTEL LOBBY/LOUNGEF-4"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "2",
+        "kind": "other",
+        "description": "RESIDENTIAL LOBBY J-2"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": 365,
+        "use_group": "6",
+        "kind": "other",
+        "description": "RETAIL STORESC"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": 9,
+        "use_group": "4",
+        "kind": "other",
+        "description": "AMBULATORY DIAGNOSTIC/TREATMENT"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": 4,
+        "use_group": "5",
+        "kind": "transient",
+        "description": "OFFICES, HOTEL RECEPTION DESKE"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "6",
+        "kind": "other",
+        "description": "RPZ CLOSET D-2"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "2, 5",
+        "kind": "transient",
+        "description": "RESIDENTIAL PACKAGE ROOM, HOTEL"
+      },
+      {
+        "floor": "001",
+        "occupancy_load": 50,
+        "units_described": null,
+        "units_column_raw": 6,
+        "use_group": "2, 5",
+        "kind": "other",
+        "description": "PARKING GARAGE (4 SPACES ACCESSORY"
+      },
+      {
+        "floor": "002",
+        "occupancy_load": 100,
+        "units_described": null,
+        "units_column_raw": 74,
+        "use_group": "5",
+        "kind": "other",
+        "description": "PUBLIC ROOF TERRACCEF-2"
+      },
+      {
+        "floor": "002",
+        "occupancy_load": 40,
+        "units_described": null,
+        "units_column_raw": 71,
+        "use_group": "31",
+        "kind": "transient",
+        "description": "5 HOTEL ROOMS, TELECOMMUNICATIONS"
+      },
+      {
+        "floor": "005",
+        "occupancy_load": 75,
+        "units_described": null,
+        "units_column_raw": null,
+        "use_group": "5",
+        "kind": "other",
         "description": "HOTEL BOILER ROOM, HOTEL ELECTRICAL"
       },
       {
@@ -65182,7 +65009,6 @@
       6
     ],
     "residential_floors": [
-      1,
       7,
       8,
       14,
@@ -65191,11 +65017,9 @@
       17,
       19
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -65213,7 +65037,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5, 2",
-        "kind": "residential",
+        "kind": "other",
         "description": "ACCESSORY RESIDENTIAL STORAGES-2"
       },
       {
@@ -65339,7 +65163,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1001"
       },
       {
@@ -65348,7 +65172,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2001"
       },
       {
@@ -65532,7 +65356,6 @@
       6
     ],
     "residential_floors": [
-      1,
       7,
       8,
       14,
@@ -65541,11 +65364,9 @@
       17,
       19
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -65563,7 +65384,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5, 2",
-        "kind": "residential",
+        "kind": "other",
         "description": "ACCESSORY RESIDENTIAL STORAGES-2"
       },
       {
@@ -65689,7 +65510,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1001"
       },
       {
@@ -65698,7 +65519,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY R-2001"
       },
       {
@@ -65873,7 +65694,6 @@
     "rooms_described": {},
     "rows": 13,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -65881,7 +65701,6 @@
       6
     ],
     "residential_floors": [
-      1,
       7,
       8,
       9,
@@ -65889,11 +65708,9 @@
       11,
       12
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -65902,7 +65719,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY. J-2"
       },
       {
@@ -65911,7 +65728,7 @@
         "units_described": null,
         "units_column_raw": 65,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, RECEPTION, OFFICE, TEA"
       },
       {
@@ -66032,7 +65849,6 @@
     "rooms_described": {},
     "rows": 13,
     "transient_floors": [
-      1,
       2,
       3,
       4,
@@ -66040,7 +65856,6 @@
       6
     ],
     "residential_floors": [
-      1,
       7,
       8,
       9,
@@ -66048,11 +65863,9 @@
       11,
       12
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": true,
     "floors": [
       {
@@ -66061,7 +65874,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY. J-2"
       },
       {
@@ -66070,7 +65883,7 @@
         "units_described": null,
         "units_column_raw": 65,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, RECEPTION, OFFICE, TEA"
       },
       {
@@ -66247,7 +66060,7 @@
         "units_described": null,
         "units_column_raw": 7,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY,RECEPTION,MECHANICAL"
       },
       {
@@ -66370,7 +66183,7 @@
         "units_described": null,
         "units_column_raw": 7,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY,RECEPTION,MECHANICAL"
       },
       {
@@ -66439,7 +66252,6 @@
     },
     "rows": 27,
     "transient_floors": [
-      1,
       3,
       4,
       5,
@@ -66462,7 +66274,7 @@
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -66515,7 +66327,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY. R-1001"
       },
       {
@@ -66726,7 +66538,6 @@
     },
     "rows": 27,
     "transient_floors": [
-      1,
       3,
       4,
       5,
@@ -66749,7 +66560,7 @@
     "shared_floors": [],
     "shared_guest_floors": [],
     "lobby_shared_only": false,
-    "transient_contiguous": false,
+    "transient_contiguous": true,
     "floors": [
       {
         "floor": "CEL",
@@ -66802,7 +66613,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY. R-1001"
       },
       {
@@ -67078,7 +66889,7 @@
         "units_described": null,
         "units_column_raw": 5,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1001"
       },
       {
@@ -67201,7 +67012,7 @@
         "units_described": null,
         "units_column_raw": 5,
         "use_group": "5B",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY R-1001"
       },
       {
@@ -68596,24 +68407,20 @@
     },
     "rows": 21,
     "transient_floors": [
-      1,
       2,
       4,
       5,
       13
     ],
     "residential_floors": [
-      1,
       14,
       15,
       25,
       26
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -68622,7 +68429,7 @@
         "units_described": null,
         "units_column_raw": 5,
         "use_group": "2, 5",
-        "kind": "transient",
+        "kind": "other",
         "description": "BICYCLE STORAGE LOCKER ROOM, HOTEL"
       },
       {
@@ -68667,7 +68474,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY. (MARKETING LOBBY)R-2001"
       },
       {
@@ -68676,7 +68483,7 @@
         "units_described": null,
         "units_column_raw": 120,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, BAR, RESTAURANT EATING"
       },
       {
@@ -68828,23 +68635,19 @@
     },
     "rows": 15,
     "transient_floors": [
-      1,
       2,
       4,
       5
     ],
     "residential_floors": [
-      1,
       14,
       15,
       25,
       26
     ],
-    "shared_floors": [
-      1
-    ],
+    "shared_floors": [],
     "shared_guest_floors": [],
-    "lobby_shared_only": true,
+    "lobby_shared_only": false,
     "transient_contiguous": false,
     "floors": [
       {
@@ -68862,7 +68665,7 @@
         "units_described": null,
         "units_column_raw": null,
         "use_group": "2",
-        "kind": "residential",
+        "kind": "other",
         "description": "RESIDENTIAL LOBBY. (MARKETING LOBBY)R-2001"
       },
       {
@@ -68871,7 +68674,7 @@
         "units_described": null,
         "units_column_raw": 120,
         "use_group": "5",
-        "kind": "transient",
+        "kind": "other",
         "description": "HOTEL LOBBY, BAR, RESTAURANT EATING"
       },
       {

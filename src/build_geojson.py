@@ -335,6 +335,45 @@ DOOR_USES = frozenset({
 REGISTER_OUTRANKS_DOOR = 10
 
 
+# Uses that agree with a certificate showing somewhere people sleep. A
+# certificate listing guest rooms or dwelling units does not argue with any of
+# these, so none of them is marked partial however few occupants carry it.
+USES_AGREEING_WITH_SLEEPING = frozenset({
+    "hotel", "hostel", "sro", "student_housing", "institutional_lodging",
+    "private_club", "supportive_housing", "residential",
+    "ground_floor_tenant", "unknown", "",
+})
+
+
+def _use_argues_with_the_certificate(current_use: str, floors: dict | None) -> bool:
+    """One occupant's use, set against what the certificate says is upstairs.
+
+    The Class B count was the first test here and it cannot carry this. 118 of
+    the 217 buildings in "Transient, no operator" that have registered rooms
+    stand on that single HPD field and nothing else, so judging a use by it is
+    circular for most of the segment it matters to. The certificate is the one
+    independent record of what the building is for.
+
+    Affirmative evidence only. A certificate that lists guest rooms or dwelling
+    units on a floor says people sleep there, and an office is not that. No
+    certificate says nothing, and this stays quiet rather than guessing: 121
+    buildings on the map have a floor table and the rest are not evidence of
+    anything either way.
+
+    This used to carry its own ancillary list, because the kind classifier
+    typed a lobby as transient and a custodian's flat as residential. That
+    belongs in the classifier, which now does it, and keeping a copy here
+    would be a second rule to drift against the first.
+    """
+    if not floors:
+        return False
+    sleeping = [f for f in (floors.get("floors") or [])
+                if f.get("kind") in ("transient", "residential")]
+    if not sleeping:
+        return False
+    return (current_use or "") not in USES_AGREEING_WITH_SLEEPING
+
+
 def _coo_fields(floors: dict | None) -> dict:
     """The published shape of one certificate's floor table."""
     if not floors:
@@ -1625,6 +1664,13 @@ def build_geojson(
             # enrich.py. Published whole: the question it answers, what is on
             # the upper floors, does not survive being summarised to a count.
             **_coo_fields(coo_floors.get(str(fp.get("bin") or "").strip())),
+            # Set here rather than in enrich because this is where the
+            # certificate is. True means the sweep elected a use the
+            # building's own certificate argues with, so the panel shows the
+            # occupant list instead of a headline it cannot stand behind.
+            "current_use_partial": _use_argues_with_the_certificate(
+                record.get("current_use", ""),
+                coo_floors.get(str(fp.get("bin") or "").strip())),
             "source_pulled_on": record["source_pulled_on"],
             "last_sale_date": record.get("last_sale_date"),
             "last_sale_price": record.get("last_sale_price"),
