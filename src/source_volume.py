@@ -34,7 +34,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from config import DATA_RAW, DATA_PROCESSED  # noqa: E402
 from src import provenance  # noqa: E402
 
 HISTORY = ROOT / "data" / "source_counts.json"
