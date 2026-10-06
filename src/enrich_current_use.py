@@ -213,6 +213,14 @@ def _is_bare_address(name: str) -> bool:
     return bool(BARE_ADDRESS.match((name or "").strip()))
 
 
+# Types whose listing agrees with registered transient rooms. Read off
+# TYPE_RULES rather than written out again, so a type added to the hotel or
+# hostel rule is corroborating here without anybody remembering to say so.
+CORROBORATING_TYPES = frozenset(
+    t for use, _label, types in TYPE_RULES if use in ("hotel", "hostel") for t in types
+)
+
+
 NO_INFORMATION_TYPES = frozenset({
     "premise", "subpremise", "point_of_interest", "establishment",
     "geocode", "street_address", "route", "political",
@@ -294,7 +302,9 @@ def restate(row: dict) -> bool:
         "primaryType": row.get("primary_type") or "",
         "types": row.get("types") or [],
         "businessStatus": row.get("business_status") or "",
-    })
+        # A stored row carries the building it came from, so a re-read knows
+        # whether a door pin's type agrees with the register.
+    }, class_b=int(row.get("hpd_class_b") or 0))
     if use == row.get("current_use"):
         return False
     # Only ever a correction, never an erasure. A stored row that carries a
@@ -311,18 +321,54 @@ def restate(row: dict) -> bool:
     return True
 
 
-def classify(place: dict) -> tuple[str, str, str, str]:
-    """Return (use, label, confidence, basis) for one Places result."""
+def classify(place: dict, class_b: int = 0) -> tuple[str, str, str, str]:
+    """Return (use, label, confidence, basis) for one Places result.
+
+    class_b is the building's registered transient rooms, and it is here for
+    one purpose: to tell a door pin that agrees with the register from one
+    that argues with it. Zero when the caller has no building to hand, which
+    is the old behaviour exactly.
+    """
     raw_name = place.get("displayName", {}).get("text") or ""
     name = raw_name.lower()
     types = [t.lower() for t in place.get("types", [])]
     primary = (place.get("primaryType") or "").lower()
     type_set = set(types) | ({primary} if primary else set())
 
-    # Before anything else. A pin on a door tells us nothing, whatever type
-    # Google hangs on it, and the type is often wrong in the flattering
-    # direction — "20 Broad" came back residential.
-    if _is_bare_address(raw_name):
+    # Before anything else. A pin on a door tells us nothing, and the type is
+    # often wrong in the flattering direction — "20 Broad" came back
+    # residential, and 57 more pins carry condominium or apartment types that
+    # would read as the building's use if they were believed.
+    #
+    # Unless the register already says the same thing. 138 Bowery is 48
+    # registered Class B rooms and an operating hotel, and its listing is
+    # named after the door it sits on, so this discarded a type=hotel on a
+    # building whose own HPD registration corroborates it — then reported
+    # "Unknown", and the segment chain read no operator. A BD person googles
+    # the address and sees a hotel in ten seconds.
+    #
+    # So the test is corroboration, not trust: a lodging type survives only
+    # where the city has registered transient rooms to agree with it.
+    #
+    # An apartment type on those same rooms is still discarded, and the reason
+    # matters because it is easy to state wrongly in either direction.
+    #
+    # It is not that apartments are impossible there. Nor is it that Class B
+    # rooms may simply be run as apartments: under the Multiple Dwelling Law a
+    # Class A unit shall only be used for permanent residence, and moving
+    # rooms from Class B to Class A means filed plans and a new certificate of
+    # occupancy. It is a conversion, not a choice made week to week.
+    #
+    # It is that a single listing named after a door cannot tell us which of
+    # three things it found. A lawful conversion that has been through plans
+    # and a new C of O. An unlawful occupancy of rooms still registered as
+    # transient. Or a noisy pin that means nothing at all. Those have very
+    # different consequences for somebody sourcing the building, and nothing
+    # in one Places result separates them.
+    #
+    # So the honest output is unknown. Not "apartments", which asserts the
+    # first; not "transient", which asserts against all three.
+    if _is_bare_address(raw_name) and not (class_b > 0 and type_set & CORROBORATING_TYPES):
         return "unknown", "Unknown", "low", "name is a street address"
 
     # primaryType is Google's own answer to "what is this place"; the types
@@ -649,7 +695,8 @@ _USE_PRIORITY = {
 }
 
 
-def candidates(address, lat: float, lon: float, footprint: list = None) -> list[dict]:
+def candidates(address, lat: float, lon: float, footprint: list = None,
+               class_b: int = 0) -> list[dict]:
     """Every address-verified occupant, classified but not yet ranked.
 
     Split from the ranking so the cache can hold candidates rather than a
@@ -692,7 +739,7 @@ def candidates(address, lat: float, lon: float, footprint: list = None) -> list[
             match = "high"
         elif match == "low":
             continue
-        use, label, conf, basis = classify(p)
+        use, label, conf, basis = classify(p, class_b=class_b)
         scored.append({
             "place_id": p.get("id", ""),
             "google_name": p.get("displayName", {}).get("text", ""),
@@ -862,14 +909,14 @@ def main() -> None:
     # point probe could not reach — a Citi Bike dock at 35-02 37 Avenue, and
     # nothing at all at 156 Tillary — and they are the ones worth paying to ask
     # again. Everything else stays cached and costs nothing.
-    def thin(entry):
+    def thin(entry, class_b=0):
         for c in (entry or []):
             use, _, _, _ = classify({
                 "displayName": {"text": c.get("google_name", "")},
                 "types": c.get("types") or [],
                 "primaryType": c.get("primary_type") or "",
                 "primaryTypeDisplayName": {"text": c.get("primary_type_display", "")},
-            })
+            }, class_b=class_b)
             if use not in ("", "ground_floor_tenant", "unknown", "other"):
                 return False
         return True
@@ -878,7 +925,7 @@ def main() -> None:
         key = f"{t['bbl']}|{t.get('address','')}"
         if key not in cache:
             return True
-        return args.rescue and thin(cache[key])
+        return args.rescue and thin(cache[key], int(t.get("hpd_class_b") or 0))
 
     uncached = [t for t in targets if needs_lookup(t)]
 
@@ -910,7 +957,8 @@ def main() -> None:
 
         # The cache holds candidates, never the verdict. Ranking is applied on
         # every run, so changing how the winner is chosen costs nothing.
-        if key in cache and not (args.rescue and thin(cache[key])):
+        if key in cache and not (args.rescue and thin(cache[key],
+                                                      int(rec.get("hpd_class_b") or 0))):
             # Re-classify on read. The cache is meant to hold candidates rather
             # than verdicts, but classification was being baked in at write
             # time, so a change to TYPE_RULES or TENANT_TYPES reached only
@@ -924,14 +972,15 @@ def main() -> None:
                     "types": c.get("types") or [],
                     "primaryType": c.get("primary_type") or "",
                     "primaryTypeDisplayName": {"text": c.get("primary_type_display", "")},
-                })
+                }, class_b=int(rec.get("hpd_class_b") or 0))
                 c["current_use"], c["current_use_label"] = use, label
                 c["use_confidence"], c["basis"] = conf, basis
         else:
             if args.limit and new >= args.limit:
                 break
             try:
-                scored = candidates(known, rec["lat"], rec["lon"], rec.get("footprint"))
+                scored = candidates(known, rec["lat"], rec["lon"], rec.get("footprint"),
+                                class_b=int(rec.get("hpd_class_b") or 0))
             except Exception as e:
                 print(f"  ERROR {addr}: {e}")
                 continue

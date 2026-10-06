@@ -390,6 +390,74 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
         "carry what they found")
 
 
+# --- a door pin the register agrees with ------------------------------------
+
+def test_a_corroborated_lodging_pin_survives_the_bare_address_rule():
+    """138 Bowery is 48 registered Class B rooms and an operating hotel.
+
+    Its Places listing is named after the door it sits on, so the rule that
+    throws away address-shaped names threw away a type=hotel on a building
+    whose own HPD registration says the same thing — and reported Unknown, so
+    the segment chain read no operator. A BD person googles the address and
+    sees a hotel in ten seconds.
+    """
+    from src.enrich_current_use import classify
+
+    pin = {"displayName": {"text": "138 Bowery"}, "primaryType": "hotel",
+           "types": ["hotel", "lodging"], "businessStatus": "OPERATIONAL"}
+    assert classify(pin, class_b=0)[0] == "unknown", (
+        "with no registered rooms there is nothing to corroborate the pin")
+    assert classify(pin, class_b=48)[0] == "hotel", (
+        "a lodging pin on registered transient rooms is still being discarded")
+
+
+def test_a_pin_the_register_cannot_corroborate_is_still_discarded():
+    """Corroboration, not trust — and not contradiction either.
+
+    57 discarded pins carry condominium or apartment types. Keeping them is
+    not wrong because apartments are impossible on Class B rooms, and not
+    right because Class B rooms may be run as apartments at will: under the
+    MDL a Class A unit shall only be used for permanent residence, and moving
+    rooms across means filed plans and a new certificate of occupancy.
+
+    It is wrong because one listing named after a door cannot say which of
+    three things it found — a lawful conversion, an unlawful occupancy of
+    rooms still registered transient, or a noisy pin. Unknown is the only
+    honest answer to that.
+    """
+    from src.enrich_current_use import classify
+
+    pin = {"displayName": {"text": "66 Madison Ave"}, "primaryType": "apartment_building",
+           "types": ["apartment_building"], "businessStatus": "OPERATIONAL"}
+    assert classify(pin, class_b=134)[0] == "unknown", (
+        "a residential pin is overriding 134 registered Class B rooms")
+
+
+def test_the_corroborating_types_are_read_off_the_rules_not_rewritten():
+    """Two lists of lodging types would drift the first time one changed."""
+    from src.enrich_current_use import CORROBORATING_TYPES, TYPE_RULES
+
+    expected = {t for use, _l, types in TYPE_RULES if use in ("hotel", "hostel") for t in types}
+    assert CORROBORATING_TYPES == expected
+    assert "hotel" in CORROBORATING_TYPES and "hostel" in CORROBORATING_TYPES
+
+
+def test_every_classify_caller_hands_over_the_building():
+    """A caller that forgets the rooms silently restores the old behaviour.
+
+    class_b defaults to 0 so the signature change breaks nothing, which is
+    also how a call site can quietly opt out of the fix. There are five.
+    """
+    import re
+    from pathlib import Path
+
+    src = (Path(__file__).resolve().parents[1] / "src/enrich_current_use.py").read_text()
+    calls = re.findall(r"classify\((?:[^()]|\([^()]*\))*\)", src, re.S)
+    calls = [c for c in calls if not c.startswith("classify(place")]
+    missing = [c[:60].replace("\n", " ") for c in calls if "class_b" not in c]
+    assert not missing, f"classify called without the building's rooms: {missing}"
+
+
 # --- a source that arrives short is not a source that arrives ---------------
 
 def _vol():
