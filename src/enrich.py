@@ -822,6 +822,26 @@ def _license_term_years(created: str, expires: str) -> float | None:
 WEAK_PLACES_USES = {"", "ground_floor_tenant", "other"}
 
 
+# Uses that corroborate registered transient rooms rather than argue with
+# them, plus the two that already admit to partial knowledge.
+USES_AGREEING_WITH_ROOMS = frozenset({
+    "hotel", "hostel", "sro", "student_housing", "institutional_lodging",
+    "private_club", "supportive_housing", "ground_floor_tenant", "unknown", "",
+})
+
+
+def _use_argues_with_the_rooms(cu: dict, record: dict) -> bool:
+    """One occupant's use set against what the city has registered here.
+
+    True means the sweep elected a use the building's own Class B registration
+    contradicts, so the occupant list is the honest answer and the headline
+    over it is not.
+    """
+    if (record.get("hpd_class_b") or 0) <= 0:
+        return False
+    return (cu.get("current_use") or "") not in USES_AGREEING_WITH_ROOMS
+
+
 def _use_holds_building(cu: dict) -> bool:
     """Does this use occupy the building, or does it rent a suite in it?
 
@@ -1278,6 +1298,30 @@ def enrich_pipeline(
             record["current_use_occupants"] = cu.get("occupants", [])
             record["current_use_needs_review"] = bool(cu.get("needs_review")) or bool(notice)
             record["current_use_checked"] = True
+            # Whether this use can speak for the building, or is one occupant
+            # the sweep happened to elect.
+            #
+            # 209 East 14th Street registers 47 Class B rooms, its certificate
+            # says floor two is ten rooms of single-room occupancy, and it read
+            # "Office" at high confidence because one of its eight occupants is
+            # Concrete Temple Theatre. Seven are shops at street level. The
+            # occupant list was right all along; the headline over it was not.
+            #
+            # The test is whether the use argues with the rooms the city has
+            # registered, not how many occupants share it. _use_holds_building
+            # asks the second question and is the right test for the penalty it
+            # guards, but it is the wrong one here: it is False for 55 Church
+            # Street and for 1535 Broadway, where the hotel is one occupant
+            # beside seven ground-floor shops, and electing a use there is
+            # exactly right. A use that agrees with the rooms is corroborated
+            # however few occupants carry it.
+            #
+            # Nothing that reaches the segment chain can be marked this way: a
+            # use that contradicts registered transient rooms is by definition
+            # neither "hotel" nor one of the occupied product types, so the
+            # classification is untouched. 204 buildings carry the flag and
+            # none of them change segment.
+            record["current_use_partial"] = _use_argues_with_the_rooms(cu, record)
             # A shelter, church or clinic is not a sourcing target no matter
             # how many Class B units it registers — but it has to actually
             # hold the building. The penalty used to fire on any occupant at

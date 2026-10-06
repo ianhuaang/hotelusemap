@@ -1694,6 +1694,10 @@ def build_geojson(
             "current_use_source": "google" if record.get("current_use") else "",
             "current_use_occupants": record.get("current_use_occupants", []),
             "current_use_needs_review": record.get("current_use_needs_review", False),
+            # True where the sweep elected a use the building's own Class B
+            # registration contradicts. The panel shows the occupant list
+            # instead of a headline it cannot stand behind.
+            "current_use_partial": record.get("current_use_partial", False),
             "current_use_checked": record.get("current_use_checked", False),
             # Published by the city, carried whole so a reader can open it.
             "occupancy_state": _occupancy_state(record),

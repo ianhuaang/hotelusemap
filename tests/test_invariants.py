@@ -390,6 +390,78 @@ def test_the_sweeps_run_after_something_has_built_a_geojson():
         "carry what they found")
 
 
+# --- one occupant is not a building -----------------------------------------
+
+def test_a_use_that_argues_with_the_rooms_is_marked_partial():
+    """209 East 14th read "Office" over 47 Class B rooms.
+
+    One of its eight occupants is a theatre company; seven are shops at street
+    level, and its certificate says floor two is ten rooms of single-room
+    occupancy. The occupant list was right and the headline over it was not.
+    """
+    from src.enrich import _use_argues_with_the_rooms
+
+    rooms = {"hpd_class_b": 47}
+    assert _use_argues_with_the_rooms({"current_use": "office"}, rooms)
+    assert _use_argues_with_the_rooms({"current_use": "religious"}, rooms)
+    # A use that corroborates the rooms is not partial, however few occupants
+    # carry it -- which is the case _use_holds_building gets wrong here. It is
+    # False for 55 Church Street and 1535 Broadway, where the hotel is one
+    # occupant beside seven ground-floor shops and electing it is right.
+    assert not _use_argues_with_the_rooms({"current_use": "hotel"}, rooms)
+    assert not _use_argues_with_the_rooms({"current_use": "student_housing"}, rooms)
+    # A building with no registered rooms has nothing to argue with.
+    assert not _use_argues_with_the_rooms({"current_use": "office"}, {"hpd_class_b": 0})
+
+
+def test_marking_a_use_partial_cannot_move_a_building_between_segments():
+    """The flag is for the panel, not the classification.
+
+    build_geojson decides segment on current_use == "hotel" and on the
+    occupied product types. A use that contradicts registered transient rooms
+    is neither, so nothing carrying this flag can reach either branch -- which
+    is what makes it shippable without re-deciding the chain.
+    """
+    from src.build_geojson import OCCUPIED_PRODUCT_USES
+    from src.enrich import USES_AGREEING_WITH_ROOMS, _use_argues_with_the_rooms
+
+    segment_reads = {"hotel"} | set(OCCUPIED_PRODUCT_USES)
+    overlap = segment_reads - USES_AGREEING_WITH_ROOMS
+    assert not overlap, (
+        f"these uses decide a segment and can still be marked partial: {overlap}. "
+        "Marking one would silently reclassify the building.")
+    for use in segment_reads:
+        assert not _use_argues_with_the_rooms({"current_use": use}, {"hpd_class_b": 500})
+
+
+def test_the_partial_flag_is_actually_wired_to_the_rule():
+    """Testing the rule is not testing that anything calls it.
+
+    The first version of these tests exercised _use_argues_with_the_rooms on
+    its own, so replacing the assignment with a constant False passed all of
+    them. The rule and the field have to be connected, and nothing but reading
+    the connection proves it.
+    """
+    import re
+    from pathlib import Path
+
+    enrich = (Path(__file__).resolve().parents[1] / "src/enrich.py").read_text()
+    assert re.search(
+        r'record\["current_use_partial"\]\s*=\s*_use_argues_with_the_rooms\(',
+        enrich), (
+        "current_use_partial is no longer set from _use_argues_with_the_rooms; "
+        "the rule still exists and nothing calls it")
+
+
+def test_the_partial_flag_is_published():
+    """A flag the build does not carry is a flag the panel cannot read."""
+    from pathlib import Path
+
+    build = (Path(__file__).resolve().parents[1] / "src/build_geojson.py").read_text()
+    assert '"current_use_partial"' in build, (
+        "current_use_partial is computed and never published")
+
+
 # --- a source that arrives short is not a source that arrives ---------------
 
 def _vol():
