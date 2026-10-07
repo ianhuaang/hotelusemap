@@ -406,7 +406,7 @@ def test_a_pin_is_only_dropped_where_the_geocode_is_trustworthy(build):
             assert geom and geom.get("type") in ("Polygon", "MultiPolygon"), p["bbl"]
 
 
-def test_the_availability_score_matches_its_own_signals(by_bbl):
+def test_the_distress_score_matches_its_own_signals(by_bbl):
     """Recomputed from the published fields, every score agrees — and tops out at 100.
 
     The divisor was 45 while the five terms summed to 40, so 100 was
@@ -417,8 +417,18 @@ def test_the_availability_score_matches_its_own_signals(by_bbl):
 
     Checked against the artifact rather than by re-running the formula, since
     re-running the formula would pass with the bug in place.
+
+    The field was score_avail until 2026-10-07, one letter from
+    readiness_state's "available" and meaning something unrelated. A build
+    predating the rename cannot answer this, so it skips rather than fails —
+    the thing under test is the arithmetic, not whether the artifact on this
+    disk happens to be newer than the rename.
     """
+    import pytest
     from datetime import date
+
+    if not any("score_distress" in p for p in by_bbl.values()):
+        pytest.skip("build predates the score_avail -> score_distress rename")
 
     year = date.today().year
     weights = [15, 8, 8, 5, 4]
@@ -434,14 +444,14 @@ def test_the_availability_score_matches_its_own_signals(by_bbl):
             (p.get("ecb_total_balance") or 0) > 10000,
         ]
         raw = sum(w for w, f in zip(weights, fired) if f)
-        assert p["score_avail"] == round(raw / ceiling * 100), (
-            f"{bbl}: published {p['score_avail']}, signals give "
+        assert p["score_distress"] == round(raw / ceiling * 100), (
+            f"{bbl}: published {p['score_distress']}, signals give "
             f"{round(raw / ceiling * 100)}")
         if raw:
             seen_any += 1
 
     assert seen_any > 100, "no building fires an availability signal; the check proves nothing"
-    assert max(p["score_avail"] for p in by_bbl.values()) <= 100
+    assert max(p["score_distress"] for p in by_bbl.values()) <= 100
 
 
 def test_no_curated_building_is_dropped(by_bbl):

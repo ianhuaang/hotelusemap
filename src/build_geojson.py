@@ -2111,29 +2111,38 @@ def build_geojson(
         # H-class as a hotel -- including the H8 dormitories and HR SROs this
         # pipeline excludes by name three hundred lines up.
 
-        # Availability. Kept: the app has no counterpart to contradict, and
-        # HubSpot exports it.
+        # Distress. Named score_distress rather than score_avail, because
+        # "avail" sat one letter from readiness_state's "available" and meant
+        # something else entirely: readiness asks whether anybody is running
+        # the building, this asks whether its owner is under pressure. A
+        # building can be distressed and occupied, or available and perfectly
+        # solvent. Nothing here reads readiness and nothing in readiness reads
+        # this, and they must stay that way — a reader who conflates them
+        # concludes that a high number means the building is free.
+        #
+        # Kept: the app has no counterpart to contradict, and HubSpot exports
+        # it.
         #
         # The divisor was 45 and the five terms sum to 40, so 100 was
         # unreachable by construction — the best a building could do was 89,
         # and the highest in the set is 62. On a 0-100 scale displayed beside
-        # a legal score that does reach 100, that reads as "barely available"
-        # for a building carrying every distress signal we track. It is shown
-        # on the Independent Hotels tab and exported to HubSpot, so the number
-        # went out wrong in both.
+        # a legal score that does reach 100, that reads as "barely distressed"
+        # for a building carrying every signal we track. It is shown on the
+        # Independent Hotels tab and exported to HubSpot, so the number went
+        # out wrong in both.
         #
         # Derived from the weights rather than written down twice, so adding a
         # term cannot leave the divisor behind again.
-        AVAIL_SIGNALS = (
+        DISTRESS_SIGNALS = (
             (15, bool(record.get("prior_operator"))),
             (8, bool(record.get("has_tax_lien"))),
             (8, bool(record.get("has_lis_pendens"))),
             (5, (record.get("last_sale_date") or "") >= f"{date.today().year - 2}-01-01"),
             (4, (record.get("ecb_total_balance") or 0) > 10000),
         )
-        avail = sum(points for points, fired in AVAIL_SIGNALS if fired)
-        avail_max = sum(points for points, _ in AVAIL_SIGNALS)
-        properties["score_avail"] = round(avail / avail_max * 100)
+        distress = sum(points for points, fired in DISTRESS_SIGNALS if fired)
+        distress_max = sum(points for points, _ in DISTRESS_SIGNALS)
+        properties["score_distress"] = round(distress / distress_max * 100)
 
         feature = {
             "type": "Feature",
