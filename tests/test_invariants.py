@@ -1049,11 +1049,11 @@ def test_no_parsed_floor_still_files_an_sro_under_other():
     assert not stranded, f"{len(stranded)} SRO floors still filed under 'other': {stranded[:3]}"
 
 
-def _kind(desc, units=None):
+def _kind(desc, units=None, group=""):
     """The real classifier, not a copy of it."""
     from src.parse_coo_pdf import floor_kind
 
-    return floor_kind(desc, units)
+    return floor_kind(desc, units, group)
 
 
 def test_service_space_is_not_transient_capacity():
@@ -1068,7 +1068,7 @@ def test_service_space_is_not_transient_capacity():
     for desc in ("HOTEL LOBBY R-1", "MECHANICAL EQUIPMENT ROOMJ-1",
                  "TENANT STORAGE J-2", "RESIDENTIAL LOBBY AND MAILROOMJ-2",
                  "ELECTRICAL CLOSET & MECHANICAL ROOMJ-2"):
-        assert _kind(desc) == "other", f"{desc!r} still reads as capacity"
+        assert _kind(desc) == "ancillary", f"{desc!r} still reads as capacity"
 
 
 def test_a_floor_of_flats_with_a_boiler_in_it_is_still_a_floor_of_flats():
@@ -1084,6 +1084,94 @@ def test_a_floor_of_flats_with_a_boiler_in_it_is_still_a_floor_of_flats():
     assert _kind("TWELVE (12) APARTMENTS, MECHANICAL", 12) == "residential"
     # Named rooms keep a floor even with no count parsed.
     assert _kind("HOTEL LOBBY AND ROOMSJ-1") == "transient"
+
+
+def test_a_floor_of_sleeping_rooms_is_not_filed_under_neither_heading():
+    """The gap this change closes.
+
+    SLEEPING and GUEST ROOM lived in DWELLING_MARKS, which guards the
+    ancillary rule and never assigns a kind. Neither list that does assign one
+    named them. So "TWENTY (20) SLEEPING ROOMS" matched nothing and fell in
+    with the boiler rooms: 28 rows across five buildings in the no-operator
+    segment, every one a floor of people sleeping, none of them visible.
+
+    Sleeping accommodation is never "nothing". Where the row says which kind
+    it is, it says so; where it does not, it lands somewhere named.
+    """
+    assert _kind("TWENTY (20) SLEEPING ROOMS RES", 20) == "residential"
+    assert _kind("EIGHT (8) FURNISHED ROOMS RES", 8) == "residential"
+    # The occupancy group is the certificate's own answer and outranks prose.
+    assert _kind("32 15 sleeping rooms", None, "J-2") == "residential"
+    assert _kind("15 GUEST ROOMS", None, "J-1") == "transient"
+    # Nothing on the row says which. Named rather than guessed.
+    assert _kind("3 LIVING/SLEEPING ROOMS, HABITABLE", None, "6") == "sleeping_unclassified"
+
+
+def test_a_zoning_use_group_is_not_an_occupancy_group():
+    """The guess this deliberately does not make.
+
+    Most of these certificates carry zoning use groups — 2, 3, 6, G — not
+    occupancy groups. Use Group 5 is the transient-hotel group and the rest
+    map tidily enough by the zoning resolution that reading them would be
+    tempting. But a zoning group describes what the lot may be put to, not
+    what the floor is: 146 8 Avenue carries group 3 over twenty sleeping
+    rooms, and group 3 is community facility.
+    """
+    assert _kind("TWENTY (20) SLEEPING ROOMS", 20, "3") == "sleeping_unclassified"
+    assert _kind("TWENTY (20) SLEEPING ROOMS", 20, "5") == "sleeping_unclassified"
+    assert _kind("TWENTY (20) SLEEPING ROOMS", 20, "2") == "sleeping_unclassified"
+
+
+def test_the_use_column_is_unglued_from_the_description():
+    """The extractor welds the two together when the column rule is faint.
+
+    "TWENTY (20) SLEEPING ROOMSRES", "MECHANICAL/UTILITY SPACESU",
+    "COMMERCIAL OFFICE SPACEE" — 125 rows in the no-operator segment arrive
+    this way, and the glued token is the certificate's own answer about the
+    floor, unreadable welded to the end of a word.
+    """
+    from src.parse_coo_pdf import unglue
+
+    assert unglue("TWENTY (20) SLEEPING ROOMSRES") == "TWENTY (20) SLEEPING ROOMS RES"
+    assert unglue("MECHANICAL/UTILITY SPACESU") == "MECHANICAL/UTILITY SPACES U"
+    # And it reaches the classifier, which is the point of it existing.
+    assert _kind("EIGHT (8) FURNISHED ROOMSRES", 8) == "residential"
+    # A word that merely ends in one of those letters is left alone.
+    assert unglue("STORAGE") == "STORAGE"
+
+
+def test_unreadable_and_ancillary_stop_sharing_one_word():
+    """"other" covered a boiler room and a row nobody could read.
+
+    They are different findings and only one of them is a finding at all.
+    Collapsed into one word, 532 rows in the no-operator segment said nothing
+    about which they were — which is how the sleeping-room gap above stayed
+    hidden for as long as it did. The next gap should be visible in the
+    counts.
+    """
+    assert _kind("BOILER ROOM") == "ancillary"
+    assert _kind("$%^ &*(") == "unclassified"
+    assert _kind("") == "unclassified"
+
+
+def test_one_classifier_for_both_parsers():
+    """The scanned and the text certificate must get the same answer.
+
+    parse_coo_scan carried its own shorter rule. It read the occupancy group,
+    which floor_kind did not, and knew nothing of SRO rooms, single-room
+    occupancy or ancillary space, which floor_kind did — so a lobby on a
+    scanned certificate counted as capacity and a lobby on a text one did
+    not, and which answer a building got depended on how its certificate
+    happened to be filed.
+    """
+    import inspect
+
+    from src import parse_coo_scan
+
+    assert not hasattr(parse_coo_scan, "_classify"), (
+        "the scan parser has grown a second classifier again")
+    src = inspect.getsource(parse_coo_scan)
+    assert "floor_kind(" in src, "the scan parser should call the shared rule"
 
 
 def test_what_serves_the_hotel_is_not_ancillary():
