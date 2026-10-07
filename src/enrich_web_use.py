@@ -12,11 +12,23 @@ sweep recorded `type=bike_sharing_station` and the building kept a clean
 target badge.
 
 The web knows. That conversion is in Crain's, the Commercial Observer, QNS and
-the Queens Post. This reads that corpus through the Programmable Search JSON
-API and keeps the snippets and URLs it decided on, so every call this makes
-can be checked by opening the link. It does not ask a model what the building
-is; a model's opinion is not evidence, and evidence is the whole point of the
-field this writes into.
+the Queens Post. This reads that corpus through the Claude API's server-side
+web search tool and keeps the quotes and URLs it came back with, so every call
+this makes can be checked by opening the link.
+
+It does not ask a model what the building is. The model searches and quotes;
+CLASSIFY_RULES and corroborate() decide, in Python, over text the model did
+not write -- `cited_text` is verbatim source text, not prose about a source.
+That line is the point of the field this writes into, and it has moved one
+step rather than gone: the model no longer judges the evidence, but it does
+choose which passages become evidence. A sentence it declines to quote is a
+rule that never fires. SEARCH_SYSTEM is written against exactly that, and
+results it found but never quoted are still returned, on their titles.
+
+This replaced Programmable Search, which could only ever search a slice of
+the web on our account -- an engine has to be pointed at sites, and "the
+entire web" is a setting that approximates one. The cost model inverted with
+it: no 100-a-day ceiling, and $10 per 1,000 searches plus tokens instead.
 
 It runs in two modes against the same corpus. The default reads a use for
 buildings Places could not see. --corroborate answers a narrower question for
@@ -26,7 +38,7 @@ question is not "what is this building" but "does anything outside Google say
 the same thing", and the answer decides whether the claim closes as occupied,
 goes back for review, or leaves the building undetermined.
 
-    GOOGLE_API_KEY=... GOOGLE_CSE_ID=... python3 src/enrich_web_use.py
+    ANTHROPIC_API_KEY=... python3 src/enrich_web_use.py
     ... --bbl 4003770013            one building, prints its evidence
     ... --limit 50                  stop after 50 lookups
     ... --all                       re-check buildings Places already answered
@@ -42,7 +54,6 @@ import re
 import sys
 import time
 import urllib.parse
-import urllib.request
 from datetime import date
 from pathlib import Path
 
@@ -53,9 +64,43 @@ CACHE_FILE = DATA_RAW / "web_current_use_cache.json"
 CORROBORATE_FILE = DATA_RAW / f"web_corroboration_{date.today():%Y%m%d}.json"
 CORROBORATE_CACHE = DATA_RAW / "web_corroboration_cache.json"
 
-API_KEY = os.environ.get("GOOGLE_API_KEY", "")
-CSE_ID = os.environ.get("GOOGLE_CSE_ID", "")
-ENDPOINT = "https://www.googleapis.com/customsearch/v1"
+API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+# The model is the search client, not the judge -- see search(). Opus 5
+# because the job is reading pages and quoting the right sentence out of
+# them, and a miss here is silent: a passage never quoted is a rule that
+# never fires, and the building comes back unconfirmed rather than wrong.
+MODEL = os.environ.get("WEB_USE_MODEL", "claude-opus-5")
+
+# Basic search on purpose, not for want of a newer one. web_search_20260209
+# and _20260318 add dynamic filtering, which runs code to drop irrelevant
+# results *before* they reach the context window. That is the right default
+# for a chat answer and the wrong one here: this module wants the widest
+# possible pool of quotable text, and a filter tuned for relevance to a
+# question is not tuned for "any sentence naming what occupies this
+# address". Basic search loads every result, which is what we are paying
+# for. One line to change if that reasoning stops holding.
+WEB_SEARCH_TOOL = {"type": "web_search_20250305", "name": "web_search",
+                   "max_uses": 4}
+
+# What the model is for. Not "is this building a shelter" -- that question is
+# answered by CLASSIFY_RULES and corroborate(), in Python, on text it did not
+# write. It searches and it quotes; the rules decide. Asking it for a verdict
+# would put a model's opinion in the evidence chain, which is the one thing
+# this module was built not to do.
+SEARCH_SYSTEM = (
+    "You are a search front-end, not an analyst. Run web searches for the "
+    "query you are given and then quote what you found.\n\n"
+    "Quote generously and verbatim. For every page that mentions the "
+    "address, quote the sentence that says what occupies the building -- its "
+    "name, operator, use, or what it was converted into -- even when several "
+    "pages say the same thing and even when a page looks unreliable. Quote "
+    "sentences that argue the building is ordinary housing too.\n\n"
+    "Do not judge, summarise, reconcile sources, or state a conclusion about "
+    "what the building is. Do not say a source is wrong or irrelevant. "
+    "Something downstream weighs these quotes; your job is to find them and "
+    "reproduce them exactly as written."
+)
 
 # Places answered these with something, but not with the building. A shop at
 # street level says nothing about the 120 rooms above it, and a blank says
@@ -153,33 +198,148 @@ def log(msg: str) -> None:
     print(msg, flush=True)
 
 
+_client = None
+
+
+def client():
+    """One Anthropic client, built on first use so imports stay cheap.
+
+    Tests import this module for its pure functions and must not need a key
+    on the machine running them.
+    """
+    global _client
+    if _client is None:
+        import anthropic
+        # max_retries covers 429/5xx with backoff; the loop in search()
+        # handles only what the SDK gives up on.
+        _client = anthropic.Anthropic(api_key=API_KEY or None, max_retries=4,
+                                      timeout=180.0)
+    return _client
+
+
+def results_from_message(message) -> list[dict]:
+    """Pull title/snippet/link triples out of one Claude response.
+
+    Two sources, deliberately both:
+
+    Citations (`web_search_result_location`) carry `cited_text` -- up to 150
+    characters of the source page, verbatim, which is the same shape of
+    evidence a Programmable Search snippet was and is what the phrase rules
+    read. These are the ones that can fire a rule.
+
+    Search results (`web_search_result`) carry a title and url and no
+    readable body at all; the page text comes back as `encrypted_content`,
+    which the API decrypts for the model and never for us. They are included
+    with an empty snippet because a title alone sometimes carries the whole
+    answer -- "Jack Ryan Residence - Homeless Shelter Directory" satisfies
+    both the phrase test and the address test -- and because dropping them
+    would mean a page the model found but did not quote vanished without
+    trace.
+
+    Pure, and takes a message or a plain dict, so the extraction is tested
+    without a key or a network.
+    """
+    if hasattr(message, "model_dump"):
+        message = message.model_dump()
+    out, seen = [], set()
+
+    def add(title, link, snippet):
+        key = (link, snippet)
+        if not link or key in seen:
+            return
+        seen.add(key)
+        out.append({"title": title or "", "snippet": snippet or "",
+                    "link": link})
+
+    for block in message.get("content") or []:
+        kind = block.get("type")
+        if kind == "text":
+            for c in block.get("citations") or []:
+                if c.get("type") == "web_search_result_location":
+                    add(c.get("title"), c.get("url"), c.get("cited_text"))
+        elif kind == "web_search_tool_result":
+            content = block.get("content")
+            # An error comes back as a single object where results are a
+            # list -- and as a 200, so nothing raised on the way here.
+            if isinstance(content, dict):
+                log(f"    web search error: {content.get('error_code')}")
+                continue
+            for r in content or []:
+                if r.get("type") == "web_search_result":
+                    add(r.get("title"), r.get("url"), "")
+    return out
+
+
 def search(query: str, retries: int = 3) -> list[dict]:
-    """One Programmable Search call. Returns title/snippet/link triples."""
-    params = urllib.parse.urlencode({
-        "key": API_KEY, "cx": CSE_ID, "q": query, "num": 10,
-    })
+    """One web search through Claude. Returns title/snippet/link triples.
+
+    The contract is the one Programmable Search had, so classify() and
+    corroborate() are unchanged: the model is a search client here, and the
+    rules downstream still decide what the results mean.
+    """
+    import anthropic
+
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(f"{ENDPOINT}?{params}", timeout=30) as fh:
-                body = json.loads(fh.read())
-            return [
-                {
-                    "title": it.get("title", ""),
-                    "snippet": it.get("snippet", ""),
-                    "link": it.get("link", ""),
-                }
-                for it in body.get("items", [])
-            ]
-        except urllib.error.HTTPError as exc:
-            # 429 is the daily free-tier ceiling, and waiting does not clear it.
-            if exc.code == 429:
+            messages = [{"role": "user", "content":
+                         f"Search the web for: {query}"}]
+            results, hops = [], 0
+            while True:
+                message = client().messages.create(
+                    model=MODEL,
+                    max_tokens=8000,
+                    system=SEARCH_SYSTEM,
+                    tools=[WEB_SEARCH_TOOL],
+                    messages=messages,
+                )
+                results.extend(results_from_message(message))
+                if message.stop_reason == "refusal":
+                    log(f"    declined on {query[:50]!r}")
+                    break
+                # The server paused a long search turn. Send the assistant
+                # turn back untouched -- encrypted_content has to survive
+                # the round trip or the next request 400s.
+                if message.stop_reason != "pause_turn" or hops >= 3:
+                    break
+                hops += 1
+                messages.append({"role": "assistant",
+                                 "content": message.content})
+
+            # Dedup across hops; a paused turn repeats nothing but a
+            # continuation can re-cite a page the first leg already gave us.
+            seen, deduped = set(), []
+            for r in results:
+                key = (r["link"], r["snippet"])
+                if key not in seen:
+                    seen.add(key)
+                    deduped.append(r)
+            return deduped
+
+        except anthropic.APIStatusError as exc:
+            # The SDK already retried 429 and 5xx. Reaching here means the
+            # ceiling is not a per-second one -- an exhausted credit balance
+            # or a disabled key -- and the next building will fail the same
+            # way, so stop rather than burn the run finding that out 60 more
+            # times. Results so far are already on disk.
+            if exc.status_code in (401, 403):
                 raise SystemExit(
-                    "  search quota exhausted — the free tier is 100 queries a "
-                    "day. Enable billing on the key or resume tomorrow; "
-                    "results so far are already written."
+                    f"  the Anthropic key was rejected ({exc.status_code}). "
+                    "Check ANTHROPIC_API_KEY and that the workspace has "
+                    "web search enabled; results so far are already written."
+                )
+            if exc.status_code == 429:
+                raise SystemExit(
+                    "  rate limited past the SDK's own retries. Wait and "
+                    "resume -- the cache means a rerun costs only what it "
+                    "has not already done."
                 )
             if attempt == retries - 1:
-                log(f"    HTTP {exc.code} on {query[:50]!r}")
+                log(f"    HTTP {exc.status_code} on {query[:50]!r}")
+                return []
+            time.sleep(2 ** attempt)
+        except anthropic.APIConnectionError as exc:
+            if attempt == retries - 1:
+                log(f"    {type(exc).__name__} on {query[:50]!r}")
                 return []
             time.sleep(2 ** attempt)
         except Exception as exc:  # noqa: BLE001 — a single failed lookup is not fatal
@@ -514,12 +674,14 @@ def main() -> None:
                          "reading a use for buildings Places could not see")
     args = ap.parse_args()
 
-    if not API_KEY or not CSE_ID:
+    if not API_KEY:
         sys.exit(
-            "Set GOOGLE_API_KEY and GOOGLE_CSE_ID.\n"
-            "  The key is the one the Places sweep already uses.\n"
-            "  The CSE id comes from programmablesearchengine.google.com —\n"
-            "  create an engine, set it to search the entire web, copy the id."
+            "Set ANTHROPIC_API_KEY.\n"
+            "  This is not the Places key — the web screen moved off\n"
+            "  Programmable Search, which could not search the whole web on\n"
+            "  our account. Web search must also be enabled for the\n"
+            "  workspace in the Claude console, or every call 400s.\n"
+            "  Budget: $10 per 1,000 searches, plus tokens."
         )
 
     if args.corroborate:

@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.enrich_web_use import (
     borough_of, classify, corroborate, distinctive_tokens, mentions_address,
-    names_the_place, query_addresses,
+    names_the_place, query_addresses, results_from_message,
 )
 
 LIC = ["35-02 37 AVENUE", "37-06 36 STREET", "37-06 36TH STREET", "3706 36TH STREET"]
@@ -751,3 +751,123 @@ def test_the_query_carries_a_borough_the_build_never_published():
     assert borough_of("4004060040") == "Queens"
     assert borough_of("3024870041") == "Brooklyn"
     assert borough_of("") == ""
+
+
+# --- reading a Claude web-search response ------------------------------------
+#
+# The search client moved from the Programmable Search JSON API to the Claude
+# API's server-side web search tool, because Programmable Search cannot search
+# the whole web on our account -- an engine is pointed at sites, and "the
+# entire web" only approximates one. The contract did not move: search() still
+# returns title/snippet/link triples and the rules above still decide what
+# they mean. These guard the new extraction, which is the only part that is
+# genuinely new code.
+
+SHELTER_RESPONSE = {
+    "stop_reason": "end_turn",
+    "content": [
+        {"type": "text", "text": "I'll search for that."},
+        {"type": "server_tool_use", "id": "srvtoolu_1", "name": "web_search",
+         "input": {"query": "35-02 37 Avenue Queens shelter"}},
+        {"type": "web_search_tool_result", "tool_use_id": "srvtoolu_1",
+         "content": [
+             {"type": "web_search_result",
+              "url": "https://www.crainsnewyork.com/lic-paper-factory",
+              "title": "LIC Paper Factory hotel to remain a shelter",
+              "encrypted_content": "Eqgf...", "page_age": "April 30, 2025"},
+             {"type": "web_search_result",
+              "url": "https://www.homelessshelterdirectory.org/lic",
+              "title": "Paper Factory Hotel Shelter - Long Island City",
+              "encrypted_content": "Eqgf...", "page_age": None},
+         ]},
+        {"type": "text",
+         "text": "One source describes the conversion.",
+         "citations": [
+             {"type": "web_search_result_location",
+              "url": "https://www.crainsnewyork.com/lic-paper-factory",
+              "title": "LIC Paper Factory hotel to remain a shelter",
+              "encrypted_index": "Eo8B...",
+              "cited_text": "A Long Island City hotel at 37-06 36th Street "
+                            "converted into an emergency shelter for "
+                            "asylum-seekers is now operating under a $65.8 "
+                            "million contract."},
+         ]},
+    ],
+}
+
+
+def test_a_citation_becomes_a_snippet_the_rules_can_read():
+    """cited_text is verbatim source text, which is the shape a Programmable
+    Search snippet was. It is the only field that can fire a phrase rule."""
+    got = results_from_message(SHELTER_RESPONSE)
+    cited = [r for r in got if r["snippet"]]
+    assert len(cited) == 1
+    assert "emergency shelter" in cited[0]["snippet"]
+    assert cited[0]["link"] == "https://www.crainsnewyork.com/lic-paper-factory"
+
+
+def test_an_uncited_result_survives_on_its_title():
+    """The page body comes back encrypted and unreadable, but a title alone
+    sometimes carries the answer -- and a page the model found but did not
+    quote should not vanish without trace."""
+    got = results_from_message(SHELTER_RESPONSE)
+    links = [r["link"] for r in got]
+    assert "https://www.homelessshelterdirectory.org/lic" in links
+    uncited = next(r for r in got
+                   if r["link"].endswith("/lic"))
+    assert uncited["snippet"] == ""
+    assert "Shelter" in uncited["title"]
+
+
+def test_the_extraction_feeds_the_classifier_unchanged():
+    """The join that matters: the new search layer's output still satisfies
+    the rules written against the old one."""
+    verdict = classify(results_from_message(SHELTER_RESPONSE), LIC)
+    assert verdict is not None
+    assert verdict["current_use"] == "shelter"
+    assert verdict["evidence"][0]["link"].startswith("https://www.crains")
+
+
+def test_a_search_error_is_not_mistaken_for_results():
+    """An error arrives as a 200 with a single object where results are a
+    list. Indexing it as a list would be the quiet kind of wrong."""
+    got = results_from_message({
+        "stop_reason": "end_turn",
+        "content": [{"type": "web_search_tool_result", "tool_use_id": "s1",
+                     "content": {"type": "web_search_tool_result_error",
+                                 "error_code": "max_uses_exceeded"}}],
+    })
+    assert got == []
+
+
+def test_nothing_found_is_empty_not_an_error():
+    """A search that ran and matched nothing returns an empty list. That is a
+    real answer -- it leaves a building undetermined, not unscreened."""
+    assert results_from_message({"stop_reason": "end_turn", "content": [
+        {"type": "web_search_tool_result", "tool_use_id": "s1", "content": []},
+    ]}) == []
+    assert results_from_message({"stop_reason": "end_turn", "content": []}) == []
+
+
+def test_the_same_page_cited_twice_is_one_result():
+    """A paused turn resumes and can re-cite what the first leg already gave
+    us. The same url with the same quote is one piece of evidence."""
+    dupe = {"stop_reason": "end_turn", "content": [
+        {"type": "text", "text": "a", "citations": [
+            {"type": "web_search_result_location", "url": "https://e.org/a",
+             "title": "A", "cited_text": "a shelter operates here"}]},
+        {"type": "text", "text": "b", "citations": [
+            {"type": "web_search_result_location", "url": "https://e.org/a",
+             "title": "A", "cited_text": "a shelter operates here"}]},
+    ]}
+    assert len(results_from_message(dupe)) == 1
+
+
+def test_a_result_with_no_url_is_dropped():
+    """Evidence that cannot be opened is not evidence -- the panel renders
+    the link, and a blank one reads as a broken citation."""
+    assert results_from_message({"stop_reason": "end_turn", "content": [
+        {"type": "text", "text": "x", "citations": [
+            {"type": "web_search_result_location", "url": "",
+             "title": "T", "cited_text": "a shelter"}]},
+    ]}) == []
