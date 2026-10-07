@@ -579,3 +579,73 @@ def test_every_recorded_year_says_where_it_came_from():
     assert dated, "no prior operator carries a year yet"
     for r in dated:
         assert r.get("year_source"), f"{r['name']} has a year and no source"
+
+
+# --- Treatment programmes and on-site clinical services --------------------
+#
+# 203 West 113 Street is the case that put these in the table. Weston House is
+# an apartment treatment programme with restorative services and an ACT team,
+# and it read as available: the Places sweep found a residential neighbour —
+# in the Bronx, 12m from a Harlem footprint — and not one phrase in
+# CLASSIFY_RULES matched a word of what the building actually does.
+#
+# They go under supportive_housing rather than a category of their own because
+# the question this answers is not what kind of programme it is. It is whether
+# anybody is running the building, and the answer is the same.
+
+WESTON = ["203 WEST 113 STREET", "203 W 113 STREET"]
+
+
+def _read(snippet, addresses=WESTON, link="https://www.op.nysed.gov/x"):
+    return classify([{"title": "", "snippet": snippet, "link": link}], addresses)
+
+
+def test_an_apartment_treatment_programme_is_not_available():
+    v = _read("Weston House — apartment treatment program at 203 West 113th "
+              "Street with on-site restorative services and an ACT team.")
+    assert v is not None, "a treatment programme must be read as somebody running the building"
+    assert v["current_use"] == "supportive_housing"
+    assert v["transient_ok"] is False
+
+
+def test_on_site_clinical_services_count_the_same_as_supportive_housing():
+    for snippet in (
+        "203 West 113th Street: residential treatment for adults with serious mental illness.",
+        "Supportive services and mental health services at 203 West 113th Street.",
+        "Behavioral health services at 203 W 113th St.",
+    ):
+        v = _read(snippet)
+        assert v is not None and v["current_use"] == "supportive_housing", snippet
+
+
+def test_the_broad_words_on_their_own_still_do_not_fire():
+    # The reason every phrase above is several words long. "treatment",
+    # "services" and "clinic" alone match a dentist on the ground floor and a
+    # news page about the treatment of asylum seekers somewhere else entirely,
+    # which is the failure the rest of this table is written against.
+    assert _read("Dental clinic and treatment rooms on the ground floor at "
+                 "203 West 113th Street.") is None
+    assert _read("City criticised over its treatment of asylum seekers in "
+                 "Queens shelters.") is None
+
+
+def test_a_programme_at_another_address_is_still_not_evidence():
+    assert _read("Supportive housing opens at 500 West 20th Street.") is None
+
+
+def test_shelter_still_outranks_a_treatment_programme():
+    # Ordering matters more now that the supportive_housing row matches many
+    # more pages. A building that is both described as a former programme and
+    # reported as a shelter has to resolve to the shelter — that is the
+    # reading that disqualifies it, and the one that costs most if it is lost.
+    v = _read("203 West 113th Street, a former treatment program, is now a "
+              "homeless shelter.", link="https://qns.com/x")
+    assert v["current_use"] == "shelter"
+
+
+def test_supportive_housing_is_a_use_the_readiness_model_calls_occupied():
+    # The chain this whole row depends on: enrich_web_use labels the use,
+    # deal_readiness decides what that means. If supportive_housing ever stops
+    # being institutional, every phrase added above silently stops mattering.
+    from src.deal_readiness import INSTITUTIONAL_USES
+    assert "supportive_housing" in INSTITUTIONAL_USES

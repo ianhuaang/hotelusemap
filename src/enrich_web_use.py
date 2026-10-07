@@ -66,9 +66,29 @@ CLASSIFY_RULES = [
         "operating as a shelter", "now a shelter", "shelter for single adults",
         "shelter for migrants", "housing migrants", "housing asylum",
     )),
+    # Treatment programs and on-site clinical services belong here, not in a
+    # category of their own: whatever the building is called, somebody is
+    # running it and the rooms are spoken for. 203 West 113 Street is the case
+    # that forced it — Weston House, an apartment treatment program with
+    # restorative services and an ACT team, read as available because the
+    # Places sweep found a residential neighbour and nothing in this table
+    # matched a word of what the building actually does.
+    #
+    # Phrased long on purpose. "treatment", "clinic" and "services" on their
+    # own match a dentist on the ground floor and an article about the
+    # treatment of asylum seekers three neighbourhoods away, which is the
+    # failure the rest of this table is already written against. Each phrase
+    # here names a programme that occupies a building.
     ("supportive_housing", "Supportive housing", False, (
         "supportive housing", "transitional housing", "halfway house",
         "sober living", "recovery residence", "safe haven",
+        "treatment program", "treatment programme", "residential treatment",
+        "apartment treatment", "assertive community treatment", "act team",
+        "restorative services", "supportive services", "supported housing",
+        "mental health services", "behavioral health services",
+        "behavioural health services", "substance abuse treatment",
+        "rehabilitation program", "adult home", "residential care",
+        "serious mental illness", "persistent mental illness",
     )),
     ("sro", "Single room occupancy", True, (
         "single room occupancy", "single-room occupancy", " sro ", "sro hotel",
