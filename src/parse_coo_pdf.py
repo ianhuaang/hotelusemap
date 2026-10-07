@@ -221,12 +221,16 @@ def floor_kind(description: str, units_described: int | None,
     return "unclassified"
 
 
-def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
-    """The parsed shape of one certificate, whatever format it was read from.
+def derive_from_floors(rows: list) -> dict:
+    """Everything a record says that is read off the kinds of its floors.
 
-    Shared so that an OCR'd legacy scan and a DOB NOW text layer produce the
-    same record. Everything downstream joins on these keys and must not have
-    to care which parser supplied them.
+    Split out of summarise() because the kinds are frozen into a committed
+    parse while the classifier that assigns them lives here and keeps moving.
+    When the rule changes, the parse on disk is stale and nothing re-reads the
+    PDFs — the scanned half cannot be re-read at all without the OCR run. So
+    --rederive recomputes kinds from the descriptions already stored, and it
+    has to recompute these alongside them or a record ends up with new kinds
+    and a summary still describing the old ones. Two callers, one rule.
     """
     # Contiguity is asked of the numbered floors only; a cellar or a roof tank
     # room says nothing about whether the rooms can be run as a block.
@@ -248,10 +252,6 @@ def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
     shared_guest = [f for f in shared if f > 1]
 
     return {
-        "file": filename,
-        "readable": True,
-        **header,
-        "use_groups": sorted(use_groups),
         "rooms_described": rooms_by_kind,
         "rows": len(rows),
         "transient_floors": t_floors,
@@ -262,6 +262,48 @@ def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
         "transient_contiguous": contiguous,
         "floors": rows,
     }
+
+
+def summarise(rows: list, header: dict, filename: str, use_groups: set) -> dict:
+    """The parsed shape of one certificate, whatever format it was read from.
+
+    Shared so that an OCR'd legacy scan and a DOB NOW text layer produce the
+    same record. Everything downstream joins on these keys and must not have
+    to care which parser supplied them.
+    """
+    return {
+        "file": filename,
+        "readable": True,
+        **header,
+        "use_groups": sorted(use_groups),
+        **derive_from_floors(rows),
+    }
+
+
+def rederive(records: list) -> tuple[list, int]:
+    """Re-read every stored floor through today's classifier.
+
+    Uses only what the parse already carries — description, units column and
+    use group are all on the row — so this needs no PDF, no OCR engine and no
+    network. That is the point: the scanned certificates cannot be re-parsed
+    on demand, and they are the ones whose descriptions are mangled enough to
+    find the gaps in the rule.
+    """
+    changed = 0
+    for r in records:
+        floors = r.get("floors") or []
+        if not floors:
+            continue
+        for f in floors:
+            was = f.get("kind")
+            now = floor_kind(f.get("description") or "",
+                             f.get("units_described"),
+                             f.get("use_group") or "")
+            if now != was:
+                changed += 1
+            f["kind"] = now
+        r.update(derive_from_floors(floors))
+    return records, changed
 
 
 def merge_parsed(existing: list, fresh: list) -> list:
@@ -369,6 +411,23 @@ def main() -> None:
     args = sys.argv[1:]
     if not args:
         raise SystemExit(__doc__)
+    if args[0] == "--rederive":
+        # Rewrites in place rather than under today's date. A re-derive is not
+        # a new pull — it is the same certificates read by a newer rule, and
+        # giving it a fresh date would let provenance.resolve prefer it over a
+        # genuinely newer pull that has more certificates in it.
+        src_path = provenance.resolve("coo_parsed", DATA_PROCESSED)
+        records = json.loads(src_path.read_text())
+        records, changed = rederive(records)
+        src_path.write_text(json.dumps(records, indent=2))
+        kinds = {}
+        for r in records:
+            for f in r.get("floors") or []:
+                kinds[f["kind"]] = kinds.get(f["kind"], 0) + 1
+        print(f"re-derived {src_path.name}: {changed} floor kinds changed")
+        for k in sorted(kinds, key=lambda k: -kinds[k]):
+            print(f"  {k:24} {kinds[k]}")
+        return
     if args[0] == "--all":
         paths = sorted(PDF_DIR.glob("*.PDF"))
     else:
