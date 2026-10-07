@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""Whether a building is one somebody could have a conversation about today.
+
+Four states, derived once in the producer so the app shows one verdict rather
+than four half-verdicts a reader has to reconcile:
+
+    available      nothing in the way
+    occupied       somebody is running it
+    not_ready      a specific, named condition
+    undetermined   we looked and could not tell
+
+The field names here are a contract with the app and are not free to change:
+readiness_state, readiness_basis, not_ready_kind, occupied_flag,
+occupied_basis, not_ready_flag, operator_answered, reversion_window. The app
+reads the first three and keys its filter off readiness_state; the rest are
+published as the inputs behind it.
+
+Two things this deliberately does not do. It does not rank or date anything —
+the watch list that ordered buildings by how long a condition had stood was
+cut, and with it not_ready_since and not_ready_trackable. And it never fails
+optimistic: anything unrecognised is undetermined, never available, because
+the one error that costs real time is a building nobody has established
+arriving in the clean prospecting view wearing a clean bill of health.
+
+Residential occupancy is not an occupier. 237 Madison Avenue is a block of
+flats with 157 Class B rooms and 229 Duffield Street is another with 130, and
+both are exactly what this list is for — rooms that are transient-capable with
+nobody running them as rooms. An institution or a hotel operator in the
+building is what takes it off the table, and those are what occupied_flag
+tests. Reading "someone lives here" as "someone is running it" would empty the
+list of its best entries.
+"""
+
+from __future__ import annotations
+
+LIVE_LICENCE_STATUSES = frozenset({"Active", "Ready for Renewal"})
+
+# A use that means an institution has the building. Residential is absent on
+# purpose — see the module docstring.
+INSTITUTIONAL_USES = frozenset({
+    "religious", "education", "government", "medical", "institutional",
+    "student_housing", "supportive_housing", "shelter",
+})
+
+
+def _occupied(p: dict, nearby: dict) -> tuple[bool, str]:
+    """Is somebody running this building, and what says so.
+
+    Ordered by how directly the source speaks to the question. A live licence
+    and a union roster name an operator outright; the sweep and Method 2
+    infer one from what is standing there.
+    """
+    if p.get("hotel_license_status") in LIVE_LICENCE_STATUSES:
+        name = p.get("hotel_license_name") or p.get("hotel_name") or "a licensed operator"
+        return True, f"a live DCWP hotel licence held by {name}"
+
+    if p.get("htc_union") and (p.get("htc_union_name") or "").strip():
+        return True, f"the hotel union roster names {p['htc_union_name']} here"
+
+    if (p.get("shelter_status") or "").strip():
+        return True, f"an active shelter use ({p['shelter_status']})"
+
+    # Deliberately NOT operator_name. It carries the HPD managing agent on 272
+    # buildings and whatever business Google found on 681, so reading it as an
+    # operator makes a letting agent into a hotelier: 237 Madison Avenue came
+    # back "occupied" on LIVINGSTON MANAGEMENT SERVICES LLC and 229 Duffield
+    # on WEBSTER APARTMENTS, which are the managing agents of two blocks of
+    # flats. On operator_source "ground_truth" it is worse than useless — it
+    # names an operator who has LEFT, which is the bug that had Sonder running
+    # 20 Broad Street months after they moved out.
+
+    # The pipeline has already concluded this one is trading.
+    if p.get("segment") == "active_hotel":
+        name = p.get("hotel_name") or p.get("operator_name") or "a hotel"
+        return True, f"it is trading as {name}"
+
+    # restricted_class carries three different findings in one field. SRO is a
+    # legal restriction on converting rooms people live in, and belongs under
+    # not_ready. A hostel and a dormitory are not restrictions at all — they
+    # are somebody running the building, and calling them "restricted" files
+    # an operator under a condition. 8 hostels and 4 dormitories in the
+    # no-operator segment, including 117 West 70 Street, which is AMDA's.
+    reason = (p.get("restricted_class_reason") or "").strip()
+    head = reason.split("—")[0].strip().lower()
+    if head in ("hostel", "dormitory"):
+        return True, f"it is in {head} use ({reason})"
+
+    if p.get("current_use_conflict"):
+        label = p.get("current_use_label") or "a use that is not transient"
+        return True, f"the current-use sweep found {label}, against the room count"
+
+    # Method 2. Only ever a building-level type within 30m — the guards live
+    # in enrich_nearby_use, and the measured resolution rate behind them is
+    # 16%, so most buildings reach this line with nothing to say.
+    use = (nearby or {}).get("nearby_use") or ""
+    if use == "lodging":
+        return True, f"Places has {nearby['nearby_use_basis']}"
+    if use == "institutional":
+        return True, f"Places has {nearby['nearby_use_basis']}"
+
+    # The sweep found a building-level use that is not somewhere people live.
+    occupants = p.get("current_use_occupants") or []
+    if isinstance(occupants, str):
+        occupants = []
+    for o in occupants:
+        if o.get("use") in ("ground_floor_tenant", "unknown", "other"):
+            continue
+        if o.get("use") in INSTITUTIONAL_USES:
+            return True, f"{o.get('name') or 'an occupant'} occupies the building"
+    if p.get("current_use") in INSTITUTIONAL_USES and p.get("current_use_name"):
+        return True, f"{p['current_use_name']} occupies the building"
+
+    return False, ""
+
+
+def _not_ready(p: dict, nearby: dict) -> tuple[bool, str, str]:
+    """A named condition holding the building back: flag, machine key, phrase.
+
+    Ordered hardest-first. A building being demolished is not merely
+    restricted, and saying "restricted" about it would be true and useless.
+    """
+    if p.get("demolition"):
+        d = p["demolition"] if isinstance(p["demolition"], dict) else {}
+        when = d.get("filed") or d.get("date") or ""
+        return True, "demolition", f"a demolition filing{f' ({when})' if when else ''}"
+
+    works = p.get("guestroom_works")
+    if works:
+        w = works if isinstance(works, dict) else {}
+        when = w.get("filed") or w.get("date") or ""
+        return True, "guest_room_works", (
+            f"work on the guest rooms{f' (permit {when})' if when else ''}")
+
+    if (nearby or {}).get("nearby_use") == "lodging_closed":
+        return True, "closed_hotel", f"Places has {nearby['nearby_use_basis']}, closed"
+
+    if p.get("coo_temp_only"):
+        return True, "temporary_certificate", (
+            "only a temporary certificate of occupancy on record")
+
+    if p.get("restricted_class"):
+        reason = (p.get("restricted_class_reason") or "").strip()
+        return True, "restricted_conversion", (
+            reason or "rent-stabilisation restricts a change of use")
+
+    blockers = p.get("blockers") or []
+    if blockers:
+        return True, "restricted_conversion", str(blockers[0])
+
+    return False, "", ""
+
+
+def _operator_answered(p: dict, nearby: dict) -> bool:
+    """Did anything establish what occupies the building, either way.
+
+    Ground-floor tenants are not an answer. The app already says so on the
+    panel — "What occupies the rest of the building is not established" — and
+    a readiness model that disagreed with that sentence would be the same
+    claim made twice in two voices.
+    """
+    if (nearby or {}).get("nearby_use"):
+        return True
+    if p.get("occupancy_state") in ("occupied", "clear", "onrecord"):
+        return True
+    # Method 1. A readable certificate says what the floors are, which is an
+    # answer about the building even though it names nobody.
+    return bool(p.get("coo_count"))
+
+
+def _reversion_window(p: dict) -> str:
+    """open where a conversion is recent enough to be reversible, else closed.
+
+    Published, and deliberately not read by the app: it has a control of its
+    own in Overlays and does not belong in a single readiness verdict.
+    """
+    if not (p.get("has_reversion") or p.get("reversion_kind")):
+        return ""
+    return "open" if p.get("reversion_window_open") else "closed"
+
+
+def readiness(p: dict, nearby: dict | None = None) -> dict:
+    """The eight published fields for one building."""
+    nearby = nearby or {}
+    occ, occ_basis = _occupied(p, nearby)
+    nr, nr_kind, nr_basis = _not_ready(p, nearby)
+    answered = _operator_answered(p, nearby)
+
+    if occ:
+        state, basis = "occupied", occ_basis
+    elif nr:
+        state, basis = "not_ready", nr_basis
+    elif answered:
+        state, basis = "available", _available_basis(p, nearby)
+    else:
+        state, basis = "undetermined", _undetermined_basis(p)
+
+    return {
+        "readiness_state": state,
+        "readiness_basis": basis,
+        "not_ready_kind": nr_kind if state == "not_ready" else "",
+        "occupied_flag": occ,
+        "occupied_basis": occ_basis,
+        "not_ready_flag": nr,
+        "operator_answered": answered,
+        "reversion_window": _reversion_window(p),
+    }
+
+
+def _available_basis(p: dict, nearby: dict) -> str:
+    use = (nearby or {}).get("nearby_use")
+    if use == "residential":
+        return f"Places has {nearby['nearby_use_basis']}, and nobody is running it"
+    if p.get("occupancy_state") == "clear":
+        return "the sweep found a building-level use and no operator"
+    if p.get("coo_count"):
+        return "the certificate says what the floors are and no operator is recorded"
+    return "the city register knows the use and no operator is recorded"
+
+
+def _undetermined_basis(p: dict) -> str:
+    if p.get("occupancy_state") == "thin":
+        return "swept, ground-floor tenants only — the rest of the building is not established"
+    return "nothing on record establishes what occupies the building"
+
+
+def apply_readiness(features: list, nearby_rows: dict | None = None) -> dict:
+    """Write the fields onto every feature. Returns the count per state."""
+    nearby_rows = nearby_rows or {}
+    counts = {}
+    for f in features:
+        p = f["properties"]
+        fields = readiness(p, nearby_rows.get(str(p.get("bbl") or "")))
+        p.update(fields)
+        counts[fields["readiness_state"]] = counts.get(fields["readiness_state"], 0) + 1
+    return counts

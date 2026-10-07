@@ -399,6 +399,20 @@ jobs:
         continue-on-error: true
         timeout-minutes: 25
 
+      # Method 2 in the deal-readiness escalation. Nearby Search rather than
+      # Text Search, on its own quota metric (NearbySearchRequest), so it does
+      # not compete with the three sweeps above for the 100/day
+      # SearchTextRequest cap they share.
+      #
+      # It reads the Phase 3 build for footprint centroids and segments, and
+      # Phase 4 rebuilds with its output — the same two-pass shape the sweeps
+      # above already use.
+      - name: Sweep nearby use (Google Places, deal readiness Method 2)
+        id: p_nearbyuse
+        run: python src/enrich_nearby_use.py
+        continue-on-error: true
+        timeout-minutes: 25
+
       # City Record shelter notices. Socrata, not Google, and it was simply
       # never wired in — the only source in the tree with no route into a run.
       - name: Pull City Record shelter notices
@@ -414,13 +428,14 @@ jobs:
           check "current-use sweep"   "${{ steps.p_currentuse.outcome }}"
           check "hotel-name sweep"    "${{ steps.p_hotelnames.outcome }}"
           check "hotel-class sweep"   "${{ steps.p_hclass.outcome }}"
+          check "nearby-use sweep"   "${{ steps.p_nearbyuse.outcome }}"
           check "City Record notices" "${{ steps.p_cityrecord.outcome }}"
           if [ -n "$FAILED" ]; then
             echo "::error title=Incomplete sweep::A sweep did not complete, so the build would fall back to a committed file of unknown age."
             printf '%b\n' "Sweeps that did not complete:$FAILED"
             exit 1
           fi
-          echo "All 4 sweeps completed."
+          echo "All 5 sweeps completed."
 
       # Phase 4: Enrich and build, now with the sweeps in hand.
       - name: Run enrichment

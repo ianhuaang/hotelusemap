@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW, DATA_PROCESSED, is_hotel_class
 from src import provenance
 from src import source_volume
+from src.deal_readiness import apply_readiness
 
 TODAY = date.today().strftime("%Y%m%d")
 
@@ -167,6 +168,23 @@ POST_2021_REVERSIONS = {
         "source": None,
     },
 }
+
+
+def load_nearby_use() -> dict:
+    """Method 2's answers, keyed by BBL, or nothing if the sweep never ran.
+
+    Absent is the normal state: enrich_nearby_use is a hand-run sweep like the
+    other Places scripts, and nothing in refresh-data.yml calls it. Readiness
+    is derived without it rather than blocked on it — it resolved 16% of the
+    buildings it was measured on, so treating it as required would hold the
+    other 84% hostage to a file nobody generated this week.
+    """
+    path = provenance.resolve("nearby_use", DATA_RAW)
+    if not path.exists():
+        return {}
+    rows = json.loads(path.read_text())
+    print(f"  Method 2 (nearby use): {path.name}, {len(rows)} rows")
+    return {str(r["bbl"]): r for r in rows if r.get("bbl")}
 
 
 def _funnel_entry() -> dict:
@@ -2141,6 +2159,16 @@ def build_geojson(
 
     complete_reason_codes(features)
     check_no_laundered_operators(features)
+
+    # Deal readiness last, so it reads the finished properties rather than the
+    # half-built record — segment, restricted_class, blockers and the roster
+    # promotions above are all inputs to it.
+    nearby_rows = load_nearby_use()
+    readiness_counts = apply_readiness(features, nearby_rows)
+    print(f"  deal readiness: " + ", ".join(
+        f"{k} {v}" for k, v in sorted(readiness_counts.items(), key=lambda x: -x[1])))
+    if nearby_rows:
+        print(f"    Method 2 supplied a building-level use on {sum(1 for r in nearby_rows.values() if r.get('nearby_use'))} buildings")
     report_contact_coverage(features)
 
     # Per collection, not per feature. Every building in a build reads the same

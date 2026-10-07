@@ -74,6 +74,12 @@ SOURCES = [
     ("google_current_use",   "google_current_use",       DATA_RAW,       True),
     ("google_hotel_names",   "google_hotel_names",       DATA_RAW,       True),
     ("google_hclass_hotels", "google_hclass_hotels",     DATA_RAW,       True),
+    # Method 2 in the deal-readiness escalation. Nearby Search, not Text
+    # Search: asked for an address, Text Search returns the address — 60 of 62
+    # queries in the 2026-10-07 probe came back a geocoded premise carrying no
+    # use at all. Separate SKU, separate quota metric, so it does not compete
+    # with the three sweeps above for their shared 100/day cap.
+    ("nearby_use",           "nearby_use",               DATA_RAW,       True),
     # City Record shelter notices — the one source with no route into a run at
     # all until the same change.
     ("city_record_shelter",  "city_record_shelter",      DATA_RAW,       True),
