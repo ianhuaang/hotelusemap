@@ -16,7 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.enrich_web_use import classify, mentions_address, query_addresses
+from src.enrich_web_use import (
+    borough_of, classify, corroborate, distinctive_tokens, mentions_address,
+    names_the_place, query_addresses,
+)
 
 LIC = ["35-02 37 AVENUE", "37-06 36 STREET", "37-06 36TH STREET", "3706 36TH STREET"]
 
@@ -649,3 +652,102 @@ def test_supportive_housing_is_a_use_the_readiness_model_calls_occupied():
     # being institutional, every phrase added above silently stops mattering.
     from src.deal_readiness import INSTITUTIONAL_USES
     assert "supportive_housing" in INSTITUTIONAL_USES
+
+
+# --- corroborating a lone Places reading ------------------------------------
+#
+# The second question this module answers. 23 buildings in the no-operator
+# segment were occupied on one Nearby Search hit and 22 more on one sweep
+# occupant, with nothing outside Google agreeing. These tests are the readings
+# that decide whether such a claim closes as occupied, goes back for review,
+# or leaves the building undetermined.
+
+BROADWAY = ["2508 BROADWAY"]
+
+
+def test_a_page_naming_the_institution_at_the_address_confirms_it():
+    page = {
+        "title": "Advent Lutheran Church — Upper West Side",
+        "snippet": "Advent Lutheran Church at 2508 Broadway holds Sunday service at 11am.",
+        "link": "https://www.gothamist.com/uws-churches",
+    }
+    v = corroborate([page], BROADWAY, "Advent Lutheran Church")
+    assert v["verdict"] == "confirmed"
+    assert v["evidence"][0]["link"].startswith("https://")
+
+
+def test_the_address_gate_applies_to_corroboration_too():
+    # The same failure the classifier has: a search for an address returns
+    # the block. A church three doors down is not this building.
+    elsewhere = {
+        "title": "Advent Lutheran Church",
+        "snippet": "Advent Lutheran Church at 93 Amsterdam Avenue.",
+        "link": "https://www.gothamist.com/x",
+    }
+    assert corroborate([elsewhere], BROADWAY, "Advent Lutheran Church")["verdict"] == "none"
+
+
+def test_housing_stock_at_the_address_contradicts_the_claim():
+    page = {
+        "title": "2508 Broadway apartments",
+        "snippet": "Two apartments for rent at 2508 Broadway, a rental building on the UWS.",
+        "link": "https://streeteasy.example.com/2508-broadway",
+    }
+    v = corroborate([page], BROADWAY, "Advent Lutheran Church")
+    assert v["verdict"] == "contradicted"
+    assert "apartments for rent" in v["basis"]
+
+
+def test_a_confirmation_outranks_a_contradiction_when_both_appear():
+    # A listing for a flat at an address is near-universal and says nothing
+    # about the other floors. Erring toward confirmed costs a lead; erring the
+    # other way puts somebody in front of a church.
+    listing = {"title": "2508 Broadway", "snippet": "Apartments for rent at 2508 Broadway.",
+               "link": "https://streeteasy.example.com/x"}
+    news = {"title": "Advent Lutheran Church", "link": "https://gothamist.com/y",
+            "snippet": "Advent Lutheran Church, 2508 Broadway, marks its centenary."}
+    assert corroborate([listing, news], BROADWAY, "Advent Lutheran Church")["verdict"] == "confirmed"
+
+
+def test_an_operator_under_another_name_still_confirms_somebody_runs_it():
+    # Places may be wrong about what it is and right that the rooms are
+    # spoken for. A shelter at the address is not a church, and it is also
+    # not a building anybody can have.
+    page = {"title": "City opens shelter", "link": "https://www.crainsnewyork.com/z",
+            "snippet": "The homeless shelter at 2508 Broadway houses single adults."}
+    v = corroborate([page], BROADWAY, "Advent Lutheran Church")
+    assert v["verdict"] == "confirmed"
+    assert "Shelter" in v["basis"]
+
+
+def test_nothing_found_is_an_answer_and_not_a_failure():
+    v = corroborate([], BROADWAY, "Advent Lutheran Church")
+    assert v["verdict"] == "none"
+    assert v["evidence"] == []
+
+
+def test_the_name_test_needs_more_than_one_short_word():
+    # "Prep For Prep" reduces to {prep}, and a page about 71st Street using
+    # the word prep is not evidence the school is the building. Unconfirmed
+    # is the right answer there, not wrong.
+    assert not names_the_place("the prep course meets on West 71 Street", "Prep For Prep")
+    # Two distinctive words, or one long enough to be a proper noun.
+    assert names_the_place("Advent Lutheran on Broadway", "Advent Lutheran Church")
+    assert names_the_place("services at Ascension", "Ascension Roman Catholic Church")
+
+
+def test_the_words_every_institution_shares_are_not_distinctive():
+    assert distinctive_tokens("Advent Lutheran Church") == {"advent", "lutheran"}
+    assert distinctive_tokens("The MAve nyc") == {"mave"}
+    # A corporate suffix is not a name. Zoe Ministries Inc. is Zoe Ministries.
+    assert distinctive_tokens("Zoe Ministries Inc.") == {"zoe", "ministries"}
+
+
+def test_the_query_carries_a_borough_the_build_never_published():
+    # Both modes read b["borough"], and no build has ever carried that
+    # property — every query went out with an empty string where the one word
+    # that separates a Manhattan address from a Brooklyn one belongs.
+    assert borough_of("1011680029") == "Manhattan"
+    assert borough_of("4004060040") == "Queens"
+    assert borough_of("3024870041") == "Brooklyn"
+    assert borough_of("") == ""

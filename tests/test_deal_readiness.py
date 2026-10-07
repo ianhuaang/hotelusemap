@@ -17,7 +17,11 @@ from src.deal_readiness import apply_readiness, readiness
 LOCKED_FIELDS = {
     "readiness_state", "readiness_basis", "not_ready_kind", "occupied_flag",
     "occupied_basis", "not_ready_flag", "operator_answered", "reversion_window",
+    "places_claim",
 }
+
+# The no-operator segment, where a lone Places reading is no longer enough.
+GOLD = {"segment": "transient"}
 
 
 def test_the_published_field_names_are_the_ones_the_app_reads():
@@ -99,13 +103,118 @@ def test_a_hostel_or_dormitory_is_occupied_not_restricted():
     assert sro["not_ready_kind"] == "restricted_conversion"
 
 
-def test_method_2_lodging_makes_a_building_occupied():
-    """40-40 27 Street: LIC Plaza Hotel Corp, 3m from the footprint."""
-    out = readiness({"occupancy_state": "clear"},
-                    {"nearby_use": "lodging",
-                     "nearby_use_basis": "hotel 'LIC Plaza Hotel Corp' 3m from the footprint"})
+LIC = {"nearby_use": "lodging",
+       "nearby_use_basis": "hotel 'LIC Plaza Hotel Corp' 3m from the footprint"}
+
+
+def test_method_2_still_decides_outside_the_no_operator_segment():
+    """Where the cost of a wrong reading is not a wasted day, one is enough."""
+    out = readiness({"occupancy_state": "clear", "segment": "partial"}, LIC)
     assert out["readiness_state"] == "occupied"
     assert "LIC Plaza" in out["readiness_basis"]
+
+
+def test_a_lone_places_reading_no_longer_takes_a_gold_building_off_the_list():
+    """40-40 27 Street: LIC Plaza Hotel Corp, 3m from the footprint, and
+    nothing else in the building's record agreeing with it.
+
+    23 buildings in the no-operator segment were occupied on one Nearby
+    Search hit — among them a hotel called "Jordan Barbara Schwinn" at 11
+    West 67 Street and a Hebrew-language listing at 859 7 Avenue. One source
+    cannot both make the claim and corroborate it.
+    """
+    out = readiness({**GOLD, "occupancy_state": "clear"}, LIC)
+    assert out["readiness_state"] == "undetermined"
+    assert out["places_claim"] == "unscreened"
+    assert "not yet corroborated" in out["readiness_basis"]
+
+
+def test_the_web_confirming_it_closes_the_claim_as_occupied():
+    out = readiness({**GOLD, "occupancy_state": "clear"}, LIC,
+                    {"verdict": "confirmed",
+                     "basis": "web names 'LIC Plaza Hotel Corp' at the address, in qns.com"})
+    assert out["readiness_state"] == "occupied"
+    assert out["places_claim"] == "confirmed"
+    assert "LIC Plaza" in out["readiness_basis"]
+    assert "confirmed on the web" in out["readiness_basis"]
+
+
+def test_the_web_contradicting_it_sends_the_building_back_for_review():
+    out = readiness({**GOLD, "occupancy_state": "clear"}, LIC,
+                    {"verdict": "contradicted", "basis": "web:'apartments for rent' in streeteasy.com"})
+    assert out["places_claim"] == "contradicted"
+    assert out["readiness_state"] == "undetermined", "never straight to available"
+    assert "needs review" in out["readiness_basis"]
+
+
+def test_the_web_finding_nothing_leaves_the_building_undetermined():
+    out = readiness({**GOLD, "occupancy_state": "clear"}, LIC, {"verdict": "none"})
+    assert out["places_claim"] == "unconfirmed"
+    assert out["readiness_state"] == "undetermined"
+    assert "found nothing to confirm it" in out["readiness_basis"]
+
+
+def test_an_open_claim_never_falls_through_to_available():
+    """The 11 buildings this was written for.
+
+    Retiring the lone reading without touching _operator_answered sent 11 of
+    the 23 to available rather than undetermined — they carry a parsed
+    certificate or a clear sweep, and either counts as answered on its own.
+    2508 Broadway reads as Advent Lutheran Church and 310 Riverside Drive as
+    Zoe Ministries; both would have arrived in the clean prospecting view.
+    """
+    for answered in ({"occupancy_state": "clear"},
+                     {"occupancy_state": "onrecord",
+                      "coo_floors": [{"floor": "02", "kind": "residential"}]}):
+        for verdict in (None, {"verdict": "none"}, {"verdict": "contradicted", "basis": "x"}):
+            out = readiness({**GOLD, **answered}, LIC, verdict)
+            assert out["readiness_state"] == "undetermined", (answered, verdict)
+            assert out["operator_answered"] is False
+
+
+def test_a_named_condition_answers_before_an_open_claim_does():
+    """25 of the 45 land here, and the condition was always the better answer.
+
+    342 West 71 Street is SRO stock, 859 7 Avenue has a demolition filing and
+    11 West 67 Street an active 421-a. Each was occupied on a Places reading
+    that masked a condition the pipeline had already established. The claim
+    stays published, so enrich_web_use still picks the building up.
+    """
+    out = readiness({**GOLD, "occupancy_state": "clear", "restricted_class": True,
+                     "restricted_class_reason": "SRO — rent-regulated rooming stock"},
+                    LIC)
+    assert out["readiness_state"] == "not_ready"
+    assert out["not_ready_kind"] == "restricted_conversion"
+    assert out["places_claim"] == "unscreened", "the claim is still open and still screenable"
+
+
+def test_corroboration_from_outside_google_is_not_a_places_claim_at_all():
+    """A licence, a roster or a shelter notice answers it without the web."""
+    for extra in ({"hotel_license_status": "Active", "hotel_license_name": "Highgate"},
+                  {"htc_union": True, "htc_union_name": "The Mave"},
+                  {"shelter_status": "active"},
+                  {"current_use_conflict": True, "current_use_label": "Government / civic"}):
+        out = readiness({**GOLD, "occupancy_state": "clear", **extra}, LIC)
+        assert out["readiness_state"] == "occupied", extra
+        assert out["places_claim"] == "", extra
+
+
+def test_the_sweep_occupant_is_the_same_source_as_method_2():
+    """115 East 92 Street is 'occupied' by Digital Piano Review.
+
+    The occupant rule is Method 2's own source read a second way, and it is
+    the weaker reading: no 30m radius, no guard-4 name test. The three names
+    test_guard_4 asserts Method 2 must reject are all occupying a building
+    through this rule. Leaving it out would have made the change a no-op on
+    9 of the 23, which reach occupied both ways.
+    """
+    piano = {**GOLD, "occupancy_state": "clear",
+             "current_use_occupants": [{"name": "Digital Piano Review", "use": "education"}]}
+    out = readiness(piano, {})
+    assert out["places_claim"] == "unscreened"
+    assert out["readiness_state"] == "undetermined"
+    # And it still decides on its own outside the segment.
+    assert readiness({**piano, "segment": "partial"}, {})["readiness_state"] == "occupied"
 
 
 def test_method_2_residential_does_not_make_a_building_occupied():

@@ -187,6 +187,25 @@ def load_nearby_use() -> dict:
     return {str(r["bbl"]): r for r in rows if r.get("bbl")}
 
 
+def load_web_corroboration() -> dict:
+    """The web screen's verdict on each open Places claim, keyed by BBL.
+
+    Read by glob rather than through provenance, the same way enrich.py reads
+    the other half of this script's output: both are hand-run and neither is
+    in refresh-data.yml, so registering them would put a permanent gap in the
+    completeness manifest for files nothing promises to produce weekly.
+
+    Absent means every claim is unscreened, which readiness already handles —
+    an unscreened claim leaves the building undetermined, not available.
+    """
+    files = sorted(DATA_RAW.glob("web_corroboration_[0-9]*.json"), reverse=True)
+    if not files:
+        return {}
+    rows = json.loads(files[0].read_text())
+    print(f"  Places claims put to the web: {files[0].name}, {len(rows)} rows")
+    return {str(r["bbl"]): r for r in rows if r.get("bbl")}
+
+
 def _funnel_entry() -> dict:
     """The two counts pipeline.py leaves behind, or empty if it has not run."""
     files = sorted(DATA_PROCESSED.glob("funnel_entry_*.json"), reverse=True)
@@ -2173,11 +2192,23 @@ def build_geojson(
     # half-built record — segment, restricted_class, blockers and the roster
     # promotions above are all inputs to it.
     nearby_rows = load_nearby_use()
-    readiness_counts = apply_readiness(features, nearby_rows)
+    web_rows = load_web_corroboration()
+    readiness_counts = apply_readiness(features, nearby_rows, web_rows)
     print(f"  deal readiness: " + ", ".join(
         f"{k} {v}" for k, v in sorted(readiness_counts.items(), key=lambda x: -x[1])))
     if nearby_rows:
         print(f"    Method 2 supplied a building-level use on {sum(1 for r in nearby_rows.values() if r.get('nearby_use'))} buildings")
+    claims = {}
+    for f in features:
+        c = f["properties"].get("places_claim") or ""
+        if c:
+            claims[c] = claims.get(c, 0) + 1
+    if claims:
+        print("    no-operator buildings resting on a lone Places reading: " + ", ".join(
+            f"{k} {v}" for k, v in sorted(claims.items(), key=lambda x: -x[1])))
+        if claims.get("unscreened"):
+            print(f"      {claims['unscreened']} not yet put to the web — "
+                  "run src/enrich_web_use.py --corroborate")
     report_contact_coverage(features)
 
     # Per collection, not per feature. Every building in a build reads the same

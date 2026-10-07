@@ -11,9 +11,17 @@ than four half-verdicts a reader has to reconcile:
 
 The field names here are a contract with the app and are not free to change:
 readiness_state, readiness_basis, not_ready_kind, occupied_flag,
-occupied_basis, not_ready_flag, operator_answered, reversion_window. The app
-reads the first three and keys its filter off readiness_state; the rest are
-published as the inputs behind it.
+occupied_basis, not_ready_flag, operator_answered, reversion_window,
+places_claim. The app reads the first three and keys its filter off
+readiness_state; the rest are published as the inputs behind it.
+
+One source cannot both make a claim and corroborate it. In the no-operator
+segment a Google Places reading on its own no longer takes a building off the
+list: it opens a claim, src/enrich_web_use.py --corroborate puts that claim to
+the open web, and only a confirmation closes it as occupied. Contradicted and
+not-found both land on undetermined, which keeps the building out of the
+prospecting view without asserting something nothing has established. See
+places_claim.
 
 Two things this deliberately does not do. It does not rank or date anything —
 the watch list that ordered buildings by how long a condition had stood was
@@ -43,12 +51,18 @@ INSTITUTIONAL_USES = frozenset({
 })
 
 
-def _occupied(p: dict, nearby: dict) -> tuple[bool, str]:
-    """Is somebody running this building, and what says so.
+# The no-operator segment: buildings with transient-capable rooms and nobody
+# running them. The list exists for these, which is why the bar for taking one
+# off it is set here and not anywhere else.
+NO_OPERATOR_SEGMENT = "transient"
+
+
+def _operator_off_the_sweep(p: dict) -> tuple[bool, str]:
+    """Somebody running the building, according to something that is not Places.
 
     Ordered by how directly the source speaks to the question. A live licence
-    and a union roster name an operator outright; the sweep and Method 2
-    infer one from what is standing there.
+    and a union roster name an operator outright; the rest are a status the
+    city or the pipeline has already established.
     """
     if p.get("hotel_license_status") in LIVE_LICENCE_STATUSES:
         name = p.get("hotel_license_name") or p.get("hotel_name") or "a licensed operator"
@@ -85,17 +99,40 @@ def _occupied(p: dict, nearby: dict) -> tuple[bool, str]:
     if head in ("hostel", "dormitory"):
         return True, f"it is in {head} use ({reason})"
 
+    # Places-derived like the two readings below, and kept here rather than
+    # with them because it is the one that is guarded: current_use_conflict
+    # only fires when the use holds the building, which _use_holds_building
+    # tests against the other occupants at the address. The penalty used to
+    # fire on any occupant and landed on 278 buildings, 238 of them wrongly.
     if p.get("current_use_conflict"):
         label = p.get("current_use_label") or "a use that is not transient"
         return True, f"the current-use sweep found {label}, against the room count"
 
+    return False, ""
+
+
+def _operator_off_the_places_sweep(p: dict, nearby: dict) -> tuple[bool, str]:
+    """What Google Places alone says is standing in the building.
+
+    Two readings of one source, and they are not independent of each other.
+    Method 2 asks Nearby Search what is at the point; the occupant list is the
+    same directory read through the current-use sweep. enrich_nearby_use tried
+    corroborating one against the other and found it worthless — "checking
+    Places against Places agreed with itself on all 29 and changed nothing" —
+    because a wrong listing is wrong in both readings at once.
+
+    Of the two, the occupant list is the weaker: Method 2 at least applies a
+    30m radius and the guard-4 name test, and the occupant rule applies
+    neither. The three names test_deal_readiness asserts Method 2 must reject
+    — Digital Piano Review, Rabbi Zachary Hepner Mohel, Claudia Knafo Piano
+    Studio — are all occupying a building here, on 115 East 92, 2651 Broadway
+    and 610 West 111.
+    """
     # Method 2. Only ever a building-level type within 30m — the guards live
     # in enrich_nearby_use, and the measured resolution rate behind them is
     # 16%, so most buildings reach this line with nothing to say.
     use = (nearby or {}).get("nearby_use") or ""
-    if use == "lodging":
-        return True, f"Places has {nearby['nearby_use_basis']}"
-    if use == "institutional":
+    if use in ("lodging", "institutional"):
         return True, f"Places has {nearby['nearby_use_basis']}"
 
     # The sweep found a building-level use that is not somewhere people live.
@@ -110,6 +147,67 @@ def _occupied(p: dict, nearby: dict) -> tuple[bool, str]:
     if p.get("current_use") in INSTITUTIONAL_USES and p.get("current_use_name"):
         return True, f"{p['current_use_name']} occupies the building"
 
+    return False, ""
+
+
+def places_claim(p: dict, nearby: dict | None = None, web: dict | None = None) -> str:
+    """Where a lone Places reading of this building's operator currently stands.
+
+    Empty unless the building is in the no-operator segment AND the only thing
+    saying somebody runs it is the Places sweep. Otherwise one of:
+
+        unscreened    the web screen has not reached it yet
+        confirmed     the web named the same thing at the same address
+        contradicted  the web said something that argues against it
+        unconfirmed   the web was asked and found nothing either way
+
+    Only `confirmed` is an operator. The other three leave the building
+    undetermined, which is the honest answer and, just as importantly, not
+    `available` — see _operator_answered.
+    """
+    if p.get("segment") != NO_OPERATOR_SEGMENT:
+        return ""
+    if _operator_off_the_sweep(p)[0]:
+        return ""
+    if not _operator_off_the_places_sweep(p, nearby or {})[0]:
+        return ""
+    verdict = (web or {}).get("verdict") or ""
+    if verdict in ("confirmed", "contradicted"):
+        return verdict
+    if verdict == "none":
+        return "unconfirmed"
+    return "unscreened"
+
+
+def _occupied(p: dict, nearby: dict, web: dict | None = None) -> tuple[bool, str]:
+    """Is somebody running this building, and what says so.
+
+    A reading off the Places sweep and nothing else does not answer this in
+    the no-operator segment. 23 buildings were occupied on one Nearby Search
+    hit and 22 more on one sweep occupant, and the readings include a hotel
+    called "Jordan Barbara Schwinn", a post box at 147 Graham Avenue and a
+    Chinese restaurant at 411 West End Avenue. Each of those is a building the
+    list exists to surface, taken off it by a single line in a business
+    directory with nothing agreeing with it.
+
+    Outside that segment the sweep still decides on its own: an active hotel
+    or a partial-use building is not what the prospect list is for, and the
+    cost of a wrong reading there is not a wasted day.
+    """
+    off_sweep, basis = _operator_off_the_sweep(p)
+    if off_sweep:
+        return True, basis
+
+    from_sweep, sweep_basis = _operator_off_the_places_sweep(p, nearby)
+    if not from_sweep:
+        return False, ""
+
+    claim = places_claim(p, nearby, web)
+    if not claim:
+        return True, sweep_basis
+    if claim == "confirmed":
+        where = (web or {}).get("basis") or "the open web"
+        return True, f"{sweep_basis}, confirmed on the web ({where})"
     return False, ""
 
 
@@ -150,8 +248,17 @@ def _not_ready(p: dict, nearby: dict) -> tuple[bool, str, str]:
     return False, "", ""
 
 
-def _operator_answered(p: dict, nearby: dict) -> bool:
+def _operator_answered(p: dict, nearby: dict, claim: str = "") -> bool:
     """Did anything establish what occupies the building, either way.
+
+    An open Places claim is not an answer, and this is the line that stops it
+    becoming one. Without it, retiring a lone Places reading would have sent
+    11 of the 23 buildings it decided straight to `available` rather than to
+    undetermined — 2508 Broadway, which reads as Advent Lutheran Church, and
+    310 Riverside Drive, which reads as Zoe Ministries, among them. They have
+    a parsed certificate or a clear sweep, and either is enough to count as
+    answered on its own. Neither says who is running the building, which is
+    the question the Places reading raised and nothing has yet settled.
 
     Ground-floor tenants are not an answer. The app already says so on the
     panel — "What occupies the rest of the building is not established" — and
@@ -172,6 +279,8 @@ def _operator_answered(p: dict, nearby: dict) -> bool:
     coo_floors — 121 buildings map-wide. Counting the records rather than the
     readings credited Method 1 with buildings it never resolved.
     """
+    if claim in ("unscreened", "unconfirmed", "contradicted"):
+        return False
     if (nearby or {}).get("nearby_use"):
         return True
     # The sweep found a building-level occupant, or found a use that argues
@@ -193,12 +302,13 @@ def _reversion_window(p: dict) -> str:
     return "open" if p.get("reversion_window_open") else "closed"
 
 
-def readiness(p: dict, nearby: dict | None = None) -> dict:
-    """The eight published fields for one building."""
+def readiness(p: dict, nearby: dict | None = None, web: dict | None = None) -> dict:
+    """The nine published fields for one building."""
     nearby = nearby or {}
-    occ, occ_basis = _occupied(p, nearby)
+    claim = places_claim(p, nearby, web)
+    occ, occ_basis = _occupied(p, nearby, web)
     nr, nr_kind, nr_basis = _not_ready(p, nearby)
-    answered = _operator_answered(p, nearby)
+    answered = _operator_answered(p, nearby, claim)
 
     if occ:
         state, basis = "occupied", occ_basis
@@ -207,7 +317,7 @@ def readiness(p: dict, nearby: dict | None = None) -> dict:
     elif answered:
         state, basis = "available", _available_basis(p, nearby)
     else:
-        state, basis = "undetermined", _undetermined_basis(p)
+        state, basis = "undetermined", _undetermined_basis(p, nearby, web, claim)
 
     return {
         "readiness_state": state,
@@ -218,6 +328,11 @@ def readiness(p: dict, nearby: dict | None = None) -> dict:
         "not_ready_flag": nr,
         "operator_answered": answered,
         "reversion_window": _reversion_window(p),
+        # Empty on all but the no-operator buildings whose only operator
+        # evidence is the Places sweep. Published so the panel can say which
+        # of the four it is, and so enrich_web_use can select exactly the
+        # buildings a search query would change the answer for.
+        "places_claim": claim,
     }
 
 
@@ -232,19 +347,37 @@ def _available_basis(p: dict, nearby: dict) -> str:
     return "the sweep established the building and no operator is recorded"
 
 
-def _undetermined_basis(p: dict) -> str:
+def _undetermined_basis(p: dict, nearby: dict | None = None,
+                        web: dict | None = None, claim: str = "") -> str:
+    """Why we cannot say — and for an open Places claim, what is outstanding.
+
+    An undetermined building with no explanation reads as a gap in the data.
+    These three are not a gap: something was read, and it did not hold up.
+    """
+    if claim:
+        _, sweep_basis = _operator_off_the_places_sweep(p, nearby or {})
+        if claim == "contradicted":
+            where = (web or {}).get("basis") or "the open web"
+            return (f"{sweep_basis} — contradicted on the web ({where}); "
+                    "needs review before this building moves either way")
+        if claim == "unconfirmed":
+            return f"{sweep_basis}, and the web screen found nothing to confirm it"
+        return f"{sweep_basis}, not yet corroborated"
     if p.get("occupancy_state") == "thin":
         return "swept, ground-floor tenants only — the rest of the building is not established"
     return "nothing on record establishes what occupies the building"
 
 
-def apply_readiness(features: list, nearby_rows: dict | None = None) -> dict:
+def apply_readiness(features: list, nearby_rows: dict | None = None,
+                    web_rows: dict | None = None) -> dict:
     """Write the fields onto every feature. Returns the count per state."""
     nearby_rows = nearby_rows or {}
+    web_rows = web_rows or {}
     counts = {}
     for f in features:
         p = f["properties"]
-        fields = readiness(p, nearby_rows.get(str(p.get("bbl") or "")))
+        bbl = str(p.get("bbl") or "")
+        fields = readiness(p, nearby_rows.get(bbl), web_rows.get(bbl))
         p.update(fields)
         counts[fields["readiness_state"]] = counts.get(fields["readiness_state"], 0) + 1
     return counts

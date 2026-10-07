@@ -18,10 +18,19 @@ can be checked by opening the link. It does not ask a model what the building
 is; a model's opinion is not evidence, and evidence is the whole point of the
 field this writes into.
 
+It runs in two modes against the same corpus. The default reads a use for
+buildings Places could not see. --corroborate answers a narrower question for
+buildings Places answered too confidently: the no-operator buildings that are
+occupied on a single Places reading with nothing agreeing with it. There the
+question is not "what is this building" but "does anything outside Google say
+the same thing", and the answer decides whether the claim closes as occupied,
+goes back for review, or leaves the building undetermined.
+
     GOOGLE_API_KEY=... GOOGLE_CSE_ID=... python3 src/enrich_web_use.py
     ... --bbl 4003770013            one building, prints its evidence
     ... --limit 50                  stop after 50 lookups
     ... --all                       re-check buildings Places already answered
+    ... --corroborate               put the open Places claims to the web
 """
 
 from __future__ import annotations
@@ -41,6 +50,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_RAW = ROOT / "data" / "raw"
 OUTPUT_FILE = DATA_RAW / f"web_current_use_{date.today():%Y%m%d}.json"
 CACHE_FILE = DATA_RAW / "web_current_use_cache.json"
+CORROBORATE_FILE = DATA_RAW / f"web_corroboration_{date.today():%Y%m%d}.json"
+CORROBORATE_CACHE = DATA_RAW / "web_corroboration_cache.json"
 
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 CSE_ID = os.environ.get("GOOGLE_CSE_ID", "")
@@ -120,6 +131,22 @@ TRUSTED_HOST_HINTS = (
     "bisnow.com", "curbed.com", "cityandstateny.com", "nypost.com", "bkrea.com",
     "citylimits.org", "documentedny.com", "thecity.nyc",
 )
+
+
+# The first digit of a BBL. Derived rather than read off the feature: the
+# build has never carried a `borough` property, so both modes below were
+# putting an empty string into the query where the borough belongs — a
+# search for "2508 BROADWAY  (shelter OR hostel OR ...)" with a double space
+# where the one word that disambiguates a Manhattan address from a Brooklyn
+# one should be. Neither mode had run when this was found.
+BOROUGH_BY_DIGIT = {
+    "1": "Manhattan", "2": "Bronx", "3": "Brooklyn", "4": "Queens",
+    "5": "Staten Island",
+}
+
+
+def borough_of(bbl: str) -> str:
+    return BOROUGH_BY_DIGIT.get(str(bbl or "")[:1], "")
 
 
 def log(msg: str) -> None:
@@ -211,6 +238,208 @@ def classify(results: list[dict], addresses: list[str]) -> dict | None:
     return None
 
 
+# --- corroboration: putting a lone Places reading to the open web -----------
+
+# Words that do not distinguish one institution from another. Stripped before
+# a name is matched against a page, so "Advent Lutheran Church" is tested on
+# "advent" and "lutheran" rather than on the word every church shares.
+GENERIC_NAME_WORDS = frozenset({
+    "the", "of", "and", "at", "for", "in", "on", "a", "an", "to",
+    "inc", "incorporated", "llc", "ltd", "lp", "corp", "corporation", "co",
+    "company", "nyc", "new", "york", "ny", "manhattan", "brooklyn", "queens",
+    "church", "chapel", "parish", "temple", "school", "academy", "college",
+    "hotel", "motel", "inn", "house", "building", "center", "centre",
+    "institute", "foundation", "society", "association", "saint", "st",
+})
+
+# A page that argues the building is housing stock or that the named place is
+# gone. Phrased long for the reason the table above is: "closed" on its own
+# matches a closed street and an article about a closing, and "apartment"
+# matches the one above the shop. Each of these describes a building.
+CONTRADICTION_MARKERS = (
+    "apartments for rent", "apartment for rent", "units for rent",
+    "apartments for lease", "rental building", "no fee apartments",
+    "condominium", "condo for sale", "co-op apartment", "cooperative apartment",
+    "rent stabilized apartments", "residential condominium",
+    "permanently closed", "closed its doors", "has since closed",
+    "no longer operates", "no longer located", "relocated to", "has moved to",
+    "formerly located at", "sits vacant", "stands vacant", "vacant building",
+)
+
+
+def distinctive_tokens(name: str) -> set[str]:
+    """The words in a place's name that could only be this place."""
+    words = re.findall(r"[a-z0-9']{2,}", (name or "").lower())
+    return {w for w in words if w not in GENERIC_NAME_WORDS}
+
+
+def names_the_place(blob: str, name: str) -> bool:
+    """Does this page name the place Places put in the building.
+
+    Two tokens, or one long enough to be a proper noun on its own. One short
+    token is not enough: "Prep For Prep" reduces to {prep}, and a page about
+    71st Street using the word prep is not evidence that Prep For Prep is the
+    building. Buildings that fail this come back unconfirmed rather than
+    wrong, which is the direction this whole module errs in.
+    """
+    low = blob.lower()
+    full = " ".join(sorted(distinctive_tokens(name)))
+    if not full:
+        return False
+    hits = {t for t in distinctive_tokens(name) if re.search(rf"\b{re.escape(t)}", low)}
+    return len(hits) >= 2 or any(len(t) >= 8 for t in hits)
+
+
+def corroborate(results: list[dict], addresses: list[str], claim_name: str) -> dict:
+    """Does the open web agree that claim_name is at this address.
+
+    Three verdicts, and the asymmetry between them is deliberate.
+    A confirmation beats a contradiction whenever both appear, because a
+    listings page for a flat at an address is near-universal and says nothing
+    about the other ten floors, while a newsroom or a directory naming the
+    institution at that address is about the building. Erring toward confirmed
+    keeps a building off the prospect list, which costs a lead; erring the
+    other way puts somebody in front of a church, which costs a day.
+
+    A verdict of "none" is a real answer and not a failure: it means the web
+    was asked and had nothing, which leaves the building undetermined.
+    """
+    confirming = contradicting = None
+    for r in results:
+        blob = f"{r['title']} {r['snippet']}"
+        if not mentions_address(blob, addresses):
+            continue
+        host = urllib.parse.urlparse(r["link"]).netloc.lower()
+        if names_the_place(blob, claim_name):
+            confirming = confirming or (r, f"web names {claim_name!r} at the address, in {host}")
+            continue
+        # Somebody running the building under another name still confirms that
+        # somebody is running it. The Places reading may be wrong about what
+        # it is and right that the rooms are spoken for.
+        other = classify([r], addresses)
+        if other:
+            confirming = confirming or (r, f"web reads the address as {other['current_use_label']} ({other['basis']})")
+            continue
+        low = blob.lower()
+        hit = next((m for m in CONTRADICTION_MARKERS if m in low), None)
+        if hit:
+            contradicting = contradicting or (r, f"web:{hit!r} in {host}")
+
+    chosen, verdict = (confirming, "confirmed") if confirming else (
+        (contradicting, "contradicted") if contradicting else (None, "none"))
+    if not chosen:
+        return {"verdict": "none", "basis": "the web was asked and named nothing at this address",
+                "evidence": []}
+    r, basis = chosen
+    return {
+        "verdict": verdict,
+        "basis": basis,
+        "evidence": [{"title": r["title"], "snippet": r["snippet"], "link": r["link"]}],
+    }
+
+
+def load_corroboration_targets(only_bbl: str | None = None) -> list[dict]:
+    """The buildings whose occupancy rests on a lone Places reading.
+
+    Selected by the predicate in deal_readiness rather than by readiness_state,
+    and the difference matters: once that module stops calling these occupied
+    they are undetermined like any other unanswered building, and a selector
+    keyed on the state would stop finding the very buildings it exists to
+    resolve. The predicate is keyed on the evidence, which does not move.
+    """
+    sys.path.insert(0, str(ROOT))
+    from src.deal_readiness import places_claim
+    from src.enrich_current_use import load_alt_addresses, load_buildings
+
+    nearby = {}
+    files = sorted(DATA_RAW.glob("nearby_use_[0-9]*.json"), reverse=True)
+    if files:
+        nearby = {str(r["bbl"]): r for r in json.loads(files[0].read_text()) if r.get("bbl")}
+        log(f"  Method 2 readings: {files[0].name}, {len(nearby)} rows")
+    else:
+        log("  no nearby_use file — only the sweep-occupant claims will be found")
+
+    alts = load_alt_addresses()
+    out = []
+    for b in load_buildings():
+        bbl = str(b.get("bbl") or "")
+        if not bbl or (only_bbl and bbl != only_bbl):
+            continue
+        row = nearby.get(bbl, {})
+        if not only_bbl and not places_claim(b, row):
+            continue
+        name = row.get("nearby_use_name") or b.get("current_use_name") or ""
+        if not name:
+            occs = b.get("current_use_occupants") or []
+            name = next((o.get("name") for o in occs
+                         if o.get("name") and o.get("use") not in
+                         ("ground_floor_tenant", "unknown", "other")), "")
+        addr = b.get("address") or ""
+        out.append({
+            "bbl": bbl,
+            "address": addr,
+            "borough": b.get("borough") or borough_of(bbl),
+            "claim_name": name,
+            "claim_basis": row.get("nearby_use_basis") or b.get("current_use_basis") or "",
+            "addresses": [addr] + [a for a in alts.get(bbl, []) if a and a != addr],
+        })
+    return out
+
+
+def run_corroboration(args) -> None:
+    """Ask the web about each open claim and write the verdicts."""
+    cache = json.loads(CORROBORATE_CACHE.read_text()) if CORROBORATE_CACHE.exists() else {}
+    targets = load_corroboration_targets(args.bbl)
+    if args.limit:
+        targets = targets[: args.limit]
+    log(f"  {len(targets)} building(s) occupied on a lone Places reading")
+
+    rows, tally = [], {"confirmed": 0, "contradicted": 0, "none": 0}
+    for i, t in enumerate(targets, 1):
+        if not t["claim_name"]:
+            # Nothing to search for. Left out of the output entirely so the
+            # claim stays unscreened rather than being recorded as a miss.
+            log(f"  [{i}/{len(targets)}] {t['address'][:34]:36s} -- no place name to check")
+            continue
+        if t["bbl"] in cache and not args.bbl:
+            verdict = cache[t["bbl"]]
+        else:
+            verdict = None
+            for addr in query_addresses(t["addresses"]):
+                q = f'"{addr}" {t["borough"]} "{t["claim_name"]}"'
+                v = corroborate(search(q), t["addresses"], t["claim_name"])
+                if v["verdict"] != "none":
+                    verdict = v
+                    break
+                verdict = v
+            cache[t["bbl"]] = verdict
+            if i % 25 == 0:
+                CORROBORATE_CACHE.write_text(json.dumps(cache, indent=2))
+            time.sleep(0.2)
+
+        tally[verdict["verdict"]] = tally.get(verdict["verdict"], 0) + 1
+        rows.append({"bbl": t["bbl"], "address": t["address"],
+                     "claim_name": t["claim_name"], "claim_basis": t["claim_basis"],
+                     **verdict})
+        log(f"  [{i}/{len(targets)}] {t['address'][:34]:36s} -> "
+            f"{verdict['verdict']:13s} {verdict['basis'][:48]}")
+        if args.bbl:
+            for e in verdict["evidence"]:
+                log(f"        {e['link']}\n        {e['snippet'][:160]}")
+
+    CORROBORATE_CACHE.write_text(json.dumps(cache, indent=2))
+    merged = {}
+    if CORROBORATE_FILE.exists():
+        merged = {r["bbl"]: r for r in json.loads(CORROBORATE_FILE.read_text())}
+    merged.update({r["bbl"]: r for r in rows})
+    CORROBORATE_FILE.write_text(json.dumps(list(merged.values()), indent=2))
+
+    log(f"\n  confirmed {tally['confirmed']} (stays occupied), "
+        f"contradicted {tally['contradicted']} (back for review), "
+        f"nothing found {tally['none']} (undetermined)")
+    log(f"  wrote {CORROBORATE_FILE.relative_to(ROOT)} ({len(merged)} rows)")
+
+
 def query_addresses(addresses: list[str], cap: int = 3) -> list[str]:
     """The distinct addresses worth spending a query on.
 
@@ -269,7 +498,7 @@ def load_targets(all_buildings: bool, only_bbl: str | None) -> list[dict]:
         out.append({
             "bbl": bbl,
             "address": addr,
-            "borough": b.get("borough") or "",
+            "borough": b.get("borough") or borough_of(bbl),
             "addresses": [addr] + [a for a in alts.get(bbl, []) if a and a != addr],
         })
     return out
@@ -280,6 +509,9 @@ def main() -> None:
     ap.add_argument("--bbl")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--all", action="store_true")
+    ap.add_argument("--corroborate", action="store_true",
+                    help="put the open Places claims to the web instead of "
+                         "reading a use for buildings Places could not see")
     args = ap.parse_args()
 
     if not API_KEY or not CSE_ID:
@@ -289,6 +521,10 @@ def main() -> None:
             "  The CSE id comes from programmablesearchengine.google.com —\n"
             "  create an engine, set it to search the entire web, copy the id."
         )
+
+    if args.corroborate:
+        run_corroboration(args)
+        return
 
     cache = json.loads(CACHE_FILE.read_text()) if CACHE_FILE.exists() else {}
     targets = load_targets(args.all, args.bbl)
