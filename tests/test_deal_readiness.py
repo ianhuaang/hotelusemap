@@ -153,3 +153,60 @@ def test_apply_readiness_writes_every_feature_and_counts_them():
     assert counts == {"available": 1, "undetermined": 1}
     for f in feats:
         assert LOCKED_FIELDS <= set(f["properties"])
+
+
+def test_the_city_register_knowing_rooms_is_not_an_answer_about_the_operator():
+    """occupancy_state 'onrecord' is tautological in the no-operator segment.
+
+    It fires on hpd_class_b > 0, and a building is in that segment *because*
+    it has Class B rooms. Counting it as an answer marked 113 of 221 buildings
+    answered on the strength of the criterion that selected them, and put
+    undetermined at zero — a model that cannot say "I don't know" is not a
+    model, it is an opinion.
+    """
+    out = readiness({"occupancy_state": "onrecord", "hpd_class_b": 97})
+    assert out["operator_answered"] is False
+    assert out["readiness_state"] == "undetermined"
+
+
+def test_counting_certificates_is_not_reading_one():
+    """coo_count is how many are on file; coo_floors is one that parsed."""
+    unread = readiness({"occupancy_state": "onrecord", "coo_count": 8})
+    assert unread["operator_answered"] is False
+    read_one = readiness({"occupancy_state": "onrecord", "coo_count": 8,
+                          "coo_floors": [{"floor": "02", "kind": "residential"}]})
+    assert read_one["operator_answered"] is True
+    assert read_one["readiness_state"] == "available"
+
+
+def test_nothing_reaches_available_without_being_answered():
+    """The invariant the whole strict model rests on."""
+    for p in ({}, {"occupancy_state": "onrecord"}, {"occupancy_state": "thin"},
+              {"coo_count": 30}, {"hpd_class_b": 300}):
+        out = readiness(p)
+        if out["readiness_state"] == "available":
+            assert out["operator_answered"], p
+        assert out["readiness_state"] != "available"
+
+
+def test_guard_4_rejects_a_practice_and_keeps_an_institution():
+    """Places types a piano review site as a school and a mohel as a place of
+    worship. Both would have taken a building off the prospect list."""
+    from src.enrich_nearby_use import institution_is_plausible
+    for tenant in ("Digital Piano Review", "Suffolk Addressing Services",
+                   "Rabbi Zachary Hepner, Mohel", "Claudia Knafo Piano Studio",
+                   "University of St Andrews Alumni Association",
+                   "David William Phillips Concert Pianist"):
+        assert not institution_is_plausible(tenant), tenant
+    for real in ("Ascension Roman Catholic Church", "Masjid alfirdous",
+                 "Escuela dylan", "Riverside Montessori School",
+                 "Zoe Ministries Inc.", "Mision Guadalupana",
+                 "Conservative Synagogue of Fifth Avenue"):
+        assert institution_is_plausible(real), real
+
+
+def test_a_rejected_institution_does_not_become_available():
+    """Guard 4 must fail safe. Dropping the reading leaves the building with
+    no building-level use, which is undetermined, not a clean bill of health."""
+    out = readiness({"occupancy_state": "onrecord"}, {"nearby_use": ""})
+    assert out["readiness_state"] == "undetermined"

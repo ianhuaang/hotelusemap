@@ -51,6 +51,7 @@ import argparse
 import json
 import math
 import os
+import re
 import ssl
 import sys
 import time
@@ -104,6 +105,50 @@ INSTITUTIONAL_TYPES = {
 }
 
 BUILDING_LEVEL = LODGING_TYPES | RESIDENTIAL_TYPES | INSTITUTIONAL_TYPES
+
+# Guard 4. An institutional primaryType is right about the category and wrong
+# about the entity more often than the other two are wrong at all: Places
+# types "Digital Piano Review" as a school, "Suffolk Addressing Services" as a
+# post office and "Rabbi Zachary Hepner, Mohel" as a place of worship. Each is
+# a practice or a business renting space, and each would have taken a building
+# off the prospect list.
+#
+# Corroborating against the building's own current_use was tried first and is
+# worthless, because current_use comes from the Google sweep and carries the
+# same mistake: 115 East 92 Street reads current_use "education" on
+# current_use_name "Digital Piano Review", and 18 West 76 Street reads
+# "government" on "Suffolk Addressing Services". Checking Places against
+# Places agreed with itself on all 29 and changed nothing.
+#
+# So the test is the name, which is the one piece of evidence not derived from
+# the type. A practice announces itself — a credential, a studio, an agency —
+# and an institution announces itself too. Corporate suffixes are deliberately
+# not practice markers: Zoe Ministries Inc. is a church.
+#
+# A rejected reading does not make a building available. It falls through to
+# no building-level use at all, which leaves the building undetermined.
+PRACTICE_MARKERS = re.compile(
+    r"\b(m\.?d|d\.?d\.?s|d\.?o|ph\.?d|lmsw|l\.?c\.?s\.?w|r\.?n|esq|cpa)\b"
+    r"|\bdr\.?\s|\bmohel\b|\bstudio\b|\breview\b|\bservices?\b"
+    r"|\bassociates\b|\balumni\b|\bconsult|\bagency\b",
+    re.I)
+
+INSTITUTION_NOUNS = re.compile(
+    r"church|chapel|cathedral|parish|congregation|synagogue|temple|masjid|"
+    r"mosque|ministr|miss?i[oó]n|sanctuary|worship|tabernacle|gospel|baptist|"
+    r"lutheran|methodist|catholic|presbyterian|episcopal|\bame\b|yeshiva|"
+    r"school|escuela|academy|college|university|institute|preschool|montessori|"
+    r"seminary|\bprep\b|hospital|medical cent|clinic|nursing|rehab|hospice|"
+    r"library|courthouse|city hall|post office|embassy|consulate|precinct|"
+    r"fire (station|house)|\bcenter\b|\bcentre\b|foundation|society",
+    re.I)
+
+
+def institution_is_plausible(name: str) -> bool:
+    """Does this place plausibly occupy the building, or merely rent in it."""
+    if PRACTICE_MARKERS.search(name or ""):
+        return False
+    return bool(INSTITUTION_NOUNS.search(name or ""))
 
 
 def log(msg: str) -> None:
@@ -195,6 +240,8 @@ def read(places: list, ll: tuple) -> dict:
         elif primary in RESIDENTIAL_TYPES:
             kind = "residential"
         else:
+            if not institution_is_plausible(name):
+                continue
             kind = "institutional"
         return {
             "nearby_use": kind,
@@ -260,8 +307,9 @@ def main() -> None:
 
     rows, resolved, consecutive = [], 0, 0
     for i, t in enumerate(targets, 1):
-        if t["bbl"] in cache and not args.bbl:
-            verdict = cache[t["bbl"]]
+        cached = cache.get(t["bbl"]) if not args.bbl else None
+        if cached is not None and "places" in cached:
+            verdict = read(places := cached["places"], t["ll"])
         else:
             places, err = nearby(t["ll"][0], t["ll"][1])
             if err and "TERMINAL" in err:
@@ -283,7 +331,12 @@ def main() -> None:
                     d = metres(t["ll"], (loc.get("latitude", 0), loc.get("longitude", 0)))
                     log(f"      {round(d):>4}m {pl.get('primaryType',''):<26} "
                         f"{(pl.get('displayName') or {}).get('text','')[:40]}")
-            cache[t["bbl"]] = verdict
+            # The raw answer, not the reading of it. A verdict cached under a
+            # rule that later changes is a stale verdict nothing re-reads —
+            # which is exactly how the committed C of O parse arrived carrying
+            # a classifier three commits old. Caching the places means the next
+            # guard costs nothing to apply.
+            cache[t["bbl"]] = {"places": places}
             if i % 25 == 0:
                 CACHE_FILE.write_text(json.dumps(cache, indent=2))
             time.sleep(0.12)

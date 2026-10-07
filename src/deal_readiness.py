@@ -157,14 +157,29 @@ def _operator_answered(p: dict, nearby: dict) -> bool:
     panel — "What occupies the rest of the building is not established" — and
     a readiness model that disagreed with that sentence would be the same
     claim made twice in two voices.
+
+    Two things that look like answers and are not.
+
+    occupancy_state "onrecord" is tautological in this segment. It fires when
+    hpd_class_a or hpd_class_b is above zero, and a building is in the
+    no-operator segment *because* it has Class B rooms — so it was true of 156
+    of 221 and counted 113 buildings as answered on the strength of the
+    criterion that selected them. That alone put undetermined at zero, which
+    is how a model that is supposed to admit ignorance stopped admitting any.
+
+    coo_count is the number of certificates on file, not a readable one. The
+    certificate only answers anything when its floor table parsed, which is
+    coo_floors — 121 buildings map-wide. Counting the records rather than the
+    readings credited Method 1 with buildings it never resolved.
     """
     if (nearby or {}).get("nearby_use"):
         return True
-    if p.get("occupancy_state") in ("occupied", "clear", "onrecord"):
+    # The sweep found a building-level occupant, or found a use that argues
+    # with the room count. Both are about this building.
+    if p.get("occupancy_state") in ("occupied", "clear"):
         return True
-    # Method 1. A readable certificate says what the floors are, which is an
-    # answer about the building even though it names nobody.
-    return bool(p.get("coo_count"))
+    # Method 1, properly: a certificate whose floor table was readable.
+    return bool(p.get("coo_floors"))
 
 
 def _reversion_window(p: dict) -> str:
@@ -212,9 +227,9 @@ def _available_basis(p: dict, nearby: dict) -> str:
         return f"Places has {nearby['nearby_use_basis']}, and nobody is running it"
     if p.get("occupancy_state") == "clear":
         return "the sweep found a building-level use and no operator"
-    if p.get("coo_count"):
+    if p.get("coo_floors"):
         return "the certificate says what the floors are and no operator is recorded"
-    return "the city register knows the use and no operator is recorded"
+    return "the sweep established the building and no operator is recorded"
 
 
 def _undetermined_basis(p: dict) -> str:
