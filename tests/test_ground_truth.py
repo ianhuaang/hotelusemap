@@ -488,3 +488,80 @@ def test_no_curated_building_is_dropped(by_bbl):
 
     assert not missing, f"curated buildings dropped from the build: {missing}"
     assert not leaked, f"negative examples reached the map: {leaked}"
+
+
+# --- hand-checked readiness verdicts -----------------------------------------
+
+def test_every_hand_checked_row_is_checkable(labels):
+    """The file half of the contract, independent of any build.
+
+    A hand verdict is invisible once applied: the panel shows a readiness
+    state like any other, so a stale entry looks exactly like a correct one.
+    The link and the date are the only thing that makes it better than a
+    derived answer, and a row without them is worse than no row.
+    """
+    rows = [r for r in labels if r["label_type"] == "readiness_occupied"]
+    assert len(rows) >= 9, f"only {len(rows)} hand-checked verdicts"
+    failures = []
+    for r in rows:
+        if not (r.get("source_url") or "").startswith("http"):
+            failures.append(f"{r['name']}: no source url")
+        if not (r.get("verified_on") or "").strip():
+            failures.append(f"{r['name']}: no date somebody read it")
+        if len((r.get("notes") or "").strip()) < 20:
+            failures.append(f"{r['name']}: no basis sentence")
+        if not (r.get("bbl") or "").strip():
+            failures.append(f"{r['name']}: no bbl to apply it to")
+    assert not failures, "unusable hand-checked rows:\n  " + "\n  ".join(failures)
+
+
+def test_no_hand_checked_row_points_the_optimistic_way(labels):
+    """Nothing in this file may make a building available.
+
+    Overriding toward occupied costs a building nobody looks at. Overriding
+    toward available costs a day somebody spends on a building that was never
+    free, and that asymmetry is the whole argument for letting a hand-written
+    list outrank the pipeline at all. The loader drops such a row; this fails
+    before it is ever written.
+    """
+    bad = [r["name"] for r in labels
+           if r["label_type"].startswith("readiness_")
+           and r["label_type"] != "readiness_occupied"]
+    assert not bad, f"hand-checked rows claiming something other than occupied: {bad}"
+
+
+def test_the_hand_checked_buildings_reach_the_build_as_occupied(by_bbl, labels):
+    """The published artifact, which is what the app and HubSpot read.
+
+    Skips rather than fails on a build predating the backfill: the subject is
+    whether the pipeline applies these, not whether the geojson on this disk
+    happens to be newer than the commit that taught it to.
+    """
+    if not any("readiness_verified_url" in p for p in by_bbl.values()):
+        pytest.skip("build predates the hand-checked readiness backfill")
+    failures = []
+    for row in labels:
+        if row["label_type"] != "readiness_occupied":
+            continue
+        p = by_bbl.get(row["bbl"])
+        if p is None:
+            failures.append(f"{row['name']} ({row['bbl']}): absent from the build")
+            continue
+        if p.get("readiness_state") != "occupied":
+            failures.append(
+                f"{row['name']} ({row['bbl']}): state={p.get('readiness_state')}, "
+                "a person read this building and said occupied")
+        if not p.get("readiness_verified_url"):
+            failures.append(f"{row['name']} ({row['bbl']}): corrected and cites nothing")
+    assert not failures, "hand checks that never reached the build:\n  " + "\n  ".join(failures)
+
+
+def test_the_pipeline_never_publishes_the_app_s_override_field(by_bbl):
+    """readiness_override is the app's, written in applyReadinessOverrides.
+
+    The app repo's published-fields test allowlists it as absent by
+    construction and says it should fail rather than be widened if it ever
+    starts arriving. This is that assertion on the producing side.
+    """
+    leaked = [bbl for bbl, p in by_bbl.items() if "readiness_override" in p]
+    assert not leaked, f"pipeline invented hand-check provenance on: {leaked[:5]}"

@@ -12,12 +12,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.deal_readiness import apply_readiness, readiness
+from src.deal_readiness import (
+    apply_readiness, load_verified_occupancy, readiness)
 
 LOCKED_FIELDS = {
     "readiness_state", "readiness_basis", "not_ready_kind", "occupied_flag",
     "occupied_basis", "not_ready_flag", "operator_answered", "reversion_window",
-    "places_claim",
+    "places_claim", "readiness_verified_url", "readiness_verified_on",
 }
 
 # The no-operator segment, where a lone Places reading is no longer enough.
@@ -319,3 +320,111 @@ def test_a_rejected_institution_does_not_become_available():
     no building-level use, which is undetermined, not a clean bill of health."""
     out = readiness({"occupancy_state": "onrecord"}, {"nearby_use": ""})
     assert out["readiness_state"] == "undetermined"
+
+
+# --- hand-checked verdicts from ground_truth.csv ------------------------------
+#
+# Nine buildings a person opened a source for and read, where both the city
+# records and the Places sweep said available and something was plainly
+# running in the building. They lived in a const in the app until now, which
+# corrected the browser and left every weekly run deriving the same nine wrong
+# answers. These guard the move and the asymmetry that makes it safe.
+
+VERIFIED = {
+    "basis": "the Jack Ryan Residence occupies floors 6 to 9, a 200-bed shelter",
+    "url": "https://example.org/jack-ryan",
+    "verified_on": "2026-10-07",
+}
+
+
+def test_a_hand_check_outranks_a_clean_derived_verdict():
+    """The whole point. Without it the building reads available."""
+    clean = {"occupancy_state": "clear", "segment": "transient"}
+    assert readiness(clean)["readiness_state"] == "available"
+    out = readiness(clean, verified=VERIFIED)
+    assert out["readiness_state"] == "occupied"
+    assert out["readiness_basis"] == VERIFIED["basis"]
+
+
+def test_a_hand_check_publishes_where_it_came_from():
+    """A corrected verdict nobody can re-check is worth less than one they can."""
+    out = readiness({"occupancy_state": "clear"}, verified=VERIFIED)
+    assert out["readiness_verified_url"] == VERIFIED["url"]
+    assert out["readiness_verified_on"] == VERIFIED["verified_on"]
+
+
+def test_an_underived_building_says_nothing_about_a_hand_check():
+    out = readiness({"occupancy_state": "clear"})
+    assert out["readiness_verified_url"] == ""
+    assert out["readiness_verified_on"] == ""
+
+
+def test_the_loader_refuses_a_row_that_is_not_toward_occupied(tmp_path):
+    """Only ever toward occupied. Overriding toward occupied costs a building
+    nobody looks at; overriding toward available costs a day somebody spends
+    on a building that was never free."""
+    csv = tmp_path / "gt.csv"
+    csv.write_text(
+        "label_type,notes,bbl,source_url,verified_on\n"
+        "readiness_available,nobody is here,1000000001,https://e.org/a,2026-10-07\n"
+        "readiness_occupied,a shelter runs it,1000000002,https://e.org/b,2026-10-07\n")
+    got = load_verified_occupancy(csv)
+    assert set(got) == {"1000000002"}
+
+
+def test_the_loader_drops_an_entry_that_cannot_be_checked(tmp_path):
+    """No link, no date or no basis sentence. An override is invisible once
+    applied, so a stale entry looks exactly like a correct one."""
+    csv = tmp_path / "gt.csv"
+    csv.write_text(
+        "label_type,notes,bbl,source_url,verified_on\n"
+        "readiness_occupied,,1000000001,https://e.org/a,2026-10-07\n"
+        "readiness_occupied,a shelter,1000000002,,2026-10-07\n"
+        "readiness_occupied,a shelter,1000000003,https://e.org/c,\n"
+        "readiness_occupied,a shelter,1000000004,https://e.org/d,2026-10-07\n")
+    assert set(load_verified_occupancy(csv)) == {"1000000004"}
+
+
+def test_the_real_file_carries_all_nine_and_every_one_is_checkable():
+    """The backfill itself. These BBLs are the app's old READINESS_OVERRIDES."""
+    got = load_verified_occupancy()
+    expected = {
+        "4003640004", "3001460014", "4010030011", "1008017503", "1016760011",
+        "3001727501", "1019630009", "1018290026", "1012537504",
+    }
+    assert expected <= set(got), f"missing: {expected - set(got)}"
+    for bbl, e in got.items():
+        assert e["url"].startswith("http"), bbl
+        assert len(e["basis"]) > 20, bbl
+        assert e["verified_on"].count("-") == 2, bbl
+
+
+def test_apply_readiness_corrects_the_feature_the_map_draws():
+    """Applied to the properties bag itself, so the table, the filter and the
+    polygon layer all read one answer. The app-side list split them."""
+    feats = [{"properties": {"bbl": "4003640004", "occupancy_state": "clear",
+                             "segment": "transient"}},
+             {"properties": {"bbl": "9999999999", "occupancy_state": "clear",
+                             "segment": "transient"}}]
+    counts = apply_readiness(feats)
+    assert feats[0]["properties"]["readiness_state"] == "occupied"
+    assert "Comfort Inn" in feats[0]["properties"]["readiness_basis"]
+    assert feats[1]["properties"]["readiness_state"] == "available"
+    assert counts["occupied"] >= 1
+
+
+def test_apply_readiness_reads_the_file_when_nobody_passes_one():
+    """A caller cannot forget the hand checks — that is how they went nine
+    weeks doing nothing for anyone not looking through the browser."""
+    feats = [{"properties": {"bbl": "3001727501", "occupancy_state": "clear"}}]
+    apply_readiness(feats)
+    assert feats[0]["properties"]["readiness_state"] == "occupied"
+    assert feats[0]["properties"]["readiness_verified_url"]
+
+
+def test_a_hand_check_never_publishes_the_app_s_field_name():
+    """readiness_override belongs to the app. The published-fields test in the
+    app repo fails if the pipeline starts emitting it, and that entry exists
+    to catch a producer inventing the provenance of a hand check."""
+    out = readiness({"occupancy_state": "clear"}, verified=VERIFIED)
+    assert "readiness_override" not in out

@@ -12,8 +12,16 @@ than four half-verdicts a reader has to reconcile:
 The field names here are a contract with the app and are not free to change:
 readiness_state, readiness_basis, not_ready_kind, occupied_flag,
 occupied_basis, not_ready_flag, operator_answered, reversion_window,
-places_claim. The app reads the first three and keys its filter off
-readiness_state; the rest are published as the inputs behind it.
+places_claim, readiness_verified_url, readiness_verified_on. The app reads
+the first three and keys its filter off readiness_state; the rest are
+published as the inputs behind it.
+
+Not readiness_override. That name belongs to the app, which writes it onto a
+feature it corrected in the browser, and the published-fields test in the app
+repo fails if the pipeline ever starts emitting it -- a producer inventing the
+provenance of a hand check is the thing that entry exists to catch. The two
+fields above are this side's own, and they say the same thing about a row in
+ground_truth.csv that readiness_override says about an entry in the app.
 
 One source cannot both make a claim and corroborate it. In the no-operator
 segment a Google Places reading on its own no longer takes a building off the
@@ -41,6 +49,11 @@ list of its best entries.
 
 from __future__ import annotations
 
+import csv
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
 LIVE_LICENCE_STATUSES = frozenset({"Active", "Ready for Renewal"})
 
 # A use that means an institution has the building. Residential is absent on
@@ -49,6 +62,59 @@ INSTITUTIONAL_USES = frozenset({
     "religious", "education", "government", "medical", "institutional",
     "student_housing", "supportive_housing", "shelter",
 })
+
+
+# Buildings somebody opened a source for and read, from the producer's own
+# ground_truth.csv. Nine of them, and on every one both the city records and
+# the Places sweep were wrong in the expensive direction: each arrived in the
+# clean prospecting view while something was plainly running in it. 37-35 21st
+# Street is a trading Comfort Inn with 94 Class B rooms, 50 Nevins is 78
+# supportive units, 127 West 25th is a 200-bed shelter on floors 6 to 9.
+#
+# This list used to live in the app, in a const the browser applied after
+# parsing. That worked and corrected nothing upstream: every weekly run
+# re-derived the same nine wrong answers, and anything reading the published
+# data without going through the app -- HubSpot, the exports, this module's
+# own counts -- still saw them available. A correction belongs where the
+# answer is made.
+#
+# A record is not a rule. This corrects named buildings and teaches the
+# pipeline nothing; where a rule is the right answer it goes in the rules
+# above, as the treatment-programme reading did.
+VERIFIED_LABEL = "readiness_occupied"
+
+
+def load_verified_occupancy(path=None) -> dict:
+    """The hand-checked verdicts from ground_truth.csv, keyed by BBL.
+
+    Only ever toward occupied, and the loader drops a row claiming anything
+    else even if somebody writes one -- the asymmetry is the whole argument
+    for letting a hand-written list outrank the pipeline at all. Overriding
+    toward occupied costs a building nobody looks at. Overriding toward
+    available costs a day somebody spends on a building that was never free,
+    which is the error this list was built to stop.
+
+    A row with no source url, no date or no basis sentence is dropped too.
+    An override is invisible once applied -- the panel shows a readiness state
+    like any other -- so a stale entry looks exactly like a correct one, and
+    the only thing that makes a hand verdict better than a derived one is that
+    somebody can open the link and check it.
+    """
+    path = Path(path) if path else ROOT / "ground_truth.csv"
+    if not path.exists():
+        return {}
+    out = {}
+    for row in csv.DictReader(path.open()):
+        if (row.get("label_type") or "").strip() != VERIFIED_LABEL:
+            continue
+        bbl = (row.get("bbl") or "").strip()
+        basis = (row.get("notes") or "").strip()
+        url = (row.get("source_url") or "").strip()
+        on = (row.get("verified_on") or "").strip()
+        if not (bbl and basis and url and on):
+            continue
+        out[bbl] = {"basis": basis, "url": url, "verified_on": on}
+    return out
 
 
 # The no-operator segment: buildings with transient-capable rooms and nobody
@@ -302,15 +368,24 @@ def _reversion_window(p: dict) -> str:
     return "open" if p.get("reversion_window_open") else "closed"
 
 
-def readiness(p: dict, nearby: dict | None = None, web: dict | None = None) -> dict:
-    """The nine published fields for one building."""
+def readiness(p: dict, nearby: dict | None = None, web: dict | None = None,
+              verified: dict | None = None) -> dict:
+    """The eleven published fields for one building.
+
+    A hand-checked verdict outranks everything below it. It is the only input
+    here a person wrote, it is the only one with a url somebody can open, and
+    on the nine buildings that carry one the derived answer was wrong in the
+    direction that costs a day.
+    """
     nearby = nearby or {}
     claim = places_claim(p, nearby, web)
     occ, occ_basis = _occupied(p, nearby, web)
     nr, nr_kind, nr_basis = _not_ready(p, nearby)
     answered = _operator_answered(p, nearby, claim)
 
-    if occ:
+    if verified:
+        state, basis = "occupied", verified["basis"]
+    elif occ:
         state, basis = "occupied", occ_basis
     elif nr:
         state, basis = "not_ready", nr_basis
@@ -333,6 +408,12 @@ def readiness(p: dict, nearby: dict | None = None, web: dict | None = None) -> d
         # of the four it is, and so enrich_web_use can select exactly the
         # buildings a search query would change the answer for.
         "places_claim": claim,
+        # Empty unless a person checked this building. Present, they are what
+        # lets the panel say so and show the source: a corrected verdict that
+        # cannot be told apart from a derived one is worth less than one that
+        # can, because nobody can re-check it when it goes stale.
+        "readiness_verified_url": (verified or {}).get("url", ""),
+        "readiness_verified_on": (verified or {}).get("verified_on", ""),
     }
 
 
@@ -369,15 +450,31 @@ def _undetermined_basis(p: dict, nearby: dict | None = None,
 
 
 def apply_readiness(features: list, nearby_rows: dict | None = None,
-                    web_rows: dict | None = None) -> dict:
-    """Write the fields onto every feature. Returns the count per state."""
+                    web_rows: dict | None = None,
+                    verified_rows: dict | None = None) -> dict:
+    """Write the fields onto every feature. Returns the count per state.
+
+    verified_rows is read off disk when not supplied, so a caller cannot
+    forget it: build_geojson asks for readiness and gets the hand checks with
+    it. Tests pass their own.
+    """
     nearby_rows = nearby_rows or {}
     web_rows = web_rows or {}
+    if verified_rows is None:
+        verified_rows = load_verified_occupancy()
     counts = {}
+    applied = 0
     for f in features:
         p = f["properties"]
         bbl = str(p.get("bbl") or "")
-        fields = readiness(p, nearby_rows.get(bbl), web_rows.get(bbl))
+        hand = verified_rows.get(bbl)
+        fields = readiness(p, nearby_rows.get(bbl), web_rows.get(bbl), hand)
         p.update(fields)
         counts[fields["readiness_state"]] = counts.get(fields["readiness_state"], 0) + 1
+        applied += bool(hand)
+    # A silent count is how the app-side list went nine weeks without anybody
+    # noticing it was doing the pipeline's job. If a BBL is retired or
+    # re-lotted this number drops and the build says so.
+    if verified_rows:
+        print(f"    hand-checked verdicts applied: {applied} of {len(verified_rows)}")
     return counts
