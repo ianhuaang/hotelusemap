@@ -171,6 +171,11 @@ def _places_reading_is_about_this_building(nearby: dict) -> bool:
     return True if attached is None else bool(attached)
 
 
+# DOF building classes for cooperatives: walk-up (C6), elevator (D4), and the
+# loft and warehouse conversions of each (C8, D0).
+COOP_CLASSES = frozenset({"C6", "C8", "D0", "D4"})
+
+
 def _is_condo_reading(nearby: dict) -> bool:
     """Is this Places reading a condominium listing. See CONDO_PLACES_TYPES."""
     return (nearby or {}).get("nearby_use_type", "") in CONDO_PLACES_TYPES
@@ -363,6 +368,17 @@ def _not_ready(p: dict, nearby: dict) -> tuple[bool, str, str]:
     # so "Places calls it a condominium" would have put The Sebastian in
     # front of the deal team. Said here, by name, rather than folded into
     # the generic restriction.
+    # Co-ops are left out like condominiums (decided 2026-10-08): hundreds of
+    # shareholders and a board, so no single counterparty. DOF's building
+    # class says so directly. They were held out until now only by undated
+    # 421-a rows, which was the wrong reason -- 880 and 907 Fifth Avenue, the
+    # Sutton Place buildings, 66 Madison Avenue Apartment Corp.
+    bldgclass = (p.get("bldgclass") or "").upper()
+    if bldgclass[:2] in COOP_CLASSES:
+        return True, "cooperative", (
+            f"a co-op (building class {bldgclass}), owned by its shareholders"
+            + (f" through {p['ownername'].strip()}" if p.get("ownername") else ""))
+
     if _is_condo_reading(nearby):
         return True, "condominium_listing", (
             f"Places lists it as a condominium ({nearby.get('nearby_use_basis') or nearby.get('nearby_use_name', '')})")

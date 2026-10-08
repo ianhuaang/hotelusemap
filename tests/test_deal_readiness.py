@@ -620,3 +620,17 @@ def test_a_readable_certificate_still_answers_past_a_neighbours_listing():
     out = readiness({**GOLD, "occupancy_state": "clear", "coo_floors": [{"floor": "1"}]},
                     NEIGHBOURS_CHURCH)
     assert out["operator_answered"] is True
+
+
+def test_a_co_op_is_left_out_like_a_condominium():
+    """880 Fifth Avenue: D4, owned by 880 FIFTH AVENUE CORPORATION."""
+    out = readiness({**GOLD, "occupancy_state": "clear", "bldgclass": "D4",
+                     "ownername": "880 FIFTH AVENUE CORPORATION"})
+    assert out["readiness_state"] == "not_ready"
+    assert out["not_ready_kind"] == "cooperative"
+    assert "880 FIFTH AVENUE CORPORATION" in out["readiness_basis"]
+
+
+def test_a_rental_elevator_building_is_not_a_co_op():
+    out = readiness({**GOLD, "occupancy_state": "clear", "bldgclass": "D6"})
+    assert out["not_ready_kind"] != "cooperative"
