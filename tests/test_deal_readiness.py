@@ -428,3 +428,88 @@ def test_a_hand_check_never_publishes_the_app_s_field_name():
     to catch a producer inventing the provenance of a hand check."""
     out = readiness({"occupancy_state": "clear"}, verified=VERIFIED)
     assert "readiness_override" not in out
+
+
+# --- a Places listing has to be about the building --------------------------
+
+# 340 Amsterdam Avenue. "Harrison Condominiums" sits 28m from the footprint
+# centroid and outside the footprint itself, which under the old 30m rule was
+# enough to answer the operator question and put the building in the clean
+# prospecting view.
+HARRISON = {
+    "nearby_use": "residential",
+    "nearby_use_name": "Harrison Condominiums",
+    "nearby_use_type": "condominium_complex",
+    "nearby_use_distance_m": 28,
+    "nearby_use_basis": "condominium_complex 'Harrison Condominiums' at 340 Amsterdam Ave",
+    "nearby_use_attached": True,
+}
+
+# A church pinned 29m away in Brooklyn, in neither the footprint nor at any
+# address the building answers to. Evidence about a different building.
+NEIGHBOURS_CHURCH = {
+    "nearby_use": "institutional",
+    "nearby_use_name": "The Light of the World Pentecostal Church",
+    "nearby_use_type": "church",
+    "nearby_use_distance_m": 29,
+    "nearby_use_basis": "church 29m from the footprint, not this building",
+    "nearby_use_attached": False,
+}
+
+
+def test_a_listing_that_is_not_about_the_building_opens_no_claim():
+    """Not discounted — ignored, as if the sweep had returned nothing. No
+    claim is opened and the listing's name reaches nothing the reader sees."""
+    out = readiness({**GOLD, "occupancy_state": "clear"}, NEIGHBOURS_CHURCH)
+    assert out["places_claim"] == ""
+    assert "Light of the World" not in out["readiness_basis"]
+
+
+def test_an_attached_listing_still_opens_its_claim():
+    """The gate is about belonging, not about distrusting Places. An attached
+    institutional reading still opens a claim for the web pass to settle —
+    one source cannot corroborate itself, so it does not close as occupied
+    here, and that is unchanged."""
+    attached = {**NEIGHBOURS_CHURCH, "nearby_use_attached": True,
+                "nearby_use_basis": ("church 'The Light of the World Pentecostal "
+                                     "Church' inside the footprint")}
+    out = readiness({**GOLD, "occupancy_state": "clear"}, attached)
+    assert out["places_claim"] == "unscreened"
+    assert "Light of the World" in out["readiness_basis"]
+
+
+def test_a_reading_with_no_attachment_field_keeps_the_old_behaviour():
+    """Files written before the field existed must not empty the segment.
+    Delete this test, and the fallback it covers, once a build has shipped
+    carrying nearby_use_attached."""
+    legacy = {k: v for k, v in NEIGHBOURS_CHURCH.items() if k != "nearby_use_attached"}
+    assert readiness({**GOLD, "occupancy_state": "clear"}, legacy)["places_claim"] == "unscreened"
+
+
+def test_a_condominium_listing_can_never_make_a_building_available():
+    """Rule two, and the reason 340 Amsterdam Avenue was in the clean view.
+    A condominium listing is evidence against availability and never for it:
+    it may withhold an answer, so the building lands undetermined."""
+    out = readiness({**GOLD, "occupancy_state": "clear"}, HARRISON)
+    assert out["readiness_state"] == "undetermined"
+    assert out["operator_answered"] is False
+
+
+def test_a_condominium_listing_defers_to_the_tax_lot_rule():
+    """It does not get to assert condo-ness either. Who owns the units is
+    decided on the DOF billing lot and the unit-lot sales — evidence about
+    ownership rather than a pin on a map — so the listing's only effect here
+    is to decline to answer."""
+    out = readiness({**GOLD, "occupancy_state": "clear"}, HARRISON)
+    assert out["readiness_state"] != "available"
+    assert out["not_ready_flag"] is False  # not its call to make either
+
+
+def test_a_non_condominium_residential_listing_still_answers():
+    """The condominium carve-out is narrow. An apartment building that is
+    genuinely in the building still answers the operator question the way it
+    always did — residential occupancy is not an occupier, but it is an
+    answer."""
+    flats = {**HARRISON, "nearby_use_type": "apartment_building",
+             "nearby_use_name": "Some Rental"}
+    assert readiness({**GOLD, "occupancy_state": "clear"}, flats)["operator_answered"] is True
