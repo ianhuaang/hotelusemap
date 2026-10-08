@@ -67,3 +67,14 @@ def test_a_guess_is_not_a_room():
     """The guest-room count falls back to floors x 15; this never does."""
     net, gross, _, basis = rooms(bldgclass="H3", numfloors=12)
     assert (net, gross, basis) == (0, 0, "none")
+
+
+# --- the blocker follows the room count --------------------------------------
+
+def test_the_blocker_fires_only_when_nothing_is_left():
+    """Mirrors the enrich step: stabilised rooms come off the count, and the
+    building is held back only when every room was stabilised."""
+    partial = rooms(hpd_class_b=134, rent_stab_class_b_exposure=1)   # 66 Madison
+    whole = rooms(hpd_class_b=317, rent_stab_class_b_exposure=317)   # 143 East 23
+    assert partial[0] == 133 and partial[2] == 1
+    assert whole[0] == 0 and whole[2] == 317

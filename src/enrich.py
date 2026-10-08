@@ -1626,18 +1626,9 @@ def enrich_pipeline(
             # stabilized unit as a blocker over-reports on split-use buildings.
             exposure = max(0, stab - class_a)
             record["rent_stab_class_b_exposure"] = exposure
-            if exposure > 0 and class_b > 0:
-                if class_a == 0:
-                    detail = (
-                        f"{stab} rent-stabilized rooms (as of {rs['data_year']} tax bill), "
-                        f"no Class A units to absorb them — conversion to transient use restricted"
-                    )
-                else:
-                    detail = (
-                        f"{exposure} of {stab} rent-stabilized units fall outside the {class_a} Class A units "
-                        f"(as of {rs['data_year']} tax bill) — conversion of transient rooms restricted"
-                    )
-                record.setdefault("blockers", []).append(detail)
+            # Whether this blocks the building is decided after the room
+            # count, below: stabilised rooms come off the count, and only a
+            # building with nothing left to sell is held back.
         else:
             record["rent_stabilized_units"] = 0
             record["rent_stab_data_year"] = None
@@ -1648,6 +1639,19 @@ def enrich_pipeline(
         (record["transient_rooms"], record["transient_rooms_gross"],
          record["transient_rooms_stabilized"],
          record["transient_rooms_basis"]) = _transient_rooms(record)
+
+        # Rent stabilisation excludes the stabilised rooms, not the building
+        # (decided 2026-10-08). 66 Madison Avenue was held back whole for one
+        # stabilised room in 134. The blocker now fires only when every
+        # transient room is stabilised; a building with some left keeps them,
+        # net, in transient_rooms, and the ten-room filter judges what is left.
+        stab_rooms = record["transient_rooms_stabilized"]
+        if stab_rooms and not record["transient_rooms"]:
+            record.setdefault("blockers", []).append(
+                f"all {stab_rooms} transient rooms are rent-stabilized "
+                f"(as of {record.get('rent_stab_data_year')} tax bill) — "
+                f"nothing left to operate as transient"
+            )
 
         # Zoning compatibility for hotel use
         zoning_compat, zoning_detail = _zoning_hotel_compatibility(record.get("zonedist1", ""))

@@ -434,7 +434,11 @@ def test_a_hand_check_never_publishes_the_app_s_field_name():
 
 # 477 West 57 Street, the Dorothy Ross Friedman Residence: the Actors Fund
 # runs it as nonprofit housing, 222 HPD Class B rooms of which 179 are
-# rent-stabilised, and the rent-stabilisation blocker is what holds it back.
+# rent-stabilised. Since 2026-10-08 the enrich step blocks only buildings with
+# every room stabilised, so the real record no longer carries this blocker and
+# the hand-verified verdict is what holds it back; the fixture keeps the
+# blocker because the test is about what a blocker does, not where it comes
+# from.
 # Note restricted_class is False — the class table reads HR/RS/H8/HH and an
 # HPD dobbuildingclass containing SINGLE ROOM OCCUPANCY, and this building is
 # RM / "HEREAFTER ERECTED CLASS B", so it matches neither. The blocker is
