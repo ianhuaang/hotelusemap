@@ -513,3 +513,22 @@ def test_a_non_condominium_residential_listing_still_answers():
     flats = {**HARRISON, "nearby_use_type": "apartment_building",
              "nearby_use_name": "Some Rental"}
     assert readiness({**GOLD, "occupancy_state": "clear"}, flats)["operator_answered"] is True
+
+
+def test_ignoring_a_neighbours_listing_cannot_promote_a_building():
+    """171 South 9 Street. Dropping the church pinned 29m away is right, but
+    it left a clear sweep standing as the answer and moved the building
+    undetermined → available. A sweep whose only listing was next door has
+    said nothing about this building."""
+    out = readiness({**GOLD, "occupancy_state": "clear"}, NEIGHBOURS_CHURCH)
+    assert out["readiness_state"] == "undetermined"
+    assert out["operator_answered"] is False
+    assert "neighbouring building" in out["readiness_basis"]
+    assert "Light of the World" not in out["readiness_basis"]
+
+
+def test_a_readable_certificate_still_answers_past_a_neighbours_listing():
+    """The certificate is about this building whatever Places returned."""
+    out = readiness({**GOLD, "occupancy_state": "clear", "coo_floors": [{"floor": "1"}]},
+                    NEIGHBOURS_CHURCH)
+    assert out["operator_answered"] is True
