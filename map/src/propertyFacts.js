@@ -234,12 +234,19 @@ export function buildConsiderations(p) {
       severity: "medium",
     });
   }
-  if (p.is_condo) {
+  if (p.has_separately_owned_units ?? p.is_condo) {
     considerations.push({
-      text: "Condominium (condo billing lot)",
-      detail: "Requires board approval, or a negotiation with a commercial condo owner.",
+      text: "Condominium, units separately owned",
+      detail: "No single counterparty: requires board approval, or assembling a deal across individual unit owners.",
       kind: "operational",
       severity: "medium",
+    });
+  } else if (p.is_condo) {
+    considerations.push({
+      text: "Condominium regime, single owner",
+      detail: "A condo declaration exists, but the units have not been sold off — one owner to deal with.",
+      kind: "operational",
+      severity: "low",
     });
   }
   if (p.ecb_illegal_transient > 0) {

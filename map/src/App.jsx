@@ -128,7 +128,14 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
     refinements.push(["!", ["has", "hotel_name"]]);
   }
   if (hideCondos) {
-    refinements.push(["!=", ["get", "is_condo"], true]);
+    // coalesce: buildings.geojson built before has_separately_owned_units
+    // existed only carries is_condo. Drop the fallback once a build with the
+    // new field has shipped.
+    refinements.push([
+      "!=",
+      ["coalesce", ["get", "has_separately_owned_units"], ["get", "is_condo"]],
+      true,
+    ]);
   }
   if (hideRestricted) {
     refinements.push(["!=", ["get", "restricted_class"], true]);
@@ -1600,8 +1607,8 @@ function FilterPanel({
                 </svg>
               )}
             </span>
-            <span className="text-xs text-gray-700">Hide condos</span>
-            <InfoTip text="Exclude condominium buildings. Condos require board approval or commercial condo owner negotiation — a different deal structure than single-owner rentals." />
+            <span className="text-xs text-gray-700">Hide multi-owner condos</span>
+            <InfoTip text="Exclude condominiums whose units have been sold off to separate owners — there is no single party to deal with, only a board or dozens of unit owners. A condominium regime still held by one owner is a normal single-owner deal and is not hidden." />
           </label>
 
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
@@ -1972,7 +1979,8 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      if (hideCondos && p.is_condo) return false;
+      const multiOwner = p.has_separately_owned_units ?? p.is_condo;
+      if (hideCondos && multiOwner) return false;
       if (hideRestricted && p.restricted_class) return false;
     }
 
