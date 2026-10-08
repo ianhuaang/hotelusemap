@@ -122,6 +122,59 @@ def load_verified_occupancy(path=None) -> dict:
 # off it is set here and not anywhere else.
 NO_OPERATOR_SEGMENT = "transient"
 
+# A Places listing Google puts at a condominium. Reading one as an answer
+# about the building is backwards twice over.
+#
+# It cannot argue for availability. "Somebody lives here" is not "nobody is
+# running it" — this module already says so about residential readings
+# generally — and a condominium says something stronger: the building may have
+# as many owners as it has units, which is the opposite of a counterparty. The
+# tax-lot rule decides that question from the DOF billing lot and the unit-lot
+# sales, which is evidence about ownership rather than a pin on a map, and it
+# is the only thing that should decide it.
+#
+# So a condominium reading may withhold an answer and never give one. A
+# building whose only Places evidence is a condominium listing comes back
+# undetermined, which is what nobody having established anything looks like.
+CONDO_PLACES_TYPES = frozenset({
+    "condominium_complex", "condominium", "condo_complex",
+})
+
+
+def _places_reading_is_about_this_building(nearby: dict) -> bool:
+    """Does this Places listing belong to the building, or just stand near it.
+
+    Proximity was the whole test and it is not one. Nearby Search returns
+    whatever sits within 30m of the footprint centroid, and on a Manhattan
+    block that is the building next door as often as the building: "Harrison
+    Condominiums", 28m away, was answering the operator question for a
+    building it is not in.
+
+    Two ways to belong and either is enough — the pin falls inside the
+    building's own footprint, or the listing's address is one the building
+    answers to, main or alternate, since corner lots and through-block
+    buildings have several. A listing that satisfies neither is ignored
+    entirely rather than discounted: a reading that might be about the
+    building next door is not weak evidence about this one, it is evidence
+    about a different building, and averaging it in is how a neighbour's name
+    reaches this building's panel.
+
+    `nearby_use_attached` is computed in enrich_nearby_use, which is where the
+    footprint geometry and the alternate addresses are. Absent means the file
+    predates this change, and those rows keep the old behaviour so that a
+    stale file does not silently empty the segment. Remove that fallback once
+    a build has shipped carrying the field.
+    """
+    if not nearby:
+        return False
+    attached = nearby.get("nearby_use_attached")
+    return True if attached is None else bool(attached)
+
+
+def _is_condo_reading(nearby: dict) -> bool:
+    """Is this Places reading a condominium listing. See CONDO_PLACES_TYPES."""
+    return (nearby or {}).get("nearby_use_type", "") in CONDO_PLACES_TYPES
+
 
 def _operator_off_the_sweep(p: dict) -> tuple[bool, str]:
     """Somebody running the building, according to something that is not Places.
@@ -314,7 +367,8 @@ def _not_ready(p: dict, nearby: dict) -> tuple[bool, str, str]:
     return False, "", ""
 
 
-def _operator_answered(p: dict, nearby: dict, claim: str = "") -> bool:
+def _operator_answered(p: dict, nearby: dict, claim: str = "",
+                       discarded: bool = False) -> bool:
     """Did anything establish what occupies the building, either way.
 
     An open Places claim is not an answer, and this is the line that stops it
@@ -344,14 +398,24 @@ def _operator_answered(p: dict, nearby: dict, claim: str = "") -> bool:
     certificate only answers anything when its floor table parsed, which is
     coo_floors — 121 buildings map-wide. Counting the records rather than the
     readings credited Method 1 with buildings it never resolved.
+
+    A sweep whose only listing belonged to the building next door is not
+    clear, it is silent about this one. Ignoring a neighbour's listing must
+    not be able to promote a building: 171 South 9 Street went undetermined →
+    available on losing a church pinned 29m away. The certificate still
+    answers, because it is about this building whatever Places returned.
     """
     if claim in ("unscreened", "unconfirmed", "contradicted"):
         return False
     if (nearby or {}).get("nearby_use"):
-        return True
+        # A condominium listing is evidence against availability and never
+        # for it, so it is allowed to withhold an answer and not to give one.
+        # See CONDO_PLACES_TYPES: who owns the units is the tax-lot rule's
+        # question, decided on the billing lot and the unit-lot sales.
+        return not _is_condo_reading(nearby)
     # The sweep found a building-level occupant, or found a use that argues
     # with the room count. Both are about this building.
-    if p.get("occupancy_state") in ("occupied", "clear"):
+    if p.get("occupancy_state") in ("occupied", "clear") and not discarded:
         return True
     # Method 1, properly: a certificate whose floor table was readable.
     return bool(p.get("coo_floors"))
@@ -378,10 +442,17 @@ def readiness(p: dict, nearby: dict | None = None, web: dict | None = None,
     direction that costs a day.
     """
     nearby = nearby or {}
+    # Ignored entirely, as if the sweep had returned nothing for this
+    # building. Done here rather than in each reader so that _occupied,
+    # _not_ready, _operator_answered and places_claim cannot disagree about
+    # whether a listing counts.
+    discarded = bool(nearby) and not _places_reading_is_about_this_building(nearby)
+    if discarded:
+        nearby = {}
     claim = places_claim(p, nearby, web)
     occ, occ_basis = _occupied(p, nearby, web)
     nr, nr_kind, nr_basis = _not_ready(p, nearby)
-    answered = _operator_answered(p, nearby, claim)
+    answered = _operator_answered(p, nearby, claim, discarded)
 
     if verified:
         state, basis = "occupied", verified["basis"]
@@ -392,7 +463,7 @@ def readiness(p: dict, nearby: dict | None = None, web: dict | None = None,
     elif answered:
         state, basis = "available", _available_basis(p, nearby)
     else:
-        state, basis = "undetermined", _undetermined_basis(p, nearby, web, claim)
+        state, basis = "undetermined", _undetermined_basis(p, nearby, web, claim, discarded)
 
     return {
         "readiness_state": state,
@@ -429,7 +500,8 @@ def _available_basis(p: dict, nearby: dict) -> str:
 
 
 def _undetermined_basis(p: dict, nearby: dict | None = None,
-                        web: dict | None = None, claim: str = "") -> str:
+                        web: dict | None = None, claim: str = "",
+                        discarded: bool = False) -> str:
     """Why we cannot say — and for an open Places claim, what is outstanding.
 
     An undetermined building with no explanation reads as a gap in the data.
@@ -444,6 +516,9 @@ def _undetermined_basis(p: dict, nearby: dict | None = None,
         if claim == "unconfirmed":
             return f"{sweep_basis}, and the web screen found nothing to confirm it"
         return f"{sweep_basis}, not yet corroborated"
+    if discarded:
+        return ("the only Places listing near it belongs to a neighbouring "
+                "building, so the sweep says nothing about this one")
     if p.get("occupancy_state") == "thin":
         return "swept, ground-floor tenants only — the rest of the building is not established"
     return "nothing on record establishes what occupies the building"

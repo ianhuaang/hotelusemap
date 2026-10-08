@@ -62,6 +62,9 @@ from pathlib import Path
 
 import certifi
 
+from src.build_geojson import point_in_footprint
+from src.enrich_current_use import load_alt_addresses
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW
 
@@ -69,7 +72,7 @@ CTX = ssl.create_default_context(cafile=certifi.where())
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 NEARBY_URL = "https://places.googleapis.com/v1/places:searchNearby"
 FIELD_MASK = ("places.displayName,places.primaryType,places.types,"
-              "places.location,places.businessStatus")
+              "places.location,places.businessStatus,places.formattedAddress")
 
 OUTPUT_FILE = DATA_RAW / f"nearby_use_{date.today():%Y%m%d}.json"
 CACHE_FILE = DATA_RAW / "nearby_use_cache.json"
@@ -211,7 +214,47 @@ def centroid(geometry: dict):
     return sum(p[1] for p in ring) / len(ring), sum(p[0] for p in ring) / len(ring)
 
 
-def read(places: list, ll: tuple) -> dict:
+def _norm_addr(a: str) -> str:
+    """An address in the form both datasets can be compared in.
+
+    The compass direction is folded to its initial, never dropped. Dropping it
+    reads 205 West 76th Street and 205 East 76th Street as the same address,
+    which is two buildings on opposite sides of Central Park -- the precise
+    false match this whole test exists to prevent.
+    """
+    a = re.sub(r"[^A-Z0-9 ]", " ", (a or "").upper().split(",")[0])
+    a = re.sub(r"(?<=\d)(ST|ND|RD|TH)\b", "", a)
+    for word, initial in (("EAST", "E"), ("WEST", "W"),
+                          ("NORTH", "N"), ("SOUTH", "S")):
+        a = re.sub(rf"\b{word}\b", initial, a)
+    a = re.sub(r"\b(STREET|ST|AVENUE|AVE|PLACE|PL|ROAD|RD|BOULEVARD|BLVD)\b",
+               " ", a)
+    return " ".join(a.split())
+
+
+def attaches(pl: dict, geometry: dict, addresses) -> tuple[bool, bool, str]:
+    """Does this listing belong to the building: (attached, in_footprint, addr).
+
+    Either the pin is inside the building's own footprint, or the listing's
+    address is one the building answers to. Distance is not a third way --
+    see _places_reading_is_about_this_building in deal_readiness for why 30m
+    of proximity turned out to be no test at all.
+
+    Alternate addresses matter more here than anywhere else in the pipeline.
+    A corner building is listed by Google under whichever frontage its tenant
+    gave, and a through-block building under either end; matching the primary
+    address alone would throw away the listing that is actually about the
+    building about as often as it kept it.
+    """
+    loc = pl.get("location") or {}
+    inside = point_in_footprint(geometry, loc.get("longitude"), loc.get("latitude"))
+    addr = pl.get("formattedAddress") or ""
+    key = _norm_addr(addr)
+    matched = bool(key) and any(key == _norm_addr(a) for a in addresses if a)
+    return (inside or matched), inside, addr
+
+
+def read(places: list, ll: tuple, geometry: dict = None, addresses=()) -> dict:
     """The one place that is the building, or a record that none was.
 
     Only primaryType decides. The `types` array on a Places result is a bag
@@ -243,14 +286,22 @@ def read(places: list, ll: tuple) -> dict:
             if not institution_is_plausible(name):
                 continue
             kind = "institutional"
+        attached, inside, addr = attaches(pl, geometry, addresses)
         return {
             "nearby_use": kind,
             "nearby_use_name": name,
             "nearby_use_type": primary,
             "nearby_use_distance_m": round(d),
             "nearby_use_status": status,
-            "nearby_use_basis": f"{primary} '{name}' {round(d)}m from the footprint",
+            "nearby_use_basis": (
+                f"{primary} '{name}' "
+                + ("inside the footprint" if inside
+                   else f"at {addr}" if attached
+                   else f"{round(d)}m from the footprint, not this building")),
             "nearby_candidates": len(near),
+            "nearby_use_attached": attached,
+            "nearby_use_in_footprint": inside,
+            "nearby_use_address": addr,
         }
     return {
         "nearby_use": "",
@@ -270,6 +321,7 @@ def load_features(args) -> list:
         path = files[0]
     log(f"  reading {path.name}")
     feats = json.loads(path.read_text())["features"]
+    alts = load_alt_addresses()
     out = []
     for f in feats:
         p = f["properties"]
@@ -283,7 +335,9 @@ def load_features(args) -> list:
         ll = centroid(f.get("geometry"))
         if not ll:
             continue
-        out.append({"bbl": bbl, "address": p.get("address", ""), "ll": ll})
+        out.append({"bbl": bbl, "address": p.get("address", ""), "ll": ll,
+                    "geometry": f.get("geometry"),
+                    "addresses": [p.get("address", "")] + list(alts.get(bbl) or [])})
     return out
 
 
@@ -309,7 +363,8 @@ def main() -> None:
     for i, t in enumerate(targets, 1):
         cached = cache.get(t["bbl"]) if not args.bbl else None
         if cached is not None and "places" in cached:
-            verdict = read(places := cached["places"], t["ll"])
+            verdict = read(places := cached["places"], t["ll"],
+                           t.get("geometry"), t.get("addresses") or ())
         else:
             places, err = nearby(t["ll"][0], t["ll"][1])
             if err and "TERMINAL" in err:
@@ -324,7 +379,8 @@ def main() -> None:
                     break
                 continue
             consecutive = 0
-            verdict = read(places, t["ll"])
+            verdict = read(places, t["ll"],
+                           t.get("geometry"), t.get("addresses") or ())
             if args.bbl:
                 for pl in places[:10]:
                     loc = pl.get("location") or {}
