@@ -90,10 +90,11 @@ more. `transient_rooms` (same file) is the one count the app filters, sizes
 and sorts on: Class B or DOB transient units, net of the stabilised rooms the
 Class A side cannot absorb. 477 West 57 Street reads 43 there.
 
-**What is not, and why it is left.** `safe_hotels_guest_rooms` is a legal
-count that fed the regulatory-review response. Whether a room with a
-stabilised tenant is a "guest room" under the Safe Hotels Act is a reading of
-the statute, so it goes to Legal (#legal-qs-team) before the number changes.
-If the answer is no, the change is to subtract `transient_rooms_stabilized`
-in `_guest_rooms`, and the threshold counts in `reviewer-response.txt` need
-re-running.
+**What is left, and why it no longer matters for sourcing.** Decided
+2026-10-08: a rent-stabilised room is never a sellable room, whether or not
+the Safe Hotels Act would call it a guest room. `transient_rooms` already
+encodes that, so no sourcing number depends on the legal reading.
+`safe_hotels_guest_rooms` still counts those rooms and is now only the
+statutory figure the panel's Safe Hotels lines quote; if Legal ever reads the
+Act the other way, the change is to subtract `transient_rooms_stabilized` in
+`_guest_rooms` and re-run the threshold counts in `reviewer-response.txt`.
