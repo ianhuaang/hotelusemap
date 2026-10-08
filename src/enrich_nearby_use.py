@@ -62,11 +62,14 @@ from pathlib import Path
 
 import certifi
 
-from src.build_geojson import point_in_footprint
-from src.enrich_current_use import load_alt_addresses
-
+# The repo root goes on the path before anything is imported from it. The
+# workflow runs this as `python src/enrich_nearby_use.py`, where `src` is not
+# importable until it does -- fcb81e1 had the two src imports above this line,
+# and the step failed on import under continue-on-error.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import DATA_RAW
+from src.build_geojson import point_in_footprint
+from src.enrich_current_use import load_alt_addresses
 
 CTX = ssl.create_default_context(cafile=certifi.where())
 API_KEY = os.environ.get("GOOGLE_API_KEY", "")

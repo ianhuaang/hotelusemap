@@ -45,3 +45,16 @@ map/dist/
 # names between these and the sweep.
 !data/raw/google_hotel_names_[0-9]*.json
 !data/raw/google_hclass_hotels_[0-9]*.json
+
+# Inputs the readiness build reads that CI cannot regenerate, tracked so the
+# refresh builds from what was measured (2026-10-08). The nearby cache keeps
+# the weekly run off the Places quota (100/day, 221 buildings); without it the
+# step re-queried everything and came back partial. The web screen runs by
+# hand on a Claude API key CI does not hold, so its verdicts only reach the
+# build if they are here: before this, every lone Places claim published as
+# "unscreened".
+!data/raw/nearby_use_cache.json
+!data/raw/web_corroboration_[0-9]*.json
+!data/raw/web_corroboration_cache.json
+!data/raw/web_current_use_[0-9]*.json
+!data/raw/web_current_use_cache.json

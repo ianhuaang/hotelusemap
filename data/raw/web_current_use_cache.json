@@ -1,0 +1,1759 @@
+{
+  "1000110015": null,
+  "1000167512": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.hilton.com",
+    "evidence": [
+      {
+        "title": "Hotel Near World Trade Center NYC",
+        "snippet": "102 North End Avenue New York, New York 10282 USA, Opens new tab.\n\n",
+        "link": "https://www.hilton.com/en/hotels/nyccici-conrad-new-york-downtown/hotel-location/"
+      }
+    ]
+  },
+  "1001377502": null,
+  "1002027501": null,
+  "1002090011": null,
+  "1002197506": null,
+  "1002290036": null,
+  "1002390020": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.hotelplanner.com, title only",
+    "evidence": [
+      {
+        "title": "BOWERY HANBEE HOTEL - New York NY 231 Grand 10013",
+        "snippet": "",
+        "link": "https://www.hotelplanner.com/Hotels/275116/Reservations-Bowery-Hanbee-Hotel-New-York-231-Grand-St-10013"
+      }
+    ]
+  },
+  "1002860006": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'single room occupancy' in www.guidestar.org",
+    "evidence": [
+      {
+        "title": "219 Henry St H D F C - GuideStar Profile",
+        "snippet": "LOW INCOME HOUSING219 HENRY STREET HDFC PROVIDES HOUSING IN THE FORM OF A SINGLE ROOM OCCUPANCY ...\n\n# 219 Henry St H D F C\n\n**aka** BETSY JACOBSON \u00a0\u00a0...",
+        "link": "https://www.guidestar.org/profile/13-3489733"
+      }
+    ]
+  },
+  "1003080020": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in en.uhomes.com",
+    "evidence": [
+      {
+        "title": "55 Orchard - Jersey City Apartment Rentals",
+        "snippet": "55 Orchard is the upscale student housing in Jersey City, offering room types including studios, one-, two-, and three-bedroom. Located at 55 Orchard ...",
+        "link": "https://en.uhomes.com/us/jersey-city/detail-apartments-1651669"
+      }
+    ]
+  },
+  "1003770037": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'supportive housing' in shnny.org",
+    "evidence": [
+      {
+        "title": "Supportive Housing Network of New York Intake List - NYC",
+        "snippet": "The Lee (Boys Club - Pitt Street) The Prince George The Times Square 107-109 Avenue D 258 East 4th Street Cooper Square Supportive Housing Gouverneur ...",
+        "link": "https://shnny.org/images/uploads/NYC%20Supportive%20Housing_9_26_11.pdf"
+      }
+    ]
+  },
+  "1004130008": null,
+  "1004240012": null,
+  "1004250016": null,
+  "1004570028": null,
+  "1004630016": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in www.renthop.com",
+    "evidence": [
+      {
+        "title": "14 Saint Marks Place \u2014 Listing History and Nearby Rentals",
+        "snippet": "Student Housing Welcome to your new home in the heart of the East Village, right on Saint Marks Place! ",
+        "link": "https://www.renthop.com/listings/14-saint-marks-place/4/69475417"
+      }
+    ]
+  },
+  "1004747506": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": "originally",
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com, past tense ('originally')",
+    "evidence": [
+      {
+        "title": "40 Mercer Street: Apartments for Sale & Rent",
+        "snippet": "Originally conceived as a hotel, the project was converted to residential use following the September 11 attacks, with Balazs adding two additional st...",
+        "link": "https://www.cityrealty.com/nyc/soho/40-mercer-street/30901"
+      }
+    ]
+  },
+  "1004940015": null,
+  "1004950033": null,
+  "1004997506": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.il.kayak.com",
+    "evidence": [
+      {
+        "title": "New York Hotels The Mercer.190281",
+        "snippet": "Mon 16.03\n-\nTue 17.03\n1 room, 2 guests\nDeals from\n\u20aa614\n/Cheapest rate per night\nRoom type\nProvider\nNightly total\nSuperior room\n\u20aa614\nDeluxe room\n\u20aa1,113...",
+        "link": "https://www.il.kayak.com/New-York-Hotels-The-Mercer.190281.ksp"
+      }
+    ]
+  },
+  "1005077502": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "250 Bowery in NYC: Building Review and Ratings",
+        "snippet": "that FLAnk Architects, of which Jon Kully and Michael Walsdorf are the principals, designed as a hotel with a corten fa\u00e7ade for the site for developer...",
+        "link": "https://www.cityrealty.com/nyc/nolita-little-italy/250-bowery/review/37221"
+      }
+    ]
+  },
+  "1005147505": null,
+  "1005300062": null,
+  "1005550011": null,
+  "1005750064": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "plans",
+    "quoted": true,
+    "basis": "web:\"men's shelter\" in citizenportal.ai, not yet ('plans')",
+    "evidence": [
+      {
+        "title": "CitizenPortal.ai - DHS and Project Renewal propose 90\u2011bed women\u2019s shelter at 27 West 11th; neighbors press for details on construction, security and outdoor space",
+        "snippet": "The Department of Social Services and Project Renewal presented plans for a 90\u2011bed single\u2011adult women's shelter at 27 West 11th Street. ",
+        "link": "https://citizenportal.ai/articles/6642253/Manhattan-City/New-York-County/New-York/DHS-and-Project-Renewal-propose-90bed-womens-shelter-at-27-West-11th-neighbors-press-for-details-on-construction-security-and-outdoor-space"
+      }
+    ]
+  },
+  "1005760055": null,
+  "1006290024": null,
+  "1006360041": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in media.villagepreservation.org",
+    "evidence": [
+      {
+        "title": "Public Hearing Presentation 396 West Street, New York, NY Community Board 2:",
+        "snippet": "Source: 1932 NYPL Digital Collection\n\nSource: 2021 Google Maps\n\n| Tenant: Holland Hotel / New Holland Hotel |  |  | Tenant: New Holland Hotel | Tenant...",
+        "link": "https://media.villagepreservation.org/wp-content/uploads/2021/09/14122731/2021-08-26-396-West-Street-LPC-Application-Better-Version.pdf"
+      }
+    ]
+  },
+  "1006400012": null,
+  "1006950001": {
+    "current_use": "hostel",
+    "current_use_label": "Hostel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hostel' in www.yelp.com, title only",
+    "evidence": [
+      {
+        "title": "JAZZ HOSTELS - Updated September 2026 - 184 11th Ave, New York, New York - Hostels - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/jazz-hostels-new-york"
+      }
+    ]
+  },
+  "1007340007": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.kayak.com",
+    "evidence": [
+      {
+        "title": "Casamia 36 Hotel. New York Hotel Deals & Reviews - KAYAK",
+        "snippet": "Casamia 36 Hotel is located at 449 West 36th Street in Hell's Kitchen, 0.5 miles from the center of New York. ",
+        "link": "https://www.kayak.com/New-York-Hotels-Casamia-36-Hotel.2366542.ksp"
+      }
+    ]
+  },
+  "1007387504": null,
+  "1007537503": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.timeout.com",
+    "evidence": [
+      {
+        "title": "Chelsea Star Hotel (CLOSED)",
+        "snippet": "Details\n\nAddress\n300 W 30th St\nNew York\n10001\nCross street:\nat Eighth Ave\nTransport:\nSubway: A, C, E to 34th St\u2013Penn Station\nPrice:\n$30\u2013$45 per person...",
+        "link": "https://www.timeout.com/newyork/hotels/chelsea-star-hotel-closed"
+      }
+    ]
+  },
+  "1007540029": null,
+  "1007590001": null,
+  "1007620023": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "319 West 38th Street: Apartments for Sale & Rent",
+        "snippet": "As NYC hotel industry reels from Coronavirus, work begins on new 26-story hotel at 319 West 38th Street Wednesday, April 1, 2020 \u276e \u276f. ",
+        "link": "https://www.cityrealty.com/nyc/midtown-west/319-west-38th-street/59689"
+      }
+    ]
+  },
+  "1007650010": null,
+  "1007670002": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'supportive housing' in cbmanhattan.cityofnewyork.us",
+    "evidence": [
+      {
+        "title": "Permanent Supportive Housing",
+        "snippet": "## St. Francis Friends of the Poor\n155 West 22nd Street 148 Eighth Avenue (646) 638-2182\n\nThese\u00a0two facilities provides permanent supportive housing f...",
+        "link": "https://cbmanhattan.cityofnewyork.us/cb4/resources/permanent-supportive-housing/"
+      }
+    ]
+  },
+  "1007740024": null,
+  "1007890078": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'safe haven' in urbanpathways.org",
+    "evidence": [
+      {
+        "title": "Travelers Safe Haven (+Annex) - Urban Pathways",
+        "snippet": "### Location\n\n\n274 West 40th Street Manhattan New York New York 10018 Get Directions(this link opens in new window)",
+        "link": "https://urbanpathways.org/locations/travelers-safe-haven-annex/"
+      }
+    ]
+  },
+  "1007910022": null,
+  "1008017503": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'homeless shelter' in streeteasy.com",
+    "evidence": [
+      {
+        "title": "Hotel and homeless shelter on W 25th St?",
+        "snippet": "There are also a several sex offenders being housed nearby at 127 West 25, and other adrresses on the street. ",
+        "link": "https://streeteasy.com/talk/discussion/24480-hotel-and-homeless-shelter-on-w-25th-st"
+      }
+    ]
+  },
+  "1008060076": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "conversion",
+    "quoted": true,
+    "basis": "web:'hotel' in newyorkyimby.com, not yet ('conversion')",
+    "evidence": [
+      {
+        "title": "Affordable Housing Conversion Begins At 371 Seventh Avenue In Midtown",
+        "snippet": "Slate Property Group and Breaking Ground have completed the acquisition of the Stewart Hotel at 371 Seventh Avenue in Midtown, Manhattan.\n\n",
+        "link": "https://newyorkyimby.com/2025/12/affordable-housing-conversion-begins-at-371-seventh-avenue-in-midtown-manhattan.html"
+      }
+    ]
+  },
+  "1008300067": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "above ground",
+    "quoted": true,
+    "basis": "web:'hotel' in newyorkyimby.com, not yet ('above ground')",
+    "evidence": [
+      {
+        "title": "Construction Update: 32 West 29th Street",
+        "snippet": "The new hotel at 32 West 29th Street is well above ground, with concrete already at the 11th floor; foundation and excavation work began earlier this ...",
+        "link": "https://newyorkyimby.com/2013/11/32-west-29th-street-construction-photos.html"
+      }
+    ]
+  },
+  "1008360015": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "planned",
+    "quoted": true,
+    "basis": "web:'hotel' in commercialobserver.com, not yet ('planned')",
+    "evidence": [
+      {
+        "title": "Jeff Sutton\u2019s Planned 340-Key Midtown Hotel Enters Demolition Phase",
+        "snippet": "The demolition filing follows the closure of British clothing retailer **Superdry**\u2019s two-story store at 25 West 34th Street.\n\n\n\nThe developer\u2019s repos...",
+        "link": "https://commercialobserver.com/2026/09/wharton-properties-west-34th-street-hotel-demolition/"
+      }
+    ]
+  },
+  "1008370001": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "will convert",
+    "quoted": true,
+    "basis": "web:'hotel' in commercialobserver.com, not yet ('will convert')",
+    "evidence": [
+      {
+        "title": "960 Sixth Avenue",
+        "snippet": "The Yard Will Convert Closed Marriott Hotel to Flex Office Space.\n\n# 960 Sixth Avenue\n### The Yard Will Convert Closed Marriott Hotel to Flex Office S...",
+        "link": "https://commercialobserver.com/tag/960-sixth-avenue/"
+      }
+    ]
+  },
+  "1008390067": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.loopnet.com",
+    "evidence": [
+      {
+        "title": "34 W 38Th St, New York, NY 10018 - APN/Parcel ID: 0839-0067",
+        "snippet": "34 W 38Th St\n\nAPN/Parcel ID\n\n0839-0067\n\nNew York\n\nLand Use\n\nHotel\n\nState\n\nNew York\n\nZoning\n\nM1-6\n\nLot #\n\n67\n\nFlood Zone\n\n\n\nB and X Area of moderate fl...",
+        "link": "https://www.loopnet.com/property/34-w-38th-st-new-york-ny-10018/36061-08390066/"
+      }
+    ]
+  },
+  "1008577502": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "planned",
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com, not yet ('planned')",
+    "evidence": [
+      {
+        "title": "241 Fifth Avenue in NYC: Building Review and Ratings",
+        "snippet": "Dan Shavolian and Jack Hazan acquired the property for $26.5 million in 2007 from Avraham Sibony and they planned a hotel for the site.\u00a0 Mr. Sibony ha...",
+        "link": "https://www.cityrealty.com/nyc/flatiron-union-square/241-fifth-241-fifth-avenue/review/34041"
+      }
+    ]
+  },
+  "1008620028": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in us.trip.com",
+    "evidence": [
+      {
+        "title": "32nd Park Avenue Suites (New York) - Book With the Best Deals ...",
+        "snippet": "Where is 32nd Park Avenue Suites located? The hotel address is 35 East 32nd Street. ",
+        "link": "https://us.trip.com/hotels/new-york-hotel-detail-2644284/32nd-park-avenue-suites/"
+      }
+    ]
+  },
+  "1008680051": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.yelp.com, title only",
+    "evidence": [
+      {
+        "title": "THE WILLIAM - Updated May 2026 - 27 Photos & 59 Reviews - 24 E 39th St, New York, New York - Hotels - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/the-william-new-york?start=20"
+      }
+    ]
+  },
+  "1008710026": null,
+  "1008720068": null,
+  "1008770018": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": "was a",
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in en.wikipedia.org, past tense ('was a')",
+    "evidence": [
+      {
+        "title": "Gramercy Park Hotel",
+        "snippet": "Gramercy Park Hotel was a luxury hotel located at 2 Lexington Avenue, in the Gramercy Park neighborhood of Manhattan, New York City, adjacent to the p...",
+        "link": "https://en.wikipedia.org/wiki/Gramercy_Park_Hotel"
+      }
+    ]
+  },
+  "1008790001": null,
+  "1008790027": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'single room occupancy' in en.wikipedia.org",
+    "evidence": [
+      {
+        "title": "Hotel Kenmore Hall",
+        "snippet": "Hotel Kenmore Hall is a 22-story\n[single room occupancy](https://en.wikipedia.org/wiki/Single_room_occupancy) hotel located at 145 East 23rd Street in...",
+        "link": "https://en.wikipedia.org/wiki/Hotel_Kenmore_Hall"
+      }
+    ]
+  },
+  "1008800019": null,
+  "1008850004": null,
+  "1008860058": null,
+  "1008930025": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in takecare-newyork.com",
+    "evidence": [
+      {
+        "title": "Take Care NYC",
+        "snippet": "## Visit Us\n303 Lexington Ave New York, NY 10016\n\nat the Shelburne Sonesta hotel\n\n# About Take\u00a0Care\nLocated within the boutique Shelburne Sonesta Hote...",
+        "link": "https://takecare-newyork.com/"
+      }
+    ]
+  },
+  "1008960001": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'residence hall' in www.stern.nyu.edu",
+    "evidence": [
+      {
+        "title": "1 2 3 4 5 6 7 8 9 10 12 13 14 15 16 17 18 19 20 23 21 24 25 22 27 26 28 29 30",
+        "snippet": "129 Third Avenue. Thirteenth Street. Residence Hall. ",
+        "link": "https://www.stern.nyu.edu/sites/default/files/assets/documents/con_042897.pdf"
+      }
+    ]
+  },
+  "1010080001": null,
+  "1010180044": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "conversion",
+    "quoted": false,
+    "basis": "web:'hotel' in newyorkyimby.com, not yet ('conversion'), title only",
+    "evidence": [
+      {
+        "title": "Construction Rises on Hotel Conversion at 224 West 47th Street in Times Square, Manhattan - New York YIMBY",
+        "snippet": "",
+        "link": "https://newyorkyimby.com/2024/01/construction-rises-on-hotel-conversion-at-224-west-47th-street-in-times-square-manhattan.html"
+      }
+    ]
+  },
+  "1010200046": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in hotelguides.com, title only",
+    "evidence": [
+      {
+        "title": "25 Hotels TRULY CLOSEST to 1601 Broadway, New York, NY",
+        "snippet": "",
+        "link": "https://hotelguides.com/new-york/1601-broadway-hotels.html"
+      }
+    ]
+  },
+  "1010220001": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.expedia.com",
+    "evidence": [
+      {
+        "title": "Oakwood at 830 8th Avenue: 2019 Room Prices , Deals & Reviews",
+        "snippet": "Oakwood 830 8th Avenue Hotel New York. Oakwood 830 8th Avenue Hotel. ",
+        "link": "https://www.expedia.com/New-York-Hotels-Oakwood-At-830-8th-Avenue.h16715720.Hotel-Information"
+      }
+    ]
+  },
+  "1010230002": null,
+  "1010230006": null,
+  "1010260037": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.propertyshark.com",
+    "evidence": [
+      {
+        "title": "204 W 55th St, New York, NY 10019 - Owner, Sales, Taxes",
+        "snippet": "What is the year built for Woodward Hotel - 204 West 55th Street, New York, NY 10019? The development at Woodward Hotel - 204 West 55th Street, New Yo...",
+        "link": "https://www.propertyshark.com/mason/Property/15643/204-W-55-St-New-York-NY-10019/"
+      }
+    ]
+  },
+  "1010300048": null,
+  "1010350006": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in amberstudent.com",
+    "evidence": [
+      {
+        "title": "351 W 44th, New York City Student Apartments",
+        "snippet": "Located at 44th St, New York, NY 10036, 351 West 44th street, New York, is an exceptional New York student housing option well-known for its superb lo...",
+        "link": "https://amberstudent.com/places/351-w-44th-new-york-2311244145365"
+      }
+    ]
+  },
+  "1010350009": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:' inn' in cbmanhattan.cityofnewyork.us",
+    "evidence": [
+      {
+        "title": "Project Renewal Temporary Shelter Relocation at 343 West ...",
+        "snippet": "Project Renewal Temporary Shelter Relocation at 343 West 44th Street \u2013. Ramada Inn. ",
+        "link": "https://cbmanhattan.cityofnewyork.us/cb4/wp-content/uploads/sites/10/2024/02/02-HHHS-Letter-to-DHS-re-Project-Renewal-Temporary-Shelter-Relocation-at-343-West-44th-Street-%E2%80%93-Ramada-Inn.pdf"
+      }
+    ]
+  },
+  "1010350060": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in amberstudent.com",
+    "evidence": [
+      {
+        "title": "360 West 45, New York City Student Apartments",
+        "snippet": "Located at 360 W 45th St, New York, NY 10036, 360 West 45 New York is a distinguished student housing in New York. Offering a variety of ensuite and n...",
+        "link": "https://amberstudent.com/places/360-west-45-new-york-2403184156770"
+      }
+    ]
+  },
+  "1010360036": null,
+  "1010370007": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'rooming house' in streeteasy.com",
+    "evidence": [
+      {
+        "title": "359 West 46th Street in Hell's Kitchen : Sales, Rentals, Floorplans",
+        "snippet": "mixed-use building in Hell's Kitchen. \u2026 C5Converted Dwelling or Rooming House. ",
+        "link": "https://streeteasy.com/building/359-west-46-street-new_york"
+      }
+    ]
+  },
+  "1010430059": null,
+  "1010460117": null,
+  "1010460160": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:' sro ' in www.crexi.com",
+    "evidence": [
+      {
+        "title": "354 W 56TH ST New York NY 10019-4226 APN: 01046-0160",
+        "snippet": "354 West 56th Street is 13,500 gross square feet and consists of 65 SRO units and 2 below-grade commercial units.\n\n",
+        "link": "https://www.crexi.com/properties/176215/new-york-354-west-56th-street"
+      }
+    ]
+  },
+  "1010497501": {
+    "current_use": "hostel",
+    "current_use_label": "Hostel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hostel' in columbus-circle-hostel.amp.pr",
+    "evidence": [
+      {
+        "title": "Columbus Circle Hostel",
+        "snippet": "Located at 120 W 60th St, our boutique hostel offers a perfect blend of historic charm and modern amenities.\n\n",
+        "link": "https://columbus-circle-hostel.amp.pr/"
+      }
+    ]
+  },
+  "1010707501": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'supportive housing' in a856-cityrecord.nyc.gov",
+    "evidence": [
+      {
+        "title": "The City Record Online (CROL)",
+        "snippet": "Title: PROVIDE SUPPORTIVE HOUSING- SINGLE ROOM OCCUPANCY (SRO) FOR HOMELESS SINGLE ADULTS- 500 WEST 42ND STREET, NEW YORK, NY 10036.\n\n",
+        "link": "https://a856-cityrecord.nyc.gov/RequestDetail/20190110002"
+      }
+    ]
+  },
+  "1010760051": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.yelp.com, title only",
+    "evidence": [
+      {
+        "title": "HOLIDAY INN EXPRESS MANHATTAN MIDTOWN WEST - Updated September 2026 - 59 Photos & 97 Reviews - 538 W 48th St, New York, New York - Hotels - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/holiday-inn-express-manhattan-midtown-west-new-york-2"
+      }
+    ]
+  },
+  "1010760055": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.priceline.com",
+    "evidence": [
+      {
+        "title": "Hotel Five44 in New York from $198",
+        "snippet": "544 West 48th Street, New York, NY. ",
+        "link": "https://www.priceline.com/hotel-deals/en-us/P3000016152/H74586204/hotel-five44.ssp"
+      }
+    ]
+  },
+  "1010810060": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'supportive housing' in www.clintonhousing.org",
+    "evidence": [
+      {
+        "title": "CHDC",
+        "snippet": "554 West 53rd Street has a combination of 86 Class A apartments and supportive housing units, one of the first of its kind when built. ",
+        "link": "https://www.clintonhousing.org/what-we-do/affordable-hells-kitchen.php"
+      }
+    ]
+  },
+  "1011230042": null,
+  "1011240003": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.booking.com, title only",
+    "evidence": [
+      {
+        "title": "The 10 best hotels near West 71st Street Historic District in New York, United States",
+        "snippet": "",
+        "link": "https://www.booking.com/landmark/us/west-71st-street-historic-district.html"
+      }
+    ]
+  },
+  "1011420024": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'asylum-seeker' in www.ilovetheupperwestside.com",
+    "evidence": [
+      {
+        "title": "New Upper West Side Asylum-Seeker Shelters to House Over 800 People - iLovetheUpperWestSide.com",
+        "snippet": "The building at 117 West 70th Street is also known as Stratford Arms, and has served as a dormitory for the American Musical and Dramatic Academy (AMD...",
+        "link": "https://www.ilovetheupperwestside.com/new-upper-west-side-asylum-seeker-shelters-to-house-over-800-people/"
+      }
+    ]
+  },
+  "1011460061": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": "originally",
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in streeteasy.com, past tense ('originally')",
+    "evidence": [
+      {
+        "title": "166 West 75th Street #1109 in Upper West Side, Manhattan",
+        "snippet": "Originally the site of the 1920s Emerson Hotel, 166 West 75th Street has been completely reimagined with renovated common areas, updated finishes, imp...",
+        "link": "https://streeteasy.com/building/the-amstrdm/1109"
+      }
+    ]
+  },
+  "1011820049": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'single room occupancy' in www.renthop.com",
+    "evidence": [
+      {
+        "title": "342 West 71st Street \u2014 Listing History and Nearby Rentals",
+        "snippet": "SRO - Single Room occupancy - Only One Occupant Per ApartmentThis is a private studio/Room with a shared bathroom.ALL UTILIES INCLUDEDLAUNDRY IN THE B...",
+        "link": "https://www.renthop.com/listings/342-west-71st-street/488/10384492"
+      }
+    ]
+  },
+  "1011840004": null,
+  "1012070001": null,
+  "1012170057": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:' sro ' in www.nyc.gov",
+    "evidence": [
+      {
+        "title": "No. Name FMS Agency PIN # E-PIN (to be filled in as information becomes",
+        "snippet": "SRO Services at 166 West 87th. Street New York NY 10024. SRO Single Adult.\n\n",
+        "link": "https://www.nyc.gov/assets/mocs/downloads/Resources/human-services/FY21/Department_of_the_Homeless_Services_Plan_FY21.pdf"
+      }
+    ]
+  },
+  "1012367501": null,
+  "1012430029": null,
+  "1012470047": null,
+  "1012500039": null,
+  "1012520022": null,
+  "1012520024": null,
+  "1012520025": null,
+  "1012520027": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "proposed",
+    "quoted": true,
+    "basis": "web:'single room occupancy' in caselaw.findlaw.com, not yet ('proposed')",
+    "evidence": [
+      {
+        "title": "312 v. New York Tenants & Neighbors, and Community Voices Heard, Defendant-Intervenors. (2021)",
+        "snippet": "Proposed-Intervenor 312 West 93rd Street Associates (\u201c312\u201d) is the owner of a single room occupancy property (\u201cSRO\u201d).^4 Doc.  SROs are regulated by th...",
+        "link": "https://caselaw.findlaw.com/court/us-dis-crt-sd-new-yor/2115913.html"
+      }
+    ]
+  },
+  "1012520046": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in amberstudent.com",
+    "evidence": [
+      {
+        "title": "307 West 93, New York City Student Apartments",
+        "snippet": "2h 7m)\n\n## About the Property\n307 W 93rd St is a spacious **student housing in New York** at 10025, US, that offers you a comfortable private apartmen...",
+        "link": "https://amberstudent.com/places/307-west-93-new-york-2307197783145"
+      }
+    ]
+  },
+  "1012530038": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "will be",
+    "quoted": true,
+    "basis": "web:'homeless shelter' in www.westsiderag.com, not yet ('will be')",
+    "evidence": [
+      {
+        "title": "Controversial Homeless Shelter on 95th Street Will Be Moved",
+        "snippet": "After years of community complaints, a controversial homeless shelter at 316 West 95th Street between West End Avenue and Riverside Drive is getting a...",
+        "link": "https://www.westsiderag.com/2018/10/11/controversial-homeless-shelter-on-95th-street-will-be-moved"
+      }
+    ]
+  },
+  "1012727503": {
+    "current_use": "private_club",
+    "current_use_label": "Private membership club",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'members club' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "Aman New York Residences at 730 Fifth Avenue: Apartments for Sale & Rent",
+        "snippet": "The building offers luxurious amenities including a sky lobby, private Members Club, restaurants, and an extensive Aman Spa spanning three floors with...",
+        "link": "https://www.cityrealty.com/nyc/midtown-west/aman-new-york-residences-730-fifth-avenue/79191"
+      }
+    ]
+  },
+  "1012810021": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'migrant shelter' in www.breezyscroll.com",
+    "evidence": [
+      {
+        "title": "NYC converts historic Roosevelt Hotel to an emergency migrant shelter as thousands of people seek asylum - BreezyScroll",
+        "snippet": "Near the Grand Central Terminal, the storied hotel at 45 East 45th Street has been vacant for almost three years. ",
+        "link": "https://www.breezyscroll.com/world/the-us/nyc-converts-historic-roosevelt-hotel-to-an-emergency-migrant-shelter-as-thousands-of-people-seek-asylum/"
+      }
+    ]
+  },
+  "1012930037": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.corcoran.com",
+    "evidence": [
+      {
+        "title": "470 Park Avenue, Manhattan",
+        "snippet": "The building has a full time doorman, live-in superintendant, basement storage and laundry. It is located adjacent to the luxurious Four Seasons Hotel...",
+        "link": "https://www.corcoran.com/building/midtown-east/4045"
+      }
+    ]
+  },
+  "1013197504": null,
+  "1013310014": null,
+  "1013480036": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in therealdeal.com",
+    "evidence": [
+      {
+        "title": "330 East 56th Street",
+        "snippet": "Commercial\n\nNew York\n\n# Pension fund\u2019s stake in Sutton Place extended-stay hotel valued at $106M\nCalSTRS owns 91% of AKA Sutton, records show\n\n330 Eas...",
+        "link": "https://therealdeal.com/new-york/2017/10/20/pension-fund-pays-106m-for-stake-in-aka-sutton-place/"
+      }
+    ]
+  },
+  "1013610001": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.travelweekly.com",
+    "evidence": [
+      {
+        "title": "The Beekman Tower New York- First Class New York, NY Hotels- GDS Reservation Codes: Travel Weekly",
+        "snippet": "# The Beekman Tower New York\n3 Mitchell Place, New York, NY 10017\n\n## Overview\n**Description**\n\nAll-suite brick landmark hotel with Art Deco stylings ...",
+        "link": "https://www.travelweekly.com/Hotels/New-York-NY/The-Beekman-Tower-New-York-p57023867"
+      }
+    ]
+  },
+  "1013630012": null,
+  "1013650020": null,
+  "1013680024": null,
+  "1013690042": null,
+  "1013730160": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.hilton.com",
+    "evidence": [
+      {
+        "title": "Graduate by Hilton New York Hotel near Cornell Tech",
+        "snippet": "# Graduate by Hilton New York\n22 North Loop Road, New York, New York, 10044, USA, Opens new tab\n\nOutside patio with tables and chairs overlooking city...",
+        "link": "https://www.hilton.com/en/hotels/nycgngu-graduate-new-york/"
+      }
+    ]
+  },
+  "1013747502": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "502 Park Avenue in NYC: Building Review and Ratings",
+        "snippet": "One of the avenue\u2019s most distinctive towers, it has had a varied life.\n\nOver the years, it switched from hotel use to rental to cooperative and back t...",
+        "link": "https://www.cityrealty.com/nyc/park-fifth-ave-79th-st/trump-park-avenue-502-park-avenue/review/202"
+      }
+    ]
+  },
+  "1013770033": null,
+  "1013817502": null,
+  "1013817504": null,
+  "1013827501": null,
+  "1013840001": null,
+  "1013847502": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "The Westbury at 15 East 69th Street: Condos for Sale",
+        "snippet": "The Westbury, built in 1927 as a hotel and converted to condos in 1999, offers hotel-like amenities including concierge service ...\n\n# The Westbury, 1...",
+        "link": "https://www.cityrealty.com/nyc/park-fifth-ave-79th-st/the-westbury-15-east-69th-street/4805"
+      }
+    ]
+  },
+  "1013857502": null,
+  "1013897501": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.corcoran.com",
+    "evidence": [
+      {
+        "title": "The Volney",
+        "snippet": "Built as a residence hotel in the Italian-Renaissance-palazzo style in 1929, The Volney at 23 East 74th Street, is one of the finest pre-war apartment...",
+        "link": "https://www.corcoran.com/building/upper-east-side/1989"
+      }
+    ]
+  },
+  "1013910054": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.loopnet.com, title only",
+    "evidence": [
+      {
+        "title": "50 E 77th St, New York, NY 10075 - Residences at Carlyle Hotel",
+        "snippet": "",
+        "link": "https://www.loopnet.com/Listing/50-E-77th-St-New-York-NY/28555035/"
+      }
+    ]
+  },
+  "1013930052": null,
+  "1013970066": null,
+  "1013977505": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "Barbizon 63, 140 East 63rd Street: Review and Ratings",
+        "snippet": "The Barbizon 63 is a very handsome, 24-story building that began as a residential hotel for women in 1927 with about 700 rooms and then was operated a...",
+        "link": "https://www.cityrealty.com/nyc/lenox-hill/barbizon-63-140-east-63rd-street/review/3503"
+      }
+    ]
+  },
+  "1014130027": null,
+  "1014210001": null,
+  "1014257501": null,
+  "1014520049": null,
+  "1014650001": null,
+  "1014830028": null,
+  "1014990065": null,
+  "1015010056": null,
+  "1015080046": null,
+  "1015090016": null,
+  "1015120062": null,
+  "1015190067": null,
+  "1015230059": null,
+  "1015300026": null,
+  "1015300044": null,
+  "1015580031": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'dormitory' in www.pincusco.com",
+    "evidence": [
+      {
+        "title": "338 East 96 Street - PincusCo",
+        "snippet": "Transactions: \u2022 Jewish Board of Family and Children\u2019s Services borrowed $13.7 million from NYS Dormitory Authority for 338 East 96th Street, Yorkville...",
+        "link": "https://www.pincusco.com/property/338-east-96-street/"
+      }
+    ]
+  },
+  "1015840045": null,
+  "1015890019": null,
+  "1016760011": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'homeless shelter' in www.affordablehousing411.com",
+    "evidence": [
+      {
+        "title": "New York",
+        "snippet": "325 East 104th Street New York, NY. Homeless Shelter. (Homeless Shelter). ",
+        "link": "https://www.affordablehousing411.com/homeless-assistances/new-york/homeless-shelter/"
+      }
+    ]
+  },
+  "1017220033": null,
+  "1018400055": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "planned",
+    "quoted": true,
+    "basis": "web:'homeless shelter' in www.dnainfo.com, not yet ('planned')",
+    "evidence": [
+      {
+        "title": "Transitional Homeless Shelter Planned for West 105th St. - Upper West Side - New York - DNAinfo",
+        "snippet": "Urban Pathways is working on getting a contract with DHS to host a \"safe haven\" at 54 W. 105th St.\n\n# Transitional Homeless Shelter Planned for West 1...",
+        "link": "https://www.dnainfo.com/new-york/20151002/upper-west-side/transitional-homeless-shelter-planned-for-west-105th-st/"
+      }
+    ]
+  },
+  "1018630052": null,
+  "1018687501": null,
+  "1018730063": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'dormitory' in en.awehome.com",
+    "evidence": [
+      {
+        "title": "850 WEST END_Student Accommodation NewYork|Awehome",
+        "snippet": "Students from Columbia University, Fordham University, FIT, and NYIT consider the West End Ave student dormitory their cozy home.\n\n",
+        "link": "https://en.awehome.com/us/newyork/detail-apartment-1116209"
+      }
+    ]
+  },
+  "1018770061": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in en.uhomes.com",
+    "evidence": [
+      {
+        "title": "936 West End Avenue - New York Apartment Rentals",
+        "snippet": "Student Housing Manhattan Student Housing Brooklyn Student Housing Downtown Student Housing Upper Manhattan Student Housing Midtown Student Housing Ne...",
+        "link": "https://en.uhomes.com/us/new-york/detail-apartments-1676066"
+      }
+    ]
+  },
+  "1018790013": {
+    "current_use": "hostel",
+    "current_use_label": "Hostel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hostel' in reserving.com",
+    "evidence": [
+      {
+        "title": "West Side Inn Hostel, New York - Reserving",
+        "snippet": "237 WEST 107TH STREET - New York - 10025 - New York - New York - United States Map. \u2026 Book the West Side Inn Hostel and take advantage of our offers a...",
+        "link": "https://reserving.com/hotels/america/united-states/new-york/new-york/city/west-side-inn-hostel"
+      }
+    ]
+  },
+  "1018790015": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "redevelop",
+    "quoted": false,
+    "basis": "web:'supportive housing' in newyorkyimby.com, not yet ('redevelop'), title only",
+    "evidence": [
+      {
+        "title": "Developers Secure $38M to Redevelop Illegal Hotel into Permanent Supportive Housing at 235 West 107th Street on the Upper West Side - New York YIMBY",
+        "snippet": "",
+        "link": "https://newyorkyimby.com/2023/04/developers-secure-38m-to-redevelop-illegal-hotel-into-permanent-supportive-housing-at-235-west-109th-street-on-the-upper-west-side.html"
+      }
+    ]
+  },
+  "1018850007": null,
+  "1018870048": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:' sro ' in www.yardimatrix.com, title only",
+    "evidence": [
+      {
+        "title": "Rose House - SRO - 305 West 97th Street, NY 10025",
+        "snippet": "",
+        "link": "https://www.yardimatrix.com/property-types/multifamily/manhattan/rose-house-sro-305-west-97th-street-ny-10025--149146/"
+      }
+    ]
+  },
+  "1018950045": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'residence hall' in www.housing.columbia.edu",
+    "evidence": [
+      {
+        "title": "619 W. 113th Street",
+        "snippet": "619 West 113 Street\n\n# 619 W. 113th Street\n## Building Fast Facts\n- Near Riverside Drive and Park\n- Closest to McBain and Broadway residence halls\n- B...",
+        "link": "https://www.housing.columbia.edu/content/619-w-113th-street"
+      }
+    ]
+  },
+  "1019190060": null,
+  "1019210026": null,
+  "1019520011": null,
+  "1020660033": null,
+  "1021140070": null,
+  "1021177501": null,
+  "1021540011": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'safe haven' in nyc.gov",
+    "evidence": [
+      {
+        "title": "W-2-196 Rev. 09/22 INTENT TO RENEW",
+        "snippet": "**SHELTER FOR HOMELESS ADULTS**\n\nBOWERY RESIDENTS' COMMITTEE, INC.\n\nSite: The Lex Safe Haven\n\n566 West 182nd Street\n\nNew York, NY 10033\n\nEPIN: 07119P8...",
+        "link": "https://nyc.gov/assets/dhs/downloads/pdf/IntenttoRenew_DHSbowery-2-3-23.pdf"
+      }
+    ]
+  },
+  "1021540076": {
+    "current_use": "sro",
+    "current_use_label": "Single room occupancy",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:' sro ' in www.rosewoodrg.com",
+    "evidence": [
+      {
+        "title": "558 & 560 West 184th Street, New York, NY",
+        "snippet": "Two contiguous 5 story walk-up apartment buildings consisting of a total of 109 SRO units and 1 apartments. 558 West 184th Street is leased on a NNN b...",
+        "link": "https://www.rosewoodrg.com/listings/558-560-west-184th-street-new-york-ny"
+      }
+    ]
+  },
+  "1021790010": null,
+  "3000350012": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": "was the",
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.brownstoner.com, past tense ('was the')",
+    "evidence": [
+      {
+        "title": "Building of the Day: 1 Old Fulton Street - Brooklyn",
+        "snippet": "The Franklin House Hotel was the most important of these establishments in the 19th century.\n\n",
+        "link": "https://www.brownstoner.com/architecture/building-of-the-182/"
+      }
+    ]
+  },
+  "3001570009": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "slated",
+    "quoted": true,
+    "basis": "web:'homeless shelter' in www.brooklynpaper.com, not yet ('slated')",
+    "evidence": [
+      {
+        "title": "New homeless shelter slated for Hoyt Street next year \u2022 Brooklyn Paper",
+        "snippet": "A new homeless shelter is slated to open in Downtown Brooklyn early next year, bringing 160 beds for single adult men to the facility at 1 Hoyt St.\n\n",
+        "link": "https://www.brooklynpaper.com/new-homeless-shelter-hoyt-street/"
+      }
+    ]
+  },
+  "3001727501": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'act team' in www.wellness.com, title only",
+    "evidence": [
+      {
+        "title": "50 Nevins Street, Brooklyn, NY 11217 - Institute for Community Living Inc - Mental Health Services, Central Brooklyn Act Team",
+        "snippet": "",
+        "link": "https://www.wellness.com/dir/4049241/counselor/ny/brooklyn/institute-for-community-living-inc---mental-health-services-central-brooklyn-act-team/directions/50-nevins-street-brooklyn-ny-11217"
+      }
+    ]
+  },
+  "3001990010": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in guide.michelin.com",
+    "evidence": [
+      {
+        "title": "1 Hotel Brooklyn Bridge - Brooklyn - Book a MICHELIN Guide Hotel",
+        "snippet": "1 Hotel Brooklyn Bridge. 60 Furman Street, Brooklyn, NY, USA.\n\n",
+        "link": "https://guide.michelin.com/us/en/hotels-stays/brooklyn/1-hotel-brooklyn-bridge-8560"
+      }
+    ]
+  },
+  "3002490030": null,
+  "3004060067": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.yelp.com, title only",
+    "evidence": [
+      {
+        "title": "COMFORT INN BROOKLYN - DOWNTOWN - CLOSED - Updated August 2026 - 11 Photos & 25 Reviews - 279 Butler Street, Brooklyn, New York - Hotels - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/comfort-inn-brooklyn-downtown-brooklyn"
+      }
+    ]
+  },
+  "3004340056": null,
+  "3004340057": null,
+  "3004410001": null,
+  "3009330050": null,
+  "3010030033": null,
+  "3020440013": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'supportive housing' in www.yelp.com",
+    "evidence": [
+      {
+        "title": "BROOKLYN COMMUNITY HOUSING & SERVICES - Updated September 2026 - 105 Carlton Ave, Brooklyn, New York - Community Service/Non-Profit - Phone Number - Yelp",
+        "snippet": "I would not recommend this place to anyone looking to apply for supportive housing. Not to mention, the neighborhood is not safe. There was a drive by...",
+        "link": "https://www.yelp.com/biz/brooklyn-community-housing-and-services-brooklyn-4"
+      }
+    ]
+  },
+  "3021327503": null,
+  "3021397503": null,
+  "3023710048": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'homeless shelter' in augrented.com",
+    "evidence": [
+      {
+        "title": "45 Ainslie Street, Brooklyn Report",
+        "snippet": "The building recently underwent semi-annual homeless shelter inspections in February 2025, which resulted in Oath Violations being served for construc...",
+        "link": "https://augrented.com/nyc/3023710048-45-ainslie-street-brooklyn"
+      }
+    ]
+  },
+  "3026617501": {
+    "current_use": "supportive_housing",
+    "current_use_label": "Supportive housing",
+    "transient_ok": false,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'safe haven' in northbrooklynnews.com",
+    "evidence": [
+      {
+        "title": "Apollo Street's Safe Haven - The Greenline",
+        "snippet": "The Continental, a new Safe Haven Shelter at 83-97 Apollo Street in Greenpoint, plans to open sometime in May. ",
+        "link": "https://northbrooklynnews.com/2024/05/03/apollo-streets-safe-haven/"
+      }
+    ]
+  },
+  "3030370008": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.bridgeandtunnelclub.com, title only",
+    "evidence": [
+      {
+        "title": "Bushwick Hotel, 171 Bushwick Avenue, Williamsburg, Brooklyn",
+        "snippet": "",
+        "link": "https://www.bridgeandtunnelclub.com/bigmap/brooklyn/williamsburg/bushwickhotel/index.htm"
+      }
+    ]
+  },
+  "4003640004": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "permits filed",
+    "quoted": false,
+    "basis": "web:'hotel' in newyorkyimby.com, not yet ('permits filed'), title only",
+    "evidence": [
+      {
+        "title": "Permits Filed: 13-Story Hotel at 37-35 21st Street, Long Island City - New York YIMBY",
+        "snippet": "",
+        "link": "https://newyorkyimby.com/2015/08/permits-filed-13-story-hotel-at-37-35-21st-street-long-island-city.html"
+      }
+    ]
+  },
+  "4003770013": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.booking.com",
+    "evidence": [
+      {
+        "title": "Hotel The Collective Paper Factory, Queens, NY - Booking.com",
+        "snippet": "37-06 36th Street, Long Island City, Queens, NY 11101, United States of America \u2013 Great location - show map. After booking, all of the property\u2019s deta...",
+        "link": "https://www.booking.com/hotel/us/paper-factory.html"
+      }
+    ]
+  },
+  "4004057501": null,
+  "4004060040": {
+    "current_use": "hostel",
+    "current_use_label": "Hostel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hostel' in www.hotelscombined.com",
+    "evidence": [
+      {
+        "title": "Q4 Hotel and Hostel, Queens",
+        "snippet": "Lic Plaza Hotel\n\nLic Plaza Hotel\n\nLic Plaza Hotel\n\n40-36 27th Street, Queens, NY, United States\n\n6. ",
+        "link": "https://www.hotelscombined.com/Hotel/Q4_Hotel_and_Hostel.htm"
+      }
+    ]
+  },
+  "4004720679": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": false,
+    "basis": "web:'hotel' in www.yelp.com, title only",
+    "evidence": [
+      {
+        "title": "GIORGIO HOTEL - Updated September 2026 - 31 Photos & 19 Reviews - 38-60 13th St, Long Island City, New York - Hotels - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/giorgio-hotel-long-island-city"
+      }
+    ]
+  },
+  "4010030011": {
+    "current_use": "shelter",
+    "current_use_label": "Shelter",
+    "transient_ok": false,
+    "use_confidence": "medium",
+    "disposition": "remove",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'homeless shelter' in property.compstak.com",
+    "evidence": [
+      {
+        "title": "71-11 Astoria Boulevard North Queens, NY commercial lease comps and tenants.",
+        "snippet": "# Women In Need Homeless Shelter\n71-11 Astoria Boulevard North, Queens, NY\n\n## 71-11 Astoria Boulevard North is located in Queens, NY. ",
+        "link": "https://property.compstak.com/71-11-Astoria-Boulevard-North-Queens/p/2184044"
+      }
+    ]
+  },
+  "4003970001": null,
+  "4000850005": {
+    "current_use": "student_housing",
+    "current_use_label": "Student housing",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'student housing' in en.uhomes.com",
+    "evidence": [
+      {
+        "title": "Court Square - New York Apartment Rentals",
+        "snippet": "Court Square, located at 45-06 Pearson Street in Long Island City, New York, is a modern residential choice. \u2026 Student Housing Manhattan Student Housi...",
+        "link": "https://en.uhomes.com/us/new-york/detail-apartments-1569510"
+      }
+    ]
+  },
+  "1007670067": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in besenpartners.com",
+    "evidence": [
+      {
+        "title": "244 West 18th Street",
+        "snippet": "244, West 18th Street, Chelsea District, Manhattan, New York County, New York, 10011, United States. \u2026 Hotel Property Listings. ",
+        "link": "https://besenpartners.com/property/244-west-18th-street/"
+      }
+    ]
+  },
+  "1008947505": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "low",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": null,
+    "quoted": true,
+    "basis": "web:'hotel' in www.kayak.com",
+    "evidence": [
+      {
+        "title": "The Court - A St Giles Hotel. New York Hotel Deals & Reviews - KAYAK",
+        "snippet": "The Court - A St Giles Hotel is located at 130 East 39th Street in Midtown, 0.7 miles from the center of New York. ",
+        "link": "https://www.kayak.com/New-York-Hotels-The-Court---A-St-Giles-Hotel.343180.ksp"
+      }
+    ]
+  },
+  "1010000064": {
+    "current_use": "hotel",
+    "current_use_label": "Hotel",
+    "transient_ok": true,
+    "use_confidence": "medium",
+    "disposition": "flag",
+    "stale_marker": null,
+    "changing_marker": "plans",
+    "quoted": false,
+    "basis": "web:'hotel' in therealdeal.com, not yet ('plans'), title only",
+    "evidence": [
+      {
+        "title": "Atlas plans 401-room hotel at 711 Seventh Avenue",
+        "snippet": "",
+        "link": "https://therealdeal.com/new-york/2021/07/30/atlas-plans-401-room-hotel-at-711-seventh-avenue/"
+      }
+    ]
+  },
+  "1014567503": null,
+  "3024567502": null
+}

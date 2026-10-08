@@ -1,0 +1,554 @@
+{
+  "4003770013": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Shelter (web:'homeless shelter' in greathotelsinusa.com)",
+    "evidence": [
+      {
+        "title": "Housing & Homeless Shelters in Queens",
+        "snippet": "Paper Factory Hotel\n\n37-06 36th St, Long Island City",
+        "link": "https://greathotelsinusa.com/place/queens/081_NY_2/housing_and_homeless_shelter/?lang=en"
+      }
+    ]
+  },
+  "1000657502": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Pace University' at the address, in culturenow.org",
+    "evidence": [
+      {
+        "title": "Pace University Residence hall (182 broadway) - CultureNow - Museum Without Walls",
+        "snippet": "",
+        "link": "https://culturenow.org/site/pace-university-residence-hall-182-broadway"
+      }
+    ]
+  },
+  "1001620038": {
+    "verdict": "none",
+    "disposition": "no answer",
+    "basis": "the web was asked and named nothing at this address",
+    "evidence": []
+  },
+  "1003440066": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartments for rent' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "91 Pitt Street: Apartments for Rent",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/lower-east-side/91-pitt-street/110949"
+      }
+    ]
+  },
+  "1004107501": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Student housing (web:'residence hall' in streeteasy.com)",
+    "evidence": [
+      {
+        "title": "101 Ludlow Street in Lower East Side : Sales, Rentals, Floorplans",
+        "snippet": "101 Ludlow Street: SVA Residence Hall. 101 Ludlow Street aka 98 Delancey street. Steve Leon of Citi-Habitats is the exclusive broker for short term un...",
+        "link": "https://streeteasy.com/building/101-ludlow-street-new_york"
+      }
+    ]
+  },
+  "1005690001": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Conservative Synagogue of Fifth Avenue' at the address, in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "43 Fifth Avenue in NYC: Building Review and Ratings",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/greenwich-village/43-fifth-avenue/review/2710"
+      }
+    ]
+  },
+  "1006090014": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartments for rent' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "148 West 14th Street: Apartments for Rent",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/greenwich-village/148-west-14th-street/125215"
+      }
+    ]
+  },
+  "1006290027": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'rental building' in streeteasy.com",
+    "evidence": [
+      {
+        "title": "316 West 14th Street #12B in West Village, Manhattan",
+        "snippet": "## About the building\n###### 316 West 14th Street\n316 West 14th Street, New York, NY 10014\n\nRental building in West Village\n\n20 units\n\n4 stories\n\n1910...",
+        "link": "https://streeteasy.com/building/316-west-14-street-new_york/12b"
+      }
+    ]
+  },
+  "1007900059": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartments for rent' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "140 West 15th Street: Apartments for Rent",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/chelsea/140-west-15th-street/123112"
+      }
+    ]
+  },
+  "1008570018": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.homes.com, past tense ('originally'))",
+    "evidence": [
+      {
+        "title": "About 66 Madison Ave, New York NY",
+        "snippet": "Originally built as a hotel, the building has been transformed into a full-service cooperative, providing a blend of historic charm and modern conveni...",
+        "link": "https://www.homes.com/building/66-madison-ave-new-york-ny/b-ct03ngwgp5ffr/"
+      }
+    ]
+  },
+  "1008710026": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Upstairs at Union Square' at the address, in www.upstairsatunionsquare.com",
+    "evidence": [
+      {
+        "title": "Upstairs at Union Square NYC",
+        "snippet": "125 East 15th Street New York, NY 10003\n\n## Upstairs at Union Square NYC\n\n#### Location:\n\n125 East 15th Street New York, NY 10003\n\n#### Contact:\n\nEmai...",
+        "link": "https://www.upstairsatunionsquare.com/cart"
+      }
+    ]
+  },
+  "1010057501": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names '135 W 52' at the address, in studcosystems.com",
+    "evidence": [
+      {
+        "title": "135 West 52nd Street, NY - Studco Systems US",
+        "snippet": "",
+        "link": "https://studcosystems.com/projects/135-west-52nd-street/"
+      }
+    ]
+  },
+  "1010080001": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartment for rent' in www.calibernyc.com",
+    "evidence": [
+      {
+        "title": "147 West 55th Street Apartment Midtown West",
+        "snippet": "147 West 55th Street Apartment for rent & sales, luxury apartments & no fee rentals in Midtown West, New York City | Caliber Associates\n\n147 West 55th...",
+        "link": "https://www.calibernyc.com/buildings/147-west-55th-street/apartment/5892"
+      }
+    ]
+  },
+  "1010677501": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartments for rent' in www.apartmentlist.com",
+    "evidence": [
+      {
+        "title": "477 West 57th - New York City, NY apartments for rent",
+        "snippet": "",
+        "link": "https://www.apartmentlist.com/ny/new-york/477-west-57th--1"
+      }
+    ]
+  },
+  "1011200023": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.cityrealty.com, title only)",
+    "evidence": [
+      {
+        "title": "Hotel des Artistes at 1 West 67th Street: Apartments for Sale",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/central-park-west/hotel-des-artistes-1-west-67th-street/4144"
+      }
+    ]
+  },
+  "1011420064": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.cityrealty.com)",
+    "evidence": [
+      {
+        "title": "160 West 71st Street in NYC: Building Review and Ratings",
+        "snippet": "For many years, it was known as the Almanac Hotel and was frequently used by Babe Ruth. \n\nIt is now known as the South Pierre.\n\n",
+        "link": "https://www.cityrealty.com/nyc/broadway-corridor/south-pierre-160-west-71st-street/review/44931"
+      }
+    ]
+  },
+  "1011667501": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Fitzgerald Condominium' at the address, in www.elliman.com",
+    "evidence": [
+      {
+        "title": "The Fitzgerald, 201 West 74th St, 12F - Upper West Side, New York",
+        "snippet": "",
+        "link": "https://www.elliman.com/new-york-city/the-fitzgerald-201-west-74-street-12f-manhattan-ooagvly"
+      }
+    ]
+  },
+  "1011820049": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Single room occupancy (web:' sro ' in www.propertyshark.com)",
+    "evidence": [
+      {
+        "title": "342 W 71st St, New York, NY 10023 - Owner, Sales, Taxes",
+        "snippet": "SRO - 1 or 2 People Housed in Individual Rooms in Multiple Dwelling Affordable Housing (HR) Building classes in NYC are all explained here: NYC buildi...",
+        "link": "https://www.propertyshark.com/mason/Property/18343/342-W-71-St-New-York-NY-10023/"
+      }
+    ]
+  },
+  "1012410023": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.waltergrutchfield.net, title only)",
+    "evidence": [
+      {
+        "title": "Hotel Narragansett - 2508 Broadway",
+        "snippet": "",
+        "link": "https://www.waltergrutchfield.net/narragansett.htm"
+      }
+    ]
+  },
+  "1012440019": {
+    "verdict": "none",
+    "disposition": "no answer",
+    "basis": "the web was asked and named nothing at this address",
+    "evidence": []
+  },
+  "1012480011": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hostel (web:'hostel' in www.groupon.com, title only)",
+    "evidence": [
+      {
+        "title": "Dexter House Hostel, 345 W 86th St, New York, NY - Groupon",
+        "snippet": "",
+        "link": "https://www.groupon.com/biz/new-york-city/hotel-dexter-house"
+      }
+    ]
+  },
+  "1012480014": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names \"Queen of the world's residence\" at the address, in streeteasy.com",
+    "evidence": [
+      {
+        "title": "333 West 86th Street #209 in Upper West Side, Manhattan",
+        "snippet": "Atria West 86 is a full-service , all-inclusive residence, with a 24 doorman and concierge. The property includes a library, conference rooms, a rooft...",
+        "link": "https://streeteasy.com/building/333-west-86-street-new_york/209"
+      }
+    ]
+  },
+  "1012520027": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Single room occupancy (web:'single room occupancy' in caselaw.findlaw.com, not yet ('proposed'))",
+    "evidence": [
+      {
+        "title": "312 v. New York Tenants & Neighbors, and Community Voices Heard, Defendant-Intervenors. (2021)",
+        "snippet": "Proposed-Intervenor 312 West 93rd Street Associates (\u201c312\u201d) is the owner of a single room occupancy property (\u201cSRO\u201d).^4 Doc.  SROs are regulated by th...",
+        "link": "https://caselaw.findlaw.com/court/us-dis-crt-sd-new-yor/2115913.html"
+      }
+    ]
+  },
+  "1012520060": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.cityrealty.com, title only)",
+    "evidence": [
+      {
+        "title": "Tenants reportedly reject buyouts at Hotel Alexander at 306 West 94th Street",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/market-insight/carters-view/carters-perch/tenants-reportedly-reject-buyouts-hotel-alexander-306-west-94th-street/2202"
+      }
+    ]
+  },
+  "1012740006": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'apartments for rent' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "41 West 58th Street: Apartments for Rent",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/midtown-west/41-west-58th-street/2294"
+      }
+    ]
+  },
+  "1013297501": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Capri Development' at the address, in www.elegran.com",
+    "evidence": [
+      {
+        "title": "The Capri",
+        "snippet": "The Capri\n\n235 East 55th Street, NEW YORK, NY 10022\n\nUNITS 40\n\nFLOORS 46\n\nBUILT 2001\n\nDeveloper Bhatia Development\n\nLocated in the tranquil Turtle Bay...",
+        "link": "https://www.elegran.com/nyc/buildings/the-capri"
+      }
+    ]
+  },
+  "1013610001": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'The Beekman Tower, Trademark Collection by Wyndham' at the address, in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "Beekman Tower at 3 Mitchell Place: Apartments for Rent",
+        "snippet": "",
+        "link": "https://www.cityrealty.com/nyc/beekman-sutton-place/beekman-tower-3-mitchell-place/73189"
+      }
+    ]
+  },
+  "1013790066": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Permanent Mission of Pakistan to the United Nations' at the address, in worldbody.org",
+    "evidence": [
+      {
+        "title": "Permanent Mission of Pakistan to the United Nations",
+        "snippet": "Permanent Mission of Pakistan to the United Nations, Pakistan House, 8 East 65th Street, New York, NY 10065.\n\n",
+        "link": "https://worldbody.org/missions/pakistan/"
+      }
+    ]
+  },
+  "1015080046": {
+    "verdict": "none",
+    "disposition": "no answer",
+    "basis": "the web was asked and named nothing at this address",
+    "evidence": []
+  },
+  "1015210007": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'rental building' in www.renthop.com",
+    "evidence": [
+      {
+        "title": "115 East 92nd Street, New York, NY 10128: Apartments, Rentals, Floorplans, and Availability",
+        "snippet": "This rental building is located in Carnegie Hill, New York, NY\n\n# 115 East 92nd Street, New York, NY 10128\nWelcome to 115 East 92nd Street, a building...",
+        "link": "https://www.renthop.com/building/115-east-92nd-street-new-york-ny-10128"
+      }
+    ]
+  },
+  "1016870009": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'The Bowery Mission - Residential Program for Men' at the address, in commercialobserver.com",
+    "evidence": [
+      {
+        "title": "The Bowery Mission Acquires 315 East 115th Street for $5.3M",
+        "snippet": "",
+        "link": "https://commercialobserver.com/2013/01/the-bowery-mission-acquires-315-east-115th-street-for-5-3m/"
+      }
+    ]
+  },
+  "1017220033": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'condominium' in www.cityrealty.com",
+    "evidence": [
+      {
+        "title": "2002 Fifth Avenue in NYC: Building Review and Ratings",
+        "snippet": "The building has 24 apartments and is a cooperative with condominium rules.\n\n",
+        "link": "https://www.cityrealty.com/nyc/harlem/2002-fifth-avenue/review/36381"
+      }
+    ]
+  },
+  "1017230031": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names '6 West 126th street Apartments' at the address, in newyorkyimby.com",
+    "evidence": [
+      {
+        "title": "Mixed-Use Building Gets Glassy At 5 West 125th Street, Harlem - New York YIMBY",
+        "snippet": "",
+        "link": "https://newyorkyimby.com/2015/08/mixed-use-building-gets-glassy-at-5-west-125th-street-harlem.html"
+      }
+    ]
+  },
+  "1018717501": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Ariel West' at the address, in streeteasy.com",
+    "evidence": [
+      {
+        "title": "StreetEasy: Ariel West at 245 West 99th Street in Upper West Side, #3AC - Sales, Rentals, Floorplans",
+        "snippet": "",
+        "link": "https://streeteasy.com/property/1254288-ariel-west-3ac"
+      }
+    ]
+  },
+  "1018720054": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.ca.kayak.com)",
+    "evidence": [
+      {
+        "title": "Broadway Hotel from . New York Hotels - KAYAK",
+        "snippet": "230 West 101st Street, New York, NY 10025, United States.\n\n# Broadway Hotel\n2 stars\n\n230 West 101st Street, New York, NY 10025, United States\n\nNew Yor...",
+        "link": "https://www.ca.kayak.com/New-York-Hotels-Broadway-Hotel-And-Hostel.135419.ksp"
+      }
+    ]
+  },
+  "1018790015": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Supportive housing (web:'supportive housing' in newyorkyimby.com, not yet ('redevelop'), title only)",
+    "evidence": [
+      {
+        "title": "Developers Secure $38M to Redevelop Illegal Hotel into Permanent Supportive Housing at 235 West 107th Street on the Upper West Side - New York YIMBY",
+        "snippet": "",
+        "link": "https://newyorkyimby.com/2023/04/developers-secure-38m-to-redevelop-illegal-hotel-into-permanent-supportive-housing-at-235-west-109th-street-on-the-upper-west-side.html"
+      }
+    ]
+  },
+  "1018900040": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Zoe Ministries Inc.' at the address, in www.yelp.com",
+    "evidence": [
+      {
+        "title": "ZOE MINISTRIES - Updated August 2026 - 310 Riverside Drive Lbby, New York, New York - Religious Organizations - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/zoe-ministries-new-york"
+      }
+    ]
+  },
+  "1018940023": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.theblueandwhite.org)",
+    "evidence": [
+      {
+        "title": "Gimme Shelter",
+        "snippet": "Standing at 610 West 111th Street with a fading awning where the words Hotel Ellington are barely visible is not a hotel but a women\u2019s shelter. ",
+        "link": "https://www.theblueandwhite.org/post/gimme-shelter"
+      }
+    ]
+  },
+  "1019150001": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Shelter (web:'homeless shelter' in www.blackenterprise.com)",
+    "evidence": [
+      {
+        "title": "Luxury Harlem Building Shifts From Condos To Homeless Shelter, Sparking Community Outcry",
+        "snippet": "The 35-unit complex at 2201 Adam Clayton Powell Jr. Blvd near 130th Street was initially touted as a high-end living space featuring market-rate apart...",
+        "link": "https://www.blackenterprise.com/luxury-harlem-building-condos-to-homeless-shelter-community-outcry/"
+      }
+    ]
+  },
+  "1019940038": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Columbia University International Students and Scholars Office' at the address, in www.cheapnycparking.com",
+    "evidence": [
+      {
+        "title": "\ud83c\udd7f\ufe0f INTERNATIONAL HOUSE at 524-527 RIVERSIDE DRIVE - Cheap Parking NYC",
+        "snippet": "",
+        "link": "https://www.cheapnycparking.com/international-house-L1279111"
+      }
+    ]
+  },
+  "1020580001": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Single room occupancy (web:'single room occupancy' in new.express.adobe.com)",
+    "evidence": [
+      {
+        "title": "Harry Simmons Residences and Medical Center Adaptive Reuse - Historic Preservation 1649 Amsterdam Avenue, New York, NY",
+        "snippet": "The building is currently known as the Harry Simmons Residence and is mixed-use with 140 Single Room Occupancy (SRO) units for single adults and two c...",
+        "link": "https://new.express.adobe.com/webpage/2tmodJOgiSEZQ"
+      }
+    ]
+  },
+  "3020037502": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Sa - Adult Rehabilitation Center - Food Distribution Center' at the address, in www.tapatalk.com",
+    "evidence": [
+      {
+        "title": "Sj\u00f8mannshjemmet i Brooklyn - Sandefjord_shipsf",
+        "snippet": "62 Hanson Place er n\u00e5 nesten ferdig restaurert (de pusser fortsatt opp baksiden) og drives av Frelsesarmeen: Brooklyn Adult Rehabilitation Center 62\n\n...",
+        "link": "https://www.tapatalk.com/groups/sandefjordskipfr/sj-mannshjemmet-i-brooklyn-t3475.html"
+      }
+    ]
+  },
+  "3021397503": {
+    "verdict": "none",
+    "disposition": "no answer",
+    "basis": "the web was asked and named nothing at this address",
+    "evidence": []
+  },
+  "3030610018": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'Holy Trinity Apartments' at the address, in www.yelp.com",
+    "evidence": [
+      {
+        "title": "HOLY TRINITY APTS - Updated May 2026 - 157 Graham Ave, Brooklyn, New York - Apartments - Phone Number - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/holy-trinity-apts-brooklyn"
+      }
+    ]
+  },
+  "4003850005": {
+    "verdict": "confirmed",
+    "disposition": "flag",
+    "basis": "web reads the address as Hotel (web:'hotel' in www.redfin.com)",
+    "evidence": [
+      {
+        "title": "38-23 28th St, Queens, NY 11101",
+        "snippet": "Ft.\n\nPrice Insights\n\nRedfin Estimate\n\n$3,248,538\n\nPrice/Sq.Ft.$233\n\nStreet View\n\n## Property Details for 38-23 28th St\n- Building Type: Hotel\n\nPropert...",
+        "link": "https://www.redfin.com/NY/Queens/38-23-28th-St-11101/home/20957244"
+      }
+    ]
+  },
+  "4004060040": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'LIC Plaza Hotel Corp' at the address, in www.yelp.com",
+    "evidence": [
+      {
+        "title": "LIC PLAZA HOTEL - Updated July 2026 - 13 Photos & 13 Reviews - 40-36 40-40 27th St, Long Island City, New York - +17183616555 - Hotels - Yelp",
+        "snippet": "",
+        "link": "https://www.yelp.com/biz/lic-plaza-hotel-long-island-city"
+      }
+    ]
+  },
+  "1007670067": {
+    "verdict": "contradicted",
+    "disposition": "flag",
+    "basis": "web:'rental building' in streeteasy.com",
+    "evidence": [
+      {
+        "title": "StreetEasy: 246 West 18th Street in Chelsea, #13 - Sales, Rentals, Floorplans",
+        "snippet": "## About the Building\n246 West 18th Street \u00a0New York, NY 10011\n\nRental Building in Chelsea\n\n- 12 Units\n- 5 Stories\n- 1915 Built\n\n\n\nRentals listings: 4...",
+        "link": "https://streeteasy.com/property/1380870-246-west-18-street-13"
+      }
+    ]
+  },
+  "1008947505": {
+    "verdict": "confirmed",
+    "disposition": "confirm",
+    "basis": "web names 'The Court - A St Giles Hotel' at the address, in www.hotels-rates.com",
+    "evidence": [
+      {
+        "title": "The Court - A St Giles Hotel - 130 East 39TH Street",
+        "snippet": "",
+        "link": "https://www.hotels-rates.com/hotel/us-ny-new-york-132036.html"
+      }
+    ]
+  }
+}
