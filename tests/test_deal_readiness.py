@@ -428,3 +428,85 @@ def test_a_hand_check_never_publishes_the_app_s_field_name():
     to catch a producer inventing the provenance of a hand check."""
     out = readiness({"occupancy_state": "clear"}, verified=VERIFIED)
     assert "readiness_override" not in out
+
+
+# --- a contradiction does not route around the not-ready checks -------------
+
+# 477 West 57 Street, the Dorothy Ross Friedman Residence: the Actors Fund
+# runs it as nonprofit housing, 222 HPD Class B rooms of which 179 are
+# rent-stabilised, and the rent-stabilisation blocker is what holds it back.
+# Note restricted_class is False — the class table reads HR/RS/H8/HH and an
+# HPD dobbuildingclass containing SINGLE ROOM OCCUPANCY, and this building is
+# RM / "HEREAFTER ERECTED CLASS B", so it matches neither. The blocker is
+# doing the work, which is the reason this test names it.
+FRIEDMAN = {
+    "segment": "transient",
+    "occupancy_state": "clear",
+    "bldgclass": "RM",
+    "hpd_class_b": 222,
+    "hpd_dob_class": "HEREAFTER ERECTED CLASS B",
+    "restricted_class": False,
+    "restricted_class_reason": "",
+    "rent_stabilized_units": 179,
+    "rent_stab_class_b_exposure": 179,
+    "blockers": ["179 rent-stabilized rooms (as of 2023 tax bill), no Class A "
+                 "units to absorb them — conversion to transient use restricted"],
+}
+
+# A school pinned four metres from the footprint — the kind of lone Places
+# reading the corroboration pass exists to put to the web.
+NEIGHBOURING_SCHOOL = {
+    "nearby_use": "school",
+    "nearby_use_name": "Phillips Artist Management Foundation",
+    "nearby_use_basis": ("school 'Phillips Artist Management Foundation' 4m "
+                         "from the footprint"),
+}
+
+
+def test_a_contradicted_claim_still_meets_the_rent_stabilisation_blocker():
+    """The web contradicting a Places claim sends a building back for review.
+    Back for review is not the same as back on the list: readiness orders
+    not_ready ahead of available, so the rent-stabilisation and
+    restricted-class checks still run on the way past.
+
+    The contradiction here was a single-apartment listing — the evidence said
+    far less than the verdict implied — and the building is fully occupied
+    subsidised housing. Had a contradiction been allowed to reach available
+    directly, this is the building it would have put in front of somebody.
+    """
+    out = readiness(FRIEDMAN, NEIGHBOURING_SCHOOL,
+                    {"verdict": "contradicted", "basis": "web:'apartments for rent'"})
+    assert out["readiness_state"] == "not_ready"
+    assert out["not_ready_kind"] == "restricted_conversion"
+    assert "rent-stabilized" in out["readiness_basis"]
+
+
+def test_no_web_verdict_reaches_available_past_a_blocker():
+    """Every verdict the corroboration pass can return, against a building the
+    blocker holds. None of them may turn it into a prospect.
+
+    The three non-confirming verdicts land on not_ready specifically. The
+    confirming one is only asserted not to reach available: whether it reaches
+    occupied depends on the Places occupant record, which belongs to
+    test_the_web_confirming_it_closes_the_claim_as_occupied and not here."""
+    for web in (None,
+                {"verdict": "none", "basis": "nothing found"},
+                {"verdict": "contradicted", "basis": "web:'apartments for rent'"}):
+        out = readiness(FRIEDMAN, NEIGHBOURING_SCHOOL, web)
+        assert out["readiness_state"] == "not_ready", web
+    for web in (None,
+                {"verdict": "none", "basis": "nothing found"},
+                {"verdict": "contradicted", "basis": "web:'apartments for rent'"},
+                {"verdict": "confirmed", "basis": "web names it"}):
+        assert readiness(FRIEDMAN, NEIGHBOURING_SCHOOL, web)["readiness_state"] \
+            != "available", web
+
+
+def test_the_blocker_is_what_catches_it_not_restricted_class():
+    """If somebody later makes restricted_class cover rent-stabilised Class B
+    stock, this test should start failing and be deleted. Until then it
+    records that the two are separate paths and only one of them fires here."""
+    assert FRIEDMAN["restricted_class"] is False
+    out = readiness({**FRIEDMAN, "blockers": []}, NEIGHBOURING_SCHOOL,
+                    {"verdict": "contradicted", "basis": "web:'apartments for rent'"})
+    assert out["readiness_state"] != "not_ready"
