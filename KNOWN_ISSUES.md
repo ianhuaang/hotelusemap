@@ -70,3 +70,60 @@ the deal team as a single-owner prospect and turns out to have a board.
 because two sold units is a sponsor closing on a couple in a building it still
 controls. Dropping it to catch quiet condominiums trades this failure for a
 worse one, in the direction that hides buildings we want to see.
+
+---
+
+## SRO and dormitory Class B stock is counted as Safe Hotels guest rooms
+
+**Where** — `safe_hotels_guest_rooms`, built in `src/build_geojson.py`; a fix
+exists unmerged on the `regulatory-review-fixes` branch ("Stop counting SRO and
+dormitory stock as Safe Hotels guest rooms").
+
+**What it is.** When nothing better is available the room count falls back to
+HPD's Class B registration, and the building carries
+`safe_hotels_room_basis: "hpd_class_b"` to say so. HPD Class B covers rooming
+units, SRO units and dormitories as well as transient hotel rooms, and the
+fallback does not separate them. Every Class B room becomes a guest room.
+
+**Why that is wrong.** A Class B room occupied by a permanent, rent-stabilised
+tenant is not a room anyone can sell a night in. It is somebody's home, and the
+tenancy is the thing that makes it unavailable.
+
+477 West 57 Street is the clearest case on the list. It is the Dorothy Ross
+Friedman Residence, run by the Actors Fund as nonprofit housing:
+
+    hpd_class_b              222
+    rent_stabilized_units    179   (DHCR, 2023)
+    safe_hotels_room_basis   hpd_class_b
+    safe_hotels_guest_rooms  222
+
+So the building is published as 222 guest rooms when 179 of those rooms have
+stabilised tenants in them. The number is not a stale layout — HPD's
+registration is current, and the four DOB alterations filed in March 2026 all
+state no change to use, egress or occupancy — it is a current count of the
+wrong thing.
+
+**How you would notice.** A building ranks high on rooms and turns out on
+inspection to be occupied housing. It sorts to the top of exactly the lists
+people read first, because the miscount is largest where the SRO stock is
+largest.
+
+**What saves it today, and why that is not enough.** 477 West 57 Street does
+not reach the prospect list, because the rent-stabilisation blocker puts it in
+`not_ready` — see the tests in `tests/test_deal_readiness.py`. That is the
+readiness gate doing its job, and it is a different question from the room
+count. The published figure is still wrong, it is still what the app sorts and
+filters on, and any building whose Class B stock is institutional without being
+rent-stabilised has nothing holding it at all.
+
+**What fixing it would take.** The `regulatory-review-fixes` branch is the
+work; it needs rebasing and a look at what it does to the published counts
+before it merges. The shape of the fix is to stop treating `hpd_class_b` as a
+guest-room count on its own and to read it against what else the record says —
+the DOB occupancy class, the rent-stabilised count, and the building class —
+rather than falling back to it whenever a better source is missing.
+
+**Related.** `restricted_class` does not fire here either: it reads building
+classes HR/RS/H8/HH and an HPD `dobbuildingclass` containing
+SINGLE ROOM OCCUPANCY, and this building is `RM` / "HEREAFTER ERECTED CLASS B".
+Two rules aimed at the same stock, and neither matches this shape of it.
