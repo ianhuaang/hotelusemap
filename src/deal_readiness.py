@@ -351,16 +351,31 @@ def _not_ready(p: dict, nearby: dict) -> tuple[bool, str, str]:
     if (nearby or {}).get("nearby_use") == "lodging_closed":
         return True, "closed_hotel", f"Places has {nearby['nearby_use_basis']}, closed"
 
-    if p.get("coo_temp_only"):
-        return True, "temporary_certificate", (
-            "only a temporary certificate of occupancy on record")
+    # A temporary certificate is not a reason (decided 2026-10-08). It is
+    # legal occupancy, buildings run on renewed ones for years, and a lapsed
+    # one is a diligence and cost item rather than a reason a deal cannot
+    # happen. It stays on the panel as coo_temp_only; it does not hold the
+    # building back.
+
+    # A condominium listing that belongs to the building excludes it
+    # (decided 2026-10-08). It used to only withhold an answer, leaving the
+    # building undetermined -- and undetermined is now on the default view,
+    # so "Places calls it a condominium" would have put The Sebastian in
+    # front of the deal team. Said here, by name, rather than folded into
+    # the generic restriction.
+    if _is_condo_reading(nearby):
+        return True, "condominium_listing", (
+            f"Places lists it as a condominium ({nearby.get('nearby_use_basis') or nearby.get('nearby_use_name', '')})")
 
     if p.get("restricted_class"):
         reason = (p.get("restricted_class_reason") or "").strip()
         return True, "restricted_conversion", (
             reason or "rent-stabilisation restricts a change of use")
 
-    blockers = p.get("blockers") or []
+    # Records enriched before 2026-10-08 still carry the temporary-certificate
+    # sentence as a blocker; it is not one any more.
+    blockers = [b for b in (p.get("blockers") or [])
+                if not str(b).startswith("Temporary C of O only")]
     if blockers:
         return True, "restricted_conversion", str(blockers[0])
 

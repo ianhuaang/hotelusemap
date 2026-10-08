@@ -109,7 +109,8 @@ def pull_tax_benefits() -> Path:
                 start_year = None
                 expires = None
 
-            is_active = expires is None or expires >= current_year
+            # No term on the row is unknown, not active forever. See enrich.
+            is_active = expires is not None and expires >= current_year
             benefit_type = "421-a" if exmp_code in CODES_421A else "J-51"
 
             if bbl not in by_bbl or (is_active and not by_bbl[bbl]["is_active"]) or \

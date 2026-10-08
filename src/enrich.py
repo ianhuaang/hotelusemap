@@ -1150,11 +1150,8 @@ def enrich_pipeline(
         if record["coo_has_temporary"] and record.get("coo_latest_type") == "Temporary":
             has_final = any(c.get("co_type") != "Temporary" for c in coos)
             if not has_final:
+                # A flag, not a blocker (decided 2026-10-08): see _not_ready.
                 record["coo_temp_only"] = True
-                if "coo_temp_only" not in [b.split(" —")[0] for b in record.get("blockers", [])]:
-                    record.setdefault("blockers", []).append(
-                        "Temporary C of O only — no final C of O on file, may be operating on expired authorization"
-                    )
 
         # Distress signals
         hpd_v = hpd_viol_by_bbl.get(bbl)
@@ -1600,8 +1597,14 @@ def enrich_pipeline(
             record["has_tax_benefit"] = True
             record["tax_benefit_type"] = tb.get("benefit_type", "")
             record["tax_benefit_expires"] = tb.get("benefit_expires")
-            record["tax_benefit_active"] = tb.get("is_active", False)
-            if tb.get("is_active"):
+            # Active needs a term to be active within. DOF carries 3,375
+            # exemption rows with no start year and no length, and the pull
+            # read "no expiry" as "active forever" -- which held seven
+            # pre-war co-ops on Fifth Avenue and Sutton Place out on a
+            # new-construction programme. Unknown is not active.
+            active = bool(tb.get("is_active") and tb.get("benefit_expires"))
+            record["tax_benefit_active"] = active
+            if active:
                 record.setdefault("blockers", []).append(
                     f"Active {tb['benefit_type']} tax benefit — rent stabilization obligations restrict use changes"
                 )

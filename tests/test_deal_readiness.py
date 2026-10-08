@@ -571,23 +571,26 @@ def test_a_reading_with_no_attachment_field_keeps_the_old_behaviour():
     assert readiness({**GOLD, "occupancy_state": "clear"}, legacy)["places_claim"] == "unscreened"
 
 
-def test_a_condominium_listing_can_never_make_a_building_available():
+def test_a_condominium_listing_excludes_the_building():
     """Rule two, and the reason 340 Amsterdam Avenue was in the clean view.
-    A condominium listing is evidence against availability and never for it:
-    it may withhold an answer, so the building lands undetermined."""
+    Since 2026-10-08 a condominium listing that belongs to the building holds
+    it back by name, rather than leaving it undetermined -- undetermined is
+    on the deal team's default view."""
     out = readiness({**GOLD, "occupancy_state": "clear"}, HARRISON)
-    assert out["readiness_state"] == "undetermined"
+    assert out["readiness_state"] == "not_ready"
+    assert out["not_ready_kind"] == "condominium_listing"
+    assert "Harrison Condominiums" in out["readiness_basis"]
     assert out["operator_answered"] is False
 
 
-def test_a_condominium_listing_defers_to_the_tax_lot_rule():
-    """It does not get to assert condo-ness either. Who owns the units is
-    decided on the DOF billing lot and the unit-lot sales — evidence about
-    ownership rather than a pin on a map — so the listing's only effect here
-    is to decline to answer."""
-    out = readiness({**GOLD, "occupancy_state": "clear"}, HARRISON)
-    assert out["readiness_state"] != "available"
-    assert out["not_ready_flag"] is False  # not its call to make either
+def test_a_temporary_certificate_does_not_hold_a_building_back():
+    """166 West 75 Street, 214 rooms, on a temporary C of O since 2018. A
+    note for diligence, not a reason -- including on records enriched before
+    the blocker sentence was retired."""
+    p = {**GOLD, "occupancy_state": "clear", "coo_temp_only": True,
+         "blockers": ["Temporary C of O only — no final C of O on file, "
+                      "may be operating on expired authorization"]}
+    assert readiness(p)["readiness_state"] == "available"
 
 
 def test_a_non_condominium_residential_listing_still_answers():
