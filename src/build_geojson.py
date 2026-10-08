@@ -6,7 +6,7 @@ Pure and re-runnable. Reads from data/raw/ and data/processed/, writes to data/p
 import json
 import math
 import os
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 from datetime import date, timedelta
 from pathlib import Path
@@ -204,6 +204,67 @@ def load_web_corroboration() -> dict:
     rows = json.loads(files[0].read_text())
     print(f"  Places claims put to the web: {files[0].name}, {len(rows)} rows")
     return {str(r["bbl"]): r for r in rows if r.get("bbl")}
+
+
+def _sales_address_key(borough, block, address: str) -> tuple:
+    """Where a sale happened, in a form both datasets agree on.
+
+    A block is not enough. Block 746 in Manhattan carries 313 West 22nd Street
+    and four other condominiums, and counting unit sales by block credits each
+    of them with all 172, so a filter keyed on it would hide every building on
+    the block. The house number and street are what separate them.
+
+    The two datasets write those differently — PLUTO has "200 EAST 89 STREET",
+    rolling sales has "200 EAST 89TH STREET, 12B" — so the ordinal, the unit
+    suffix and the street-type word all come off before matching.
+    """
+    a = (address or "").upper().split(",")[0]
+    a = re.sub(r"[^A-Z0-9 ]", " ", a)
+    a = re.sub(r"(?<=\d)(ST|ND|RD|TH)\b", "", a)
+    a = re.sub(r"\b(STREET|ST|AVENUE|AVE|PLACE|PL|ROAD|RD|BOULEVARD|BLVD)\b", "", a)
+    try:
+        block = str(int(str(block)))
+    except (TypeError, ValueError):
+        block = str(block or "")
+    return (str(borough or ""), block, " ".join(a.split()))
+
+
+def load_condo_unit_sales() -> dict:
+    """Distinct condominium units sold per address, from DOF rolling sales.
+
+    Keyed by _sales_address_key so it can be looked up from a PLUTO record.
+    The value is a count of distinct unit *lots*, not of sales: 175 Water
+    Street has sixty sales across thirty units, and sixty would overstate how
+    many separate owners there are by a factor of two.
+
+    Absent is a normal state and means every condominium falls back to its
+    owner name, which is the weaker but non-empty test.
+    """
+    files = sorted(DATA_RAW.glob("sales_[0-9]*.json"), reverse=True)
+    if not files:
+        return {}
+    lots = defaultdict(set)
+    for sale in json.loads(files[0].read_text()):
+        try:
+            lot = int(sale.get("lot") or 0)
+        except (TypeError, ValueError):
+            continue
+        if CONDO_UNIT_LOT_MIN <= lot <= CONDO_UNIT_LOT_MAX:
+            key = _sales_address_key(
+                sale.get("borough"), sale.get("block"), sale.get("address"))
+            lots[key].add(lot)
+    print(f"  condo unit sales: {files[0].name}, "
+          f"{len(lots)} addresses with unit-lot sales")
+    return {k: len(v) for k, v in lots.items()}
+
+
+def _units_sold_for(record: dict, condo_unit_sales: dict) -> int:
+    """How many of this building's units have separately changed hands."""
+    bbl = str(record.get("bbl") or "")
+    if len(bbl) != 10:
+        return 0
+    key = _sales_address_key(bbl[0], bbl[1:6], record.get("address"))
+    return condo_unit_sales.get(key, 0)
 
 
 def _funnel_entry() -> dict:
@@ -760,7 +821,7 @@ def _is_non_target(record: dict) -> bool:
 
 
 def _is_condo(record: dict) -> bool:
-    """Condominium, read off the tax lot rather than guessed from a name.
+    """A condominium declaration exists on this lot. Not who owns the units.
 
     Finance gives every condominium unit a billing lot numbered 7501 or above,
     and PLUTO carries that lot. It agrees with the R building-class family
@@ -773,6 +834,12 @@ def _is_condo(record: dict) -> bool:
     and R4 that missed RM, RC, RD, RH and eleven other R codes. The old rule
     found 1,118 condos; this finds 3,585, including 1335 Avenue of the
     Americas and 1535 Broadway, two of the largest buildings we hold.
+
+    What this cannot tell you is whether the units were ever sold off, and
+    that is the question the Condos filter was actually asking — see
+    _has_separately_owned_units, which is what the filter reads now. This
+    stays as the regime fact, because it is one, and because the multi-owner
+    test uses it as its precondition.
     """
     bbl = str(record.get("bbl") or "")
     if len(bbl) == 10 and bbl[-4:].isdigit() and int(bbl[-4:]) >= 7501:
@@ -780,6 +847,68 @@ def _is_condo(record: dict) -> bool:
     bldgclass = (record.get("bldgclass") or "").upper()
     # RS is single room occupancy, the one R code that is not a condominium.
     return bldgclass.startswith("R") and bldgclass != "RS"
+
+
+# Finance numbers condominium unit lots from 1001 up and reserves 7501 and
+# above for the billing lot that aggregates them. A sale recorded against a
+# lot in this range is the sale of one unit, not of the building.
+CONDO_UNIT_LOT_MIN = 1001
+CONDO_UNIT_LOT_MAX = 7499
+
+# Three separately sold units is the line. Two is a sponsor that has closed on
+# a couple of units in a building it still controls; three is a pattern.
+CONDO_UNIT_SALE_THRESHOLD = 3
+
+# What Finance records as the owner of a billing lot once there is no longer a
+# single owner to record. These are not missing data — they are the assessor
+# saying the question has no one answer.
+PLACEHOLDER_OWNERS = frozenset({
+    "", "UNAVAILABLE OWNER", "NAME NOT ON FILE", "NOT ON FILE",
+    "N/A", "UNKNOWN", "UNAVAILABLE",
+})
+
+# An owner name that is the building's own governance rather than a party you
+# could sign a lease with.
+MULTI_OWNER_NAME = re.compile(
+    r"\b(CONDO|CONDOMINIUM|BD/MGRS|BOARD OF MANAGERS|BD OF MGRS|"
+    r"HOMEOWNERS|OWNERS CORP|HOA)\b")
+
+
+def _has_separately_owned_units(record: dict, units_sold: int) -> bool:
+    """Were this building's units sold off to separate owners.
+
+    The question the Condos filter exists to ask, and the one `_is_condo`
+    cannot answer. 175 Water Street and 1980 Amsterdam Avenue are both
+    condominium regimes on 7501 lots: one is thirty-one office units that have
+    essentially all traded, the other a fourteen-unit rental under one LLC.
+    Hiding the second alongside the first hides it for a reason that is not
+    true of it — there is a single owner to deal with.
+
+    Two sources, because each is wrong exactly where the other is right.
+
+    `units_sold` counts distinct unit lots that have changed hands, and is the
+    only direct evidence of separate ownership available. It is positive-only:
+    pull_sales fetches ten years above $10,000, so a condominium that sold out
+    in 2005 and has sat quiet since reads zero. Absence proves nothing, which
+    is why it cannot decide alone.
+
+    The owner name catches those quiet ones. Once the units are gone Finance
+    has no single owner to record and writes the board, the condominium
+    itself, or a placeholder. It fails the opposite way — 175 Water Street
+    still carries AMERICAN INTERNATIONAL RLTY CORP, the original declarant,
+    thirty sold units later — so it cannot decide alone either.
+
+    The regime precondition is load-bearing rather than tidy. Without it the
+    placeholder test would hide every ordinary rental whose owner Finance
+    happens not to carry, which is a large number of buildings and not one of
+    them a condominium.
+    """
+    if not _is_condo(record):
+        return False
+    if units_sold >= CONDO_UNIT_SALE_THRESHOLD:
+        return True
+    owner = (record.get("ownername") or "").strip().upper()
+    return owner in PLACEHOLDER_OWNERS or bool(MULTI_OWNER_NAME.search(owner))
 
 
 def _is_branded(hotel_name: str, operator_name: str = "", bbl: str = "") -> bool:
@@ -1342,6 +1471,7 @@ def build_geojson(
     coo_floors = load_coo_floors()
     guestroom_works = load_guestroom_works()
     demolitions = load_demolitions()
+    condo_unit_sales = load_condo_unit_sales()
 
     pre_tier = len(pipeline)
     pipeline = [r for r in pipeline
@@ -1877,8 +2007,13 @@ def build_geojson(
             # Zoning compatibility
             "zoning_hotel_permitted": record.get("zoning_hotel_permitted", "unknown"),
             "zoning_hotel_detail": record.get("zoning_hotel_detail", ""),
-            # Ownership structure
+            # Ownership structure. Two separate facts, and the filter wants
+            # the second: `is_condo` says a condominium declaration exists,
+            # `has_separately_owned_units` says the units were actually sold
+            # off and there is no longer one party to deal with.
             "is_condo": _is_condo(record),
+            "has_separately_owned_units": _has_separately_owned_units(
+                record, _units_sold_for(record, condo_unit_sales)),
         }
 
         # Rooms being rebuilt right now. Emitted whatever the segment, so the
