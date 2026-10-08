@@ -98,3 +98,23 @@ encodes that, so no sourcing number depends on the legal reading.
 statutory figure the panel's Safe Hotels lines quote; if Legal ever reads the
 Act the other way, the change is to subtract `transient_rooms_stabilized` in
 `_guest_rooms` and re-run the threshold counts in `reviewer-response.txt`.
+
+---
+
+## The 421-a code mapping is unverified
+
+**Where** — `src/pull_tax_benefits.py`, `CODES_421A = {"1010", "1015", "1019"}`.
+
+**What it is.** DOF's Property Exemption Detail (`muvi-b6kx`) is read as 421-a
+wherever a lot carries exemption code 1010, 1015 or 1019. Nothing in the repo
+cites where that mapping came from. Seven buildings it fired on were pre-war
+co-ops on Fifth Avenue, Sutton Place and East End Avenue, with no start year
+and no term on the row — an odd shape for a new-construction programme.
+
+**What changed on 2026-10-08.** A row with no term is no longer read as
+active (`d047c21`), and co-ops are now left out on their building class
+(`972467a`), so these seven no longer depend on the mapping. Any building with
+a dated row still does.
+
+**What fixing it would take.** Check the three codes against DOF's published
+exemption code table and correct `CODES_421A` (and `CODES_J51`) to match.
