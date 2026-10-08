@@ -682,6 +682,47 @@ def _guest_rooms(record: dict) -> tuple[int, str]:
     return 0, "none"
 
 
+def _transient_rooms(record: dict) -> tuple[int, int, int, str]:
+    """Rooms that could sell a night: (net, gross, stabilised, basis).
+
+    One count for everything that asks "how many rooms", because four fields
+    were answering it and each reader picked a different one. HPD Class B is
+    the registration, not the room count: hotels often never register with
+    HPD, so 333 West 86 Street (H6) reads 5 Class B against 219 transient
+    units on its DOB filings, and the ten-room filter dropped it. And Class B
+    counts rooms with permanent tenants in them: 477 West 57 Street registers
+    222 when 179 are rent-stabilised homes.
+
+    Gross is Class B, unless DOB's transient-unit count is larger AND either
+    HPD registers no Class B at all or the building class is a hotel. The
+    guard is what keeps an old R-1 filing from inflating an apartment house
+    -- 11 West 67 Street is D4 with 153 DOB units and 4 Class B. An H-class
+    building with no Class A units falls back to its C of O count, as the
+    guest-room count does. The floor estimate never counts here: a guess is
+    not a room.
+
+    Net subtracts the stabilised units the Class A side cannot absorb
+    (rent_stab_class_b_exposure), so it errs low. The Safe Hotels count is
+    deliberately left alone; whether a stabilised room is a "guest room"
+    under the Act is a legal reading, not this function's.
+    """
+    class_b = int(record.get("hpd_class_b") or 0)
+    dob = int(record.get("dob_transient_units") or 0)
+    bldgclass = (record.get("bldgclass") or "").upper()
+    hotel_class = bldgclass.startswith("H")
+
+    gross, basis = class_b, ("hpd_class_b" if class_b else "none")
+    if dob > gross and (class_b == 0 or hotel_class):
+        gross, basis = dob, "dob_transient_units"
+    if not gross and hotel_class and not int(record.get("hpd_class_a") or 0):
+        coo = int(record.get("coo_dwelling_units") or 0)
+        if coo:
+            gross, basis = coo, "coo_dwelling_units"
+
+    stabilised = min(gross, int(record.get("rent_stab_class_b_exposure") or 0))
+    return gross - stabilised, gross, stabilised, basis
+
+
 def _sortable_us(us_date: str) -> str:
     """MM/DD/YYYY as DOB writes it, to YYYY-MM-DD so it can be compared."""
     parts = str(us_date or "").strip().split("/")
@@ -1597,6 +1638,12 @@ def enrich_pipeline(
             record["rent_stabilized_units"] = 0
             record["rent_stab_data_year"] = None
             record["rent_stab_class_b_exposure"] = 0
+
+        # The one room count -- after DOB occupancy, the C of O and rent
+        # stabilisation, all of which it reads.
+        (record["transient_rooms"], record["transient_rooms_gross"],
+         record["transient_rooms_stabilized"],
+         record["transient_rooms_basis"]) = _transient_rooms(record)
 
         # Zoning compatibility for hotel use
         zoning_compat, zoning_detail = _zoning_hotel_compatibility(record.get("zonedist1", ""))

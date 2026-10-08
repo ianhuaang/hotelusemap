@@ -1944,6 +1944,10 @@ def build_geojson(
             "dob_has_j1": record.get("dob_has_j1", False),
             "dob_r1_filing_count": record.get("dob_r1_filing_count", 0),
             "dob_transient_units": record.get("dob_transient_units", 0),
+            "transient_rooms": record.get("transient_rooms"),
+            "transient_rooms_gross": record.get("transient_rooms_gross"),
+            "transient_rooms_stabilized": record.get("transient_rooms_stabilized"),
+            "transient_rooms_basis": record.get("transient_rooms_basis", ""),
             # Permit description transient signals
             "permit_transient_keywords": record.get("permit_transient_keywords", []),
             "permit_transient_strong": record.get("permit_transient_strong", 0),
