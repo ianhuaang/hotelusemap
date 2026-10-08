@@ -1006,3 +1006,15 @@ def test_a_current_operator_on_a_trusted_page_still_removes():
         "$106M. CalSTRS owns 91% of AKA Sutton, records show. 330 East 56th "
         "Street", "https://therealdeal.com/x")], ["330 EAST 56 STREET"])
     assert v["disposition"] == "remove"
+
+
+def test_corroboration_inherits_not_yet():
+    """235 West 107 Street, corroborate mode. The web names something other
+    than the Places claim, but on a headline about redeveloping into it: the
+    verdict still keeps the building off the list, the disposition is a
+    person's, not a remove."""
+    page = _page("Developers Secure $38M to Redevelop Illegal Hotel into Permanent "
+                 "Supportive Housing at 235 West 107th Street", "")
+    v = corroborate([page], ["235 WEST 107 STREET"], "Some Bodega")
+    assert v["verdict"] == "confirmed"
+    assert v["disposition"] == "flag"

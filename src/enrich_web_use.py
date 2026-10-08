@@ -873,6 +873,16 @@ def run_corroboration(args) -> None:
     if args.limit:
         targets = targets[: args.limit]
     log(f"  {len(targets)} building(s) occupied on a lone Places reading")
+    if args.replay:
+        # As in the default mode: re-read the one stored result under the
+        # current rules. A "none" stored no evidence and stays "none".
+        missing = [t for t in targets if t["claim_name"] and t["bbl"] not in cache]
+        if missing:
+            sys.exit(f"--replay needs every target cached; {len(missing)} are not")
+        for t in targets:
+            v = cache.get(t["bbl"])
+            if v and v.get("evidence"):
+                cache[t["bbl"]] = corroborate(v["evidence"], t["addresses"], t["claim_name"])
 
     rows, tally = [], {"remove": 0, "flag": 0, "confirm": 0, "no answer": 0}
     for i, t in enumerate(targets, 1):
