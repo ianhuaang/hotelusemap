@@ -1,0 +1,578 @@
+<title>Case Study Paper Trails</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --bg-card: #ffffff;
+    --text: #1c1917;
+    --text-secondary: #57534e;
+    --text-muted: #a8a29e;
+    --border: #e7e5e4;
+    --border-strong: #d6d3d1;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --amber: #d97706;
+    --amber-bg: #fffbeb;
+    --amber-border: #fde68a;
+    --rose: #e11d48;
+    --rose-bg: #fff1f2;
+    --rose-border: #fecdd3;
+    --blue: #2563eb;
+    --blue-bg: #eff6ff;
+    --blue-border: #bfdbfe;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+    --purple-border: #c4b5fd;
+    --timeline-line: #d6d3d1;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0a09;
+      --bg-card: #1c1917;
+      --text: #e7e5e4;
+      --text-secondary: #a8a29e;
+      --text-muted: #78716c;
+      --border: #292524;
+      --border-strong: #44403c;
+      --green-bg: #052e16;
+      --green-border: #166534;
+      --amber-bg: #451a03;
+      --amber-border: #92400e;
+      --rose-bg: #4c0519;
+      --rose-border: #9f1239;
+      --blue-bg: #172554;
+      --blue-border: #1e40af;
+      --purple-bg: #2e1065;
+      --purple-border: #5b21b6;
+      --timeline-line: #44403c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0c0a09;
+    --bg-card: #1c1917;
+    --text: #e7e5e4;
+    --text-secondary: #a8a29e;
+    --text-muted: #78716c;
+    --border: #292524;
+    --border-strong: #44403c;
+    --green-bg: #052e16;
+    --green-border: #166534;
+    --amber-bg: #451a03;
+    --amber-border: #92400e;
+    --rose-bg: #4c0519;
+    --rose-border: #9f1239;
+    --blue-bg: #172554;
+    --blue-border: #1e40af;
+    --purple-bg: #2e1065;
+    --purple-border: #5b21b6;
+    --timeline-line: #44403c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2.5rem 2rem 3rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+  header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.35rem; }
+  header p { font-size: 0.82rem; color: var(--text-secondary); max-width: 700px; line-height: 1.55; }
+
+  h2 { font-size: 1.05rem; font-weight: 700; margin: 2.5rem 0 0.5rem; letter-spacing: -0.01em; }
+  h2:first-of-type { margin-top: 0; }
+
+  .building-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .stat-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.15rem;
+  }
+
+  .stat-value { font-size: 0.88rem; font-weight: 600; }
+
+  .timeline {
+    position: relative;
+    padding-left: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--timeline-line);
+  }
+
+  .event {
+    position: relative;
+    margin-bottom: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.82rem;
+  }
+
+  .event::before {
+    content: '';
+    position: absolute;
+    left: -1.45rem;
+    top: 0.85rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    border: 2px solid var(--bg);
+  }
+
+  .event.signal-strong::before { background: var(--green); }
+  .event.signal-partial::before { background: var(--amber); }
+  .event.signal-negative::before { background: var(--rose); }
+  .event.signal-info::before { background: var(--blue); }
+  .event.signal-operator::before { background: var(--purple); }
+
+  .event-date {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .event-source {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    margin-left: 0.4rem;
+    vertical-align: middle;
+  }
+
+  .src-hpd { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .src-pluto { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .src-dob { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+  .src-acris { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+  .src-dcwp { background: var(--rose-bg); color: var(--rose); border: 1px solid var(--rose-border); }
+  .src-coo { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+
+  .event-body { margin-top: 0.25rem; color: var(--text-secondary); line-height: 1.5; }
+  .event-body em { color: var(--text); font-style: italic; }
+
+  .event-significance {
+    margin-top: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--green);
+  }
+
+  .event-significance.negative { color: var(--rose); }
+  .event-significance.partial { color: var(--amber); }
+  .event-significance.info { color: var(--blue); }
+
+  .takeaway {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin: 1rem 0 2.5rem;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .takeaway strong { color: var(--text); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 0.3rem; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  @media (max-width: 640px) {
+    body { padding: 1.25rem 1rem 2rem; }
+    .building-header { grid-template-columns: 1fr; }
+  }
+</style>
+
+<header>
+  <h1>Case Study Paper Trails</h1>
+  <p>Chronological public data for four buildings showing how transient capacity appears, hides, and changes hands in NYC's overlapping regulatory systems. Every entry cites its source dataset.</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background: var(--green);"></div> Confirms transient</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--amber);"></div> Partial signal</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--rose);"></div> Negative / missing</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--blue);"></div> Informational</div>
+  <div class="legend-item"><div class="legend-dot" style="background: var(--purple);"></div> Operator / ownership</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>1. Sonder "The Nash" &mdash; 222 East 39th Street</h2>
+<p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">The clearest conversion paper trail. Every stage of the hotel establishment is documented in DOB filings.</p>
+
+<div class="building-header">
+  <div class="stat-card">
+    <div class="stat-label">Pipeline Tier</div>
+    <div class="stat-value" style="color: var(--blue);">Legal Transient (Split-Use)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">HPD Registration</div>
+    <div class="stat-value">125 Class A &middot; 66 Class B</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">PLUTO</div>
+    <div class="stat-value">D8 &middot; C1-9 &middot; 25 floors</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Owner</div>
+    <div class="stat-value" style="font-size: 0.8rem;">BLDG LIC 39TH ST LLC (Goldman family)</div>
+  </div>
+</div>
+
+<div class="timeline">
+  <div class="event signal-info">
+    <div class="event-date">2002 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Building shows occupancy F-4 (mercantile/storage). ADA bathroom renovation filing. No residential or transient signal.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Dec 2008 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">A1 (major alteration) filed: <em>"Plumbing work associated with renovation and establishment of existing hotel use within residential building."</em></div>
+    <div class="event-significance">First transient signal. "Hotel use" explicitly stated in job description.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Dec 2009 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Scaffold filings show 133 dwelling units with occupancy code R-1 (transient). Hotel portion is under construction.</div>
+    <div class="event-significance">R-1 occupancy code confirms transient authorization in DOB.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Oct 2011 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">A1 major alteration: <em>"Renovation and establishment of existing hotel use within residential building."</em> Occupancy changes from RES to J-1 (transient residential, old code).</div>
+    <div class="event-significance">Definitive conversion filing. Keyword scanning catches "hotel."</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Sep &ndash; Oct 2013 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Filings for the residential portion show 126 DU with occupancy J-2 (residential, old code). Cellar and lobby renovations. The building now has two distinct occupancy groups side by side.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Oct 2013 &ndash; Dec 2014 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body">Rolling Temporary C of Os issued for Job #121469534. DU: 125 &rarr; 147. The split-use is authorized but not yet finalized.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2015 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Residential portion filings update to R-2 occupancy (new code) with 125-147 DU. Transient portion filings continue under R-1.</div>
+  </div>
+
+  <div class="event signal-operator">
+    <div class="event-date">Apr 2019 <span class="event-source src-acris">ACRIS</span></div>
+    <div class="event-body">$75M assignment/lease recorded. BLDG LIC 39TH ST LLC and related entities assign to Brighthouse Life Insurance Company (MetLife Investment Advisors). Financing event.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Aug 2020 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body"><strong>Final C of O issued</strong> for Job #121469534. DU: 192 &rarr; 191. The split-use (125 residential + 66 transient) is now formally permanent.</div>
+    <div class="event-significance">Final C of O. The strongest confirmation of legal transient capacity.</div>
+  </div>
+
+  <div class="event signal-operator">
+    <div class="event-date">Dec 2023 <span class="event-source src-acris">ACRIS</span></div>
+    <div class="event-body">$90M RPTT sale recorded. Goldman family entities (Deans Management, Lloyd/Katja/Dorian Goldman) to BLDG HOLDINGS II LLC. Ownership restructuring within the same family.</div>
+  </div>
+
+  <div class="event signal-operator">
+    <div class="event-date">Current <span class="event-source src-dcwp">DCWP</span></div>
+    <div class="event-body">Sonder The Nash hotel license: <strong>Ready for Renewal</strong>. Expiration: Sep 30, 2026. Active transient operation.</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <strong>What the pipeline sees:</strong> HPD Class B = 66 (caught). But even without HPD, three other signals would flag this building: DOB R-1 occupancy (2009), keyword "hotel" in DOB filings (2008, 2011), and the DCWP hotel license. The 2008 DOB filing explicitly says "hotel use" — our keyword scanning catches this 12 years before HPD's Class B registration would have been the only signal.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>2. 70 Pine Street &mdash; 66 Pine Street</h2>
+<p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">Art Deco office tower converted to residential with a transient component. The archetype of a split-use building.</p>
+
+<div class="building-header">
+  <div class="stat-card">
+    <div class="stat-label">Pipeline Tier</div>
+    <div class="stat-value" style="color: var(--blue);">Legal Transient (Split-Use)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">HPD Registration</div>
+    <div class="stat-value">612 Class A &middot; 165 Class B</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">PLUTO</div>
+    <div class="stat-value">RM &middot; C5-5 &middot; 66 floors</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Operator</div>
+    <div class="stat-value" style="font-size: 0.8rem;">Kasa (prev. Mint House)</div>
+  </div>
+</div>
+
+<div class="timeline">
+  <div class="event signal-info">
+    <div class="event-date">Pre-2012 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Building is the Cities Service Building, a commercial office tower. Existing DU = 1 (essentially no residential). Floor-by-floor renovation filings (partitions, HVAC, sprinklers) on floors 11-19 from 2001 onward. All say "no change in occupancy."</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">2012 &ndash; 2016 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Major conversion from commercial to residential/mixed-use under two job applications:<br>
+    Job #121181416: DU 1 &rarr; 777<br>
+    Job #122673776: DU 1 &rarr; 895<br>
+    2016 tenant protection plan references NB application 121181416 with 895 DU.</div>
+    <div class="event-significance">The conversion. Two jobs suggest phased buildout — residential first, then the transient component.</div>
+  </div>
+
+  <div class="event signal-partial">
+    <div class="event-date">2019 &ndash; Jan 2021 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body">Rolling Temporary C of Os for both jobs. Job #121181416 shows DU 777; Job #122673776 shows DU 895. <strong>No Final C of O has been issued.</strong></div>
+    <div class="event-significance partial">Still operating under Temporary C of O as of last record.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Current <span class="event-source src-hpd">HPD</span></div>
+    <div class="event-body">HPD registration: 612 Class A + 165 Class B. DOB building class: "COMMERCIAL ALTERED CLASS A." 66 legal stories.</div>
+    <div class="event-significance">165 Class B rooms are the primary pipeline signal. HPD catches this building.</div>
+  </div>
+
+  <div class="event signal-operator">
+    <div class="event-date">Current <span class="event-source src-dcwp">DCWP</span></div>
+    <div class="event-body">MH MANAGEMENT 70 PINE, LLC (Mint House) hotel license: <strong>Surrendered</strong>. Expiration was Sep 30, 2026. Mint House exited; Kasa took over operations.</div>
+    <div class="event-significance partial">Surrendered license = operator change. Kasa may not have filed a new DCWP license yet.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2022 &ndash; 2026 <span class="event-source src-dob">DOB NOW</span></div>
+    <div class="event-body">All recent filings are facade restoration (landmark compliance), sidewalk sheds, and one unit renovation. No change-of-use applications. Transient capacity is stable.</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <strong>What the pipeline sees:</strong> HPD Class B = 165 (strong signal). PLUTO class RM, not hotel. C of O is still only Temporary — the building has been operating under rolling temporaries since at least 2019. The surrendered DCWP license from Mint House is a data point: it confirms the building had a licensed hotel operator, and the surrender corresponds to the Kasa takeover.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>3. The Phillips Club &mdash; 155 West 66th Street</h2>
+<p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">100% transient building that PLUTO misclassifies. Illustrates building class lag.</p>
+
+<div class="building-header">
+  <div class="stat-card">
+    <div class="stat-label">Pipeline Tier</div>
+    <div class="stat-value" style="color: var(--green);">Legal Transient (High)</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">HPD Registration</div>
+    <div class="stat-value">0 Class A &middot; 151 Class B</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">PLUTO</div>
+    <div class="stat-value">RC &middot; C4-7 &middot; 10 floors</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">DCWP License</div>
+    <div class="stat-value" style="color: var(--rose);">Not found</div>
+  </div>
+</div>
+
+<div class="timeline">
+  <div class="event signal-info">
+    <div class="event-date">Jul 2000 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Generator installation, Class 'J' fire alarm system. No occupancy listed. Building is already operational.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Dec 2008 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Interior partitions on cellar floor. 12 DU, occupancy J-1 (transient residential, old code).</div>
+    <div class="event-significance">J-1 occupancy confirms transient use in DOB records.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Sep 2010 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Interior renovation and sprinkler work. 76 DU, with occupancy codes both J-1 and R-1 (transient under old and new code systems). The transition between code systems is visible.</div>
+    <div class="event-significance">R-1 occupancy code appears. Transient use confirmed under both code systems.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Dec 2011 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Awning installations for Gourmet Garage (ground floor retail tenant). 10 DU listed, occupancy J-1. The building has commercial retail below and transient rooms above.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Dec 2015 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body">Temporary C of O issued for Job #110402467 (A1 major alteration). 151 dwelling units.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Mar 2016 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body"><strong>Final C of O issued</strong> for Job #110402467. 151 dwelling units confirmed.</div>
+    <div class="event-significance">Final C of O. Transient use permanently authorized.</div>
+  </div>
+
+  <div class="event signal-strong">
+    <div class="event-date">Current <span class="event-source src-hpd">HPD</span></div>
+    <div class="event-body">HPD registration: 0 Class A + 151 Class B. DOB building class: "HEREAFTER ERECTED CLASS B." 10 legal stories. 100% transient — no permanent residents.</div>
+    <div class="event-significance">HPD confirms all 151 units are transient. The DOB building class says Class B.</div>
+  </div>
+
+  <div class="event signal-negative">
+    <div class="event-date">Current <span class="event-source src-pluto">PLUTO</span></div>
+    <div class="event-body">Building class: RC (residential-commercial). <strong>Not hotel class.</strong> PLUTO reports 0 residential area, 93,148 sq ft commercial area. Owner listed as "UNAVAILABLE OWNER" (condo).</div>
+    <div class="event-significance negative">PLUTO misclassifies a 100% transient building. Building class is lagging actual use.</div>
+  </div>
+
+  <div class="event signal-negative">
+    <div class="event-date">Current <span class="event-source src-dcwp">DCWP</span></div>
+    <div class="event-body">No hotel license found in the DCWP dataset for this BBL. The Phillips Club may operate under a different license type, or the BBL match may be off due to condo lot structure.</div>
+    <div class="event-significance negative">Missing DCWP license. Not all transient buildings have one.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2025 &ndash; 2026 <span class="event-source src-acris">ACRIS</span></div>
+    <div class="event-body">Individual condo unit sales active. Recent transactions range from $435K to $1.9M per unit. Units are being bought and sold as investment properties.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2019 &ndash; 2025 <span class="event-source src-dob">DOB NOW</span></div>
+    <div class="event-body">All filings are routine maintenance — HVAC, plumbing, sprinkler modifications. Every filing says "no change in use, egress or occupancy." Stable operation.</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <strong>What the pipeline sees:</strong> HPD Class B = 151 catches this building with high confidence. But this case exposes two weaknesses: (1) PLUTO says RC, not hotel — if HPD had missed this building, the pipeline would have classified it as Partial. (2) No DCWP hotel license found, so that signal can't serve as a backup either. The Phillips Club proves that HPD Class B is the most reliable signal, and building class alone is insufficient.
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<h2>4. 2 Washington Street &mdash; 17 Battery Place</h2>
+<p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1rem;">The building HPD missed. Had transient capacity, is now converting out. Shows how a building exits the transient pool.</p>
+
+<div class="building-header">
+  <div class="stat-card">
+    <div class="stat-label">Pipeline Tier</div>
+    <div class="stat-value" style="color: var(--amber);">Partial Signal</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">HPD Registration</div>
+    <div class="stat-value">491 Class A &middot; <span style="color: var(--rose);">0 Class B</span></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">PLUTO</div>
+    <div class="stat-value">RM &middot; C5-5 &middot; 31 floors</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Owner</div>
+    <div class="stat-value" style="font-size: 0.8rem;">17 Battery Place Condo Board</div>
+  </div>
+</div>
+
+<div class="timeline">
+  <div class="event signal-info">
+    <div class="event-date">2011 &ndash; 2014 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Filings show 491-502 DU with occupancy J-2 (residential, old code). Fire alarm, sprinkler, and interior renovation work. Some filings show occupancy "E" (assembly) for commercial portions.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Nov 2015 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body">First Temporary C of O issued for Job #122153141. DU: 491. The building is operating under temporary authorization.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Dec 2017 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Lobby renovation filings show occupancy "B" (business/commercial) with 491 DU. Tenant protection plan filed referencing A1 #121203713 and A2 #140664751.</div>
+  </div>
+
+  <div class="event signal-partial">
+    <div class="event-date">2019 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Filings now show 735 DU with R-2 (residential) occupancy. The dwelling unit count jumped from 491 to 735 — a 244-unit increase suggesting a portion of the building is being subdivided or reclassified.</div>
+    <div class="event-significance partial">DU jump from 491 to 735 is a conversion signal — but in which direction?</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2020 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">Some filings show 837 DU with R-2 occupancy. Temporary C of Os for Job #121203713 show DU 491 &rarr; 559.</div>
+  </div>
+
+  <div class="event signal-negative">
+    <div class="event-date">Nov 2020 <span class="event-source src-dob">DOB Legacy</span></div>
+    <div class="event-body">A1 (major alteration): <em>"General construction associated with conversion of a portion of Wing B of existing building to residential use."</em> DU: 491 &rarr; 345.</div>
+    <div class="event-significance negative">The conversion filing. Wing B is being converted from transient to residential. DU drops because former hotel rooms are being consolidated into larger apartments.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">Jan 2021 <span class="event-source src-coo">C of O</span></div>
+    <div class="event-body">Last Temporary C of O on record for Job #121203713. DU: 491 &rarr; 559.</div>
+  </div>
+
+  <div class="event signal-negative">
+    <div class="event-date">Current <span class="event-source src-hpd">HPD</span></div>
+    <div class="event-body">HPD registration: 491 Class A + <strong>0 Class B</strong>. DOB building class: "COMMERCIAL ALTERED CLASS A."</div>
+    <div class="event-significance negative">HPD never registered the transient rooms as Class B. The R-1 portion was only visible in DOB filings.</div>
+  </div>
+
+  <div class="event signal-operator">
+    <div class="event-date">Current <span class="event-source src-dcwp">DCWP</span></div>
+    <div class="event-body">Sonder Battery Park hotel license: <strong>Ready for Renewal</strong>. Expiration: Sep 30, 2026. License is still technically valid despite Sonder closing in July 2026.</div>
+    <div class="event-significance partial">DCWP license lags operations. Sonder closed but the license hasn't been surrendered.</div>
+  </div>
+
+  <div class="event signal-info">
+    <div class="event-date">2025 &ndash; 2026 <span class="event-source src-dob">DOB NOW</span></div>
+    <div class="event-body">Plaza renovation, construction fencing, structural work. No transient-related activity. The building is moving on from its hotel past.</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <strong>What the pipeline sees:</strong> PLUTO class RM (partial signal). HPD 0 Class B (missed). DCWP license still shows Ready for Renewal (lagging). The building's transient history was only visible through: (1) DOB R-1 occupancy in fire alarm filings, (2) the prior operator ground truth, and (3) now the DCWP license. But the 2020 conversion filing confirms this building is leaving the transient pool — the condo board is converting Wing B to residential. A dead end for Kasa, but the case taught us to look beyond HPD.
+</div>
+
+<hr>
+
+<p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;">
+  <strong style="color: var(--text-secondary);">Data sources:</strong> PLUTO (64uk-42ks), HPD Buildings (kj4p-ruqc), DOB Legacy Filings (ic3t-wcy2), DOB NOW (w9ak-ipjd), Certificate of Occupancy (bs8b-p36w), ACRIS Legals (8h5j-fqxa), ACRIS Master (bnx9-e6tj), ACRIS Parties (636b-3b5g), DCWP Legally Operating Businesses (w7w3-xahh). All data retrieved August 2026.
+</p>

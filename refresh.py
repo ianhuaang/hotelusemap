@@ -166,12 +166,14 @@ def main():
             print(f"\nERROR: {label} failed. Stopping.")
             sys.exit(1)
 
-    # Copy GeoJSON to map/public for local dev
+    # Copy GeoJSON into the app for local dev. The app is kasa-sourcing, checked
+    # out beside this repo; this repo's own map/ was a retired copy of it and
+    # was removed on 2026-10-08.
     from config import DATA_PROCESSED
     today_fmt = date.today().strftime("%Y%m%d")
     geojson = DATA_PROCESSED / f"buildings_{today_fmt}.geojson"
-    map_public = PROJECT_ROOT / "map" / "public" / "buildings.geojson"
-    if geojson.exists():
+    map_public = PROJECT_ROOT.parent / "kasa-sourcing" / "map" / "public" / "buildings.geojson"
+    if geojson.exists() and map_public.parent.is_dir():
         import shutil
         shutil.copy2(geojson, map_public)
         print(f"\nCopied GeoJSON to {map_public}")

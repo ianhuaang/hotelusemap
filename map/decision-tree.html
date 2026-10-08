@@ -1,0 +1,259 @@
+<title>Transient Capacity Decision Tree</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --bg-card: #ffffff;
+    --text: #1c1917;
+    --text-secondary: #57534e;
+    --text-muted: #a8a29e;
+    --border: #e7e5e4;
+    --green: #166534;
+    --green-light: #dcfce7;
+    --amber: #92400e;
+    --amber-light: #fef9c3;
+    --red: #991b1b;
+    --red-light: #fee2e2;
+    --gray: #6b7280;
+    --gray-light: #f3f4f6;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0a09;
+      --bg-card: #1c1917;
+      --text: #e7e5e4;
+      --text-secondary: #a8a29e;
+      --text-muted: #78716c;
+      --border: #292524;
+      --green-light: #052e16;
+      --amber-light: #451a03;
+      --red-light: #450a0a;
+      --gray-light: #1c1917;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0c0a09;
+    --bg-card: #1c1917;
+    --text: #e7e5e4;
+    --text-secondary: #a8a29e;
+    --text-muted: #78716c;
+    --border: #292524;
+    --green-light: #052e16;
+    --amber-light: #451a03;
+    --red-light: #450a0a;
+    --gray-light: #1c1917;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2.5rem 2rem 3rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  header h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.35rem;
+  }
+
+  header p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 680px;
+    line-height: 1.55;
+  }
+
+  .chart-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .legend-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .legend-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .legend-items {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .legend-swatch.tier-legal { background: var(--green); }
+  .legend-swatch.tier-partial { background: var(--amber); }
+  .legend-swatch.tier-unknown { background: var(--gray); }
+  .legend-swatch.outcome-pursue { background: var(--green-light); border: 1px solid #86efac; }
+  .legend-swatch.outcome-verify { background: var(--amber-light); border: 1px solid #fde68a; }
+  .legend-swatch.outcome-stop { background: var(--red-light); border: 1px solid #fca5a5; }
+  .legend-swatch.outcome-deprioritize { background: var(--gray-light); border: 1px solid #d1d5db; }
+
+  .note {
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .note strong {
+    color: var(--text-secondary);
+  }
+
+  /* Override mermaid SVG font to match page */
+  .mermaid svg {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 1.25rem 1rem 2rem; }
+    .chart-container { padding: 1rem 0.5rem; }
+    .legend { flex-direction: column; gap: 0.75rem; }
+  }
+</style>
+
+<header>
+  <h1>Transient Capacity Decision Tree</h1>
+  <p>From data check through tier assignment to deal team action. Each building follows one path based on its HPD, PLUTO, and DOB signals. Every path ends in a concrete next step.</p>
+</header>
+
+<div class="chart-container">
+<pre class="mermaid">
+flowchart TD
+    START([Building enters pipeline]) --> Q1{Any HPD Class B rooms?}
+    Q1 -->|Yes| Q2{Any Class A rooms?}
+    Q1 -->|No| Q4{Hotel building class in PLUTO?}
+    Q2 -->|No, all transient| T1[LEGAL TRANSIENT - High confidence]
+    Q2 -->|Yes, mixed with residential| T2[LEGAL TRANSIENT - Medium confidence]
+    T1 --> A1[Ready to pursue. Verify C of O is current, then standard diligence]
+    T2 --> V1{C of O shows contiguous transient floors?}
+    V1 -->|Yes, floor-by-floor split| V1a[Pursue. Transient floors can operate as cohesive block]
+    V1 -->|No, scattered units| V1b[Difficult to operate. Units mixed across residential floors]
+    V1 -->|C of O unit count does not match HPD| V1c[Data conflict. Investigate before proceeding]
+    Q4 -->|Yes| Q5{Does HPD show any Class A rooms?}
+    Q4 -->|No| Q6{Any DOB filings with R-1 occupancy?}
+    Q5 -->|Yes, likely converted to residential| T3[PARTIAL - Low confidence, with reversion window]
+    Q5 -->|No HPD record at all| T4[LEGAL TRANSIENT - Medium confidence]
+    T3 --> A3{Is it before Dec 9, 2027?}
+    A3 -->|Yes| V3{Any active DOB conversion filings?}
+    A3 -->|No| A3b[Window closed. Needs CPC special permit to return to hotel use]
+    V3 -->|No active conversion| V3a[Pursue. Can revert to hotel as-of-right before deadline]
+    V3 -->|Yes, conversion in progress| V3b[Building is leaving transient pool. Move on]
+    T4 --> V4{Does C of O list R-1 transient occupancy?}
+    V4 -->|Yes, R-1 confirmed| V4a[Pursue. C of O confirms transient use despite missing HPD record]
+    V4 -->|No transient occupancy group| V4b[Not actually transient. PLUTO class is misleading]
+    V4 -->|C of O revoked or expired| V4c[Cannot operate. Needs new C of O before any use]
+    Q6 -->|Yes| T5[PARTIAL - Medium confidence, R-1 found in DOB]
+    Q6 -->|No| Q7{Mixed-use building class in PLUTO?}
+    T5 --> V5{Does C of O confirm R-1 occupancy group?}
+    V5 -->|Yes| V5a[Pursue. Transient use confirmed through C of O]
+    V5 -->|No, R-1 was only in filing not C of O| V5b[Transient use may not have been finalized. Investigate DOB BIS]
+    Q7 -->|Yes| T6[PARTIAL - Low confidence]
+    Q7 -->|No| Q8{Permit descriptions mention hotel, transient, SRO?}
+    T6 --> V6{Does C of O show any transient authorization?}
+    V6 -->|Yes, has R-1| V6a[Pursue. Hidden transient capacity confirmed]
+    V6 -->|No R-1| V6b[Not transient. Needs change-of-use filing plus CPC special permit]
+    Q8 -->|Yes, strong keyword match| T8[PARTIAL - Medium confidence, from permit text]
+    Q8 -->|No transient keywords| T7[UNKNOWN - Low confidence]
+    T8 --> V8{Does C of O or HPD confirm the transient use described?}
+    V8 -->|Yes, confirmed| V8a[Pursue. Permit filing corroborated by official record]
+    V8 -->|No confirmation| V8b[Flag for manual review. Permit text alone is not dispositive]
+    T7 --> A7[Deprioritize unless other signals emerge - prior operator, tax lien, lis pendens, temporary C of O]
+    style T1 fill:#166534,color:#fff,stroke:#166534
+    style T2 fill:#15803d,color:#fff,stroke:#15803d
+    style T3 fill:#a16207,color:#fff,stroke:#a16207
+    style T4 fill:#15803d,color:#fff,stroke:#15803d
+    style T5 fill:#a16207,color:#fff,stroke:#a16207
+    style T6 fill:#a16207,color:#fff,stroke:#a16207
+    style T7 fill:#6b7280,color:#fff,stroke:#6b7280
+    style A1 fill:#dcfce7,color:#166534,stroke:#86efac
+    style V1a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V1b fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style V1c fill:#fef9c3,color:#854d0e,stroke:#fde68a
+    style A3b fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style V3a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V3b fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style V4a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V4b fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style V4c fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style V5a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V5b fill:#fef9c3,color:#854d0e,stroke:#fde68a
+    style V6a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V6b fill:#fee2e2,color:#991b1b,stroke:#fca5a5
+    style T8 fill:#a16207,color:#fff,stroke:#a16207
+    style V8a fill:#dcfce7,color:#166534,stroke:#86efac
+    style V8b fill:#fef9c3,color:#854d0e,stroke:#fde68a
+    style A7 fill:#f3f4f6,color:#6b7280,stroke:#d1d5db
+</pre>
+</div>
+
+<div class="legend">
+  <div class="legend-group">
+    <div class="legend-label">Tier Assignment</div>
+    <div class="legend-items">
+      <div class="legend-item"><div class="legend-swatch tier-legal"></div> Legal Transient</div>
+      <div class="legend-item"><div class="legend-swatch tier-partial"></div> Partial</div>
+      <div class="legend-item"><div class="legend-swatch tier-unknown"></div> Unknown</div>
+    </div>
+  </div>
+  <div class="legend-group">
+    <div class="legend-label">Outcome</div>
+    <div class="legend-items">
+      <div class="legend-item"><div class="legend-swatch outcome-pursue"></div> Pursue</div>
+      <div class="legend-item"><div class="legend-swatch outcome-verify"></div> Needs verification</div>
+      <div class="legend-item"><div class="legend-swatch outcome-stop"></div> Deal killer / window closed</div>
+      <div class="legend-item"><div class="legend-swatch outcome-deprioritize"></div> Deprioritize</div>
+    </div>
+  </div>
+</div>
+
+<p class="note"><strong>Data sources:</strong> HPD registration (Class A/B rooms), PLUTO (building class), DOB legacy filings (R-1/J-1 occupancy classification), DOB NOW permit descriptions (keyword text scanning), Certificate of Occupancy (manual lookup via DOB BIS for verification steps).</p>

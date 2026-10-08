@@ -1,0 +1,452 @@
+[
+  {
+    "bin": "1089374",
+    "bbl": "1011717515",
+    "address": "635 WEST 59TH STREET",
+    "units": 316,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1090832",
+    "bbl": "1000517502",
+    "address": "22 THAMES STREET",
+    "units": 273,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1795043",
+    "bbl": "1006897501",
+    "address": "500 WEST 18TH STREET",
+    "units": 238,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1090682",
+    "bbl": "1006897501",
+    "address": "500 WEST 18TH STREET",
+    "units": 238,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1089807",
+    "bbl": "1006897501",
+    "address": "500 WEST 18TH STREET",
+    "units": 238,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1085139",
+    "bbl": "1015637501",
+    "address": "400 EAST 84TH STREET",
+    "units": 183,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1084262",
+    "bbl": "1004697502",
+    "address": "105 3 AVENUE",
+    "units": 157,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1066718",
+    "bbl": "1004697502",
+    "address": "105 3 AVENUE",
+    "units": 157,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1086102",
+    "bbl": "1006027501",
+    "address": "1 MORTON SQUARE",
+    "units": 144,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1086104",
+    "bbl": "1006027501",
+    "address": "1 MORTON SQUARE",
+    "units": 144,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1076164",
+    "bbl": "1009287502",
+    "address": "310 EAST 23 STREET",
+    "units": 140,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1084795",
+    "bbl": "1009287502",
+    "address": "310 EAST 23 STREET",
+    "units": 140,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "3421378",
+    "bbl": "3002397501",
+    "address": "1 CLINTON STREET",
+    "units": 137,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1034356",
+    "bbl": "1012627501",
+    "address": "62 WEST 47 STREET",
+    "units": 128,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1034520",
+    "bbl": "1012687502",
+    "address": "666 5 AVENUE",
+    "units": 125,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1034346",
+    "bbl": "1012627502",
+    "address": "44 WEST 47 STREET",
+    "units": 110,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1076262",
+    "bbl": "1012657501",
+    "address": "1250 AVENUE OF THE AMER",
+    "units": 107,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1091887",
+    "bbl": "1012597503",
+    "address": "520 FIFTH AVENUE",
+    "units": 104,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1037174",
+    "bbl": "1013147502",
+    "address": "633 3 AVENUE",
+    "units": 89,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1010360",
+    "bbl": "1005977504",
+    "address": "100 VANDAM STREET",
+    "units": 73,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1088837",
+    "bbl": "1002947502",
+    "address": "1 ORCHARD STREET",
+    "units": 71,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1024649",
+    "bbl": "1010127502",
+    "address": "200 WEST 41 STREET",
+    "units": 68,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1035737",
+    "bbl": "1012897501",
+    "address": "685 5 AVENUE",
+    "units": 68,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1090660",
+    "bbl": "1014177503",
+    "address": "249 EAST 62ND STREET",
+    "units": 67,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "4624459",
+    "bbl": "4003747502",
+    "address": "37-34 33RD STREET",
+    "units": 66,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "4623050",
+    "bbl": "4004157505",
+    "address": "41-14 27TH STREET",
+    "units": 64,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1000005",
+    "bbl": "1000047501",
+    "address": "1 WATER STREET",
+    "units": 63,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1001726",
+    "bbl": "1001627501",
+    "address": "7 CHATHAM SQUARE",
+    "units": 60,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1087484",
+    "bbl": "1000707501",
+    "address": "125 MAIDEN LANE",
+    "units": 57,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1015925",
+    "bbl": "1008387503",
+    "address": "35 WEST 36TH ST",
+    "units": 57,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1087186",
+    "bbl": "1010127501",
+    "address": "620 8 AVENUE",
+    "units": 57,
+    "bldgclass": "RI",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RI']"
+  },
+  {
+    "bin": "1036086",
+    "bbl": "1012947501",
+    "address": "500 PARK AVENUE",
+    "units": 57,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1022706",
+    "bbl": "1010027501",
+    "address": "1251 AVENUE OF THE AMER",
+    "units": 56,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1091043",
+    "bbl": "1015147503",
+    "address": "126A EAST 86TH STREET",
+    "units": 56,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1036153",
+    "bbl": "1012967502",
+    "address": "150 EAST 42 STREET",
+    "units": 55,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1076268",
+    "bbl": "1013027501",
+    "address": "277 PARK AVENUE",
+    "units": 55,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1085449",
+    "bbl": "1001997501",
+    "address": "210 CANAL STREET",
+    "units": 54,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1087662",
+    "bbl": "1002387501",
+    "address": "128 MOTT STREET",
+    "units": 52,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "3427354",
+    "bbl": "3025737501",
+    "address": "171 CALYER STREET",
+    "units": 50,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1003432",
+    "bbl": "1002807501",
+    "address": "17 EAST BROADWAY",
+    "units": 49,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "4623439",
+    "bbl": "4003977502",
+    "address": "27-09 40TH AVENUE",
+    "units": 49,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1034205",
+    "bbl": "1012597501",
+    "address": "36 WEST 44 STREET",
+    "units": 47,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "3329409",
+    "bbl": "3000307501",
+    "address": "168 PLYMOUTH STREET",
+    "units": 47,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "3329410",
+    "bbl": "3000307501",
+    "address": "168 PLYMOUTH STREET",
+    "units": 47,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1014526",
+    "bbl": "1007907505",
+    "address": "101 WEST 14 STREET",
+    "units": 46,
+    "bldgclass": "RM",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RM']"
+  },
+  {
+    "bin": "1089023",
+    "bbl": "1012617501",
+    "address": "1166 AVENUE OF THE AMER",
+    "units": 46,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1071414",
+    "bbl": "1012617501",
+    "address": "1166 AVENUE OF THE AMER",
+    "units": 46,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1081017",
+    "bbl": "1008397501",
+    "address": "",
+    "units": 45,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1076193",
+    "bbl": "1010197502",
+    "address": "1585 BROADWAY",
+    "units": 42,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  },
+  {
+    "bin": "1037546",
+    "bbl": "1013157501",
+    "address": "220 EAST 42 STREET",
+    "units": 42,
+    "bldgclass": "RC",
+    "source": "no_hpd",
+    "reason_codes": "['bldg_class_RC']"
+  }
+]

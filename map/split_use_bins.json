@@ -1,0 +1,359 @@
+[
+  {
+    "bin": "1009588",
+    "bbl": "1005750064",
+    "address": "27 WEST 11 STREET",
+    "class_b": 61,
+    "class_a": 4
+  },
+  {
+    "bin": "1010613",
+    "bbl": "1006080029",
+    "address": "116 WEST 13 STREET",
+    "class_b": 86,
+    "class_a": 1
+  },
+  {
+    "bin": "1018044",
+    "bbl": "1008790027",
+    "address": "143 EAST 23 STREET",
+    "class_b": 317,
+    "class_a": 1
+  },
+  {
+    "bin": "1023455",
+    "bbl": "1010097502",
+    "address": "111 WEST 56TH STREET",
+    "class_b": 587,
+    "class_a": 99
+  },
+  {
+    "bin": "1024894",
+    "bbl": "1010280017",
+    "address": "1752 BROADWAY",
+    "class_b": 204,
+    "class_a": 190
+  },
+  {
+    "bin": "1025000",
+    "bbl": "1010350060",
+    "address": "360 WEST 45 STREET",
+    "class_b": 77,
+    "class_a": 2
+  },
+  {
+    "bin": "1026317",
+    "bbl": "1010487502",
+    "address": "353 WEST 57 STREET",
+    "class_b": 959,
+    "class_a": 1
+  },
+  {
+    "bin": "1081705",
+    "bbl": "1010660032",
+    "address": "869 9 AVENUE",
+    "class_b": 151,
+    "class_a": 6
+  },
+  {
+    "bin": "1028948",
+    "bbl": "1011400046",
+    "address": "140 WEST 69 STREET",
+    "class_b": 136,
+    "class_a": 112
+  },
+  {
+    "bin": "1029754",
+    "bbl": "1011420024",
+    "address": "117 WEST 70 STREET",
+    "class_b": 385,
+    "class_a": 2
+  },
+  {
+    "bin": "1030522",
+    "bbl": "1011640047",
+    "address": "240 WEST 73 STREET",
+    "class_b": 142,
+    "class_a": 76
+  },
+  {
+    "bin": "1030741",
+    "bbl": "1011667501",
+    "address": "201 WEST 74 STREET",
+    "class_b": 84,
+    "class_a": 91
+  },
+  {
+    "bin": "1032217",
+    "bbl": "1012170057",
+    "address": "166 WEST 87 STREET",
+    "class_b": 192,
+    "class_a": 10
+  },
+  {
+    "bin": "1033597",
+    "bbl": "1012390039",
+    "address": "206 WEST 92 STREET",
+    "class_b": 139,
+    "class_a": 2
+  },
+  {
+    "bin": "1033647",
+    "bbl": "1012410023",
+    "address": "2508 BROADWAY",
+    "class_b": 103,
+    "class_a": 1
+  },
+  {
+    "bin": "1033935",
+    "bbl": "1012480011",
+    "address": "345 WEST 86 STREET",
+    "class_b": 253,
+    "class_a": 2
+  },
+  {
+    "bin": "1033993",
+    "bbl": "1012490054",
+    "address": "350 WEST 88 STREET",
+    "class_b": 178,
+    "class_a": 1
+  },
+  {
+    "bin": "1034128",
+    "bbl": "1012520027",
+    "address": "312 WEST 93 STREET",
+    "class_b": 109,
+    "class_a": 1
+  },
+  {
+    "bin": "1034137",
+    "bbl": "1012520060",
+    "address": "306 WEST 94 STREET",
+    "class_b": 114,
+    "class_a": 2
+  },
+  {
+    "bin": "1034183",
+    "bbl": "1012530038",
+    "address": "316 WEST 95 STREET",
+    "class_b": 191,
+    "class_a": 1
+  },
+  {
+    "bin": "1034238",
+    "bbl": "1012607502",
+    "address": "66 WEST 45 STREET",
+    "class_b": 166,
+    "class_a": 62
+  },
+  {
+    "bin": "1035253",
+    "bbl": "1012747504",
+    "address": "768 5 AVENUE",
+    "class_b": 256,
+    "class_a": 168
+  },
+  {
+    "bin": "1036458",
+    "bbl": "1013057501",
+    "address": "569 LEXINGTON AVENUE",
+    "class_b": 730,
+    "class_a": 1
+  },
+  {
+    "bin": "1038578",
+    "bbl": "1013297501",
+    "address": "231 EAST 55 STREET",
+    "class_b": 114,
+    "class_a": 43
+  },
+  {
+    "bin": "1041706",
+    "bbl": "1013907505",
+    "address": "20 EAST 76TH STREET",
+    "class_b": 102,
+    "class_a": 9
+  },
+  {
+    "bin": "1047968",
+    "bbl": "1015150046",
+    "address": "152 EAST 87 STREET",
+    "class_b": 53,
+    "class_a": 1
+  },
+  {
+    "bin": "1051335",
+    "bbl": "1015840045",
+    "address": "510 EAST 88 STREET",
+    "class_b": 92,
+    "class_a": 20
+  },
+  {
+    "bin": "1055156",
+    "bbl": "1018290026",
+    "address": "203 WEST 113 STREET",
+    "class_b": 88,
+    "class_a": 31
+  },
+  {
+    "bin": "1055665",
+    "bbl": "1018420051",
+    "address": "50 WEST 107 STREET",
+    "class_b": 72,
+    "class_a": 1
+  },
+  {
+    "bin": "1056020",
+    "bbl": "1018630052",
+    "address": "132 WEST 109 STREET",
+    "class_b": 89,
+    "class_a": 20
+  },
+  {
+    "bin": "1056487",
+    "bbl": "1018720054",
+    "address": "2651 BROADWAY",
+    "class_b": 126,
+    "class_a": 1
+  },
+  {
+    "bin": "1056650",
+    "bbl": "1018790013",
+    "address": "239 WEST 107 STREET",
+    "class_b": 85,
+    "class_a": 2
+  },
+  {
+    "bin": "1056651",
+    "bbl": "1018790015",
+    "address": "235 WEST 107 STREET",
+    "class_b": 86,
+    "class_a": 1
+  },
+  {
+    "bin": "1057021",
+    "bbl": "1018850007",
+    "address": "549 WEST 113 STREET",
+    "class_b": 110,
+    "class_a": 22
+  },
+  {
+    "bin": "1057068",
+    "bbl": "1018870048",
+    "address": "305 WEST 97 STREET",
+    "class_b": 97,
+    "class_a": 1
+  },
+  {
+    "bin": "1057320",
+    "bbl": "1018940011",
+    "address": "2841 BROADWAY",
+    "class_b": 143,
+    "class_a": 128
+  },
+  {
+    "bin": "1057322",
+    "bbl": "1018940023",
+    "address": "610 WEST 111 STREET",
+    "class_b": 86,
+    "class_a": 2
+  },
+  {
+    "bin": "1081596",
+    "bbl": "1018950045",
+    "address": "619 WEST 113 STREET",
+    "class_b": 52,
+    "class_a": 1
+  },
+  {
+    "bin": "1057964",
+    "bbl": "1019130056",
+    "address": "152 WEST 129 STREET",
+    "class_b": 90,
+    "class_a": 24
+  },
+  {
+    "bin": "1087116",
+    "bbl": "1019140026",
+    "address": "109 WEST 129 STREET",
+    "class_b": 59,
+    "class_a": 1
+  },
+  {
+    "bin": "1058396",
+    "bbl": "1019230038",
+    "address": "150 ST NICHOLAS AVENUE",
+    "class_b": 89,
+    "class_a": 1
+  },
+  {
+    "bin": "1090804",
+    "bbl": "1019630009",
+    "address": "415 WEST 120 STREET",
+    "class_b": 52,
+    "class_a": 2
+  },
+  {
+    "bin": "1080813",
+    "bbl": "1019940038",
+    "address": "167 CLAREMONT AVENUE",
+    "class_b": 81,
+    "class_a": 105
+  },
+  {
+    "bin": "1059870",
+    "bbl": "1019940057",
+    "address": "500 RIVERSIDE DRIVE",
+    "class_b": 492,
+    "class_a": 7
+  },
+  {
+    "bin": "1061221",
+    "bbl": "1020580001",
+    "address": "1641 AMSTERDAM AVENUE",
+    "class_b": 108,
+    "class_a": 33
+  },
+  {
+    "bin": "1061934",
+    "bbl": "1020770020",
+    "address": "515 WEST 145 STREET",
+    "class_b": 58,
+    "class_a": 1
+  },
+  {
+    "bin": "1061936",
+    "bbl": "1020770023",
+    "address": "511 WEST 145 STREET",
+    "class_b": 59,
+    "class_a": 1
+  },
+  {
+    "bin": "1063676",
+    "bbl": "1021540076",
+    "address": "558 WEST 184 STREET",
+    "class_b": 59,
+    "class_a": 1
+  },
+  {
+    "bin": "3000556",
+    "bbl": "3001727501",
+    "address": "50 NEVINS STREET",
+    "class_b": 194,
+    "class_a": 1
+  },
+  {
+    "bin": "3257033",
+    "bbl": "3020440013",
+    "address": "105 CARLTON AVENUE",
+    "class_b": 134,
+    "class_a": 1
+  },
+  {
+    "bin": "3325854",
+    "bbl": "3030610018",
+    "address": "147 GRAHAM AVENUE",
+    "class_b": 88,
+    "class_a": 2
+  }
+]
