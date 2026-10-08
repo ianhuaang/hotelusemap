@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo, Fragment } from "rea
 import maplibregl from "maplibre-gl";
 import {
   SEGMENTS, SEGMENT_COLORS, segmentColor, CRM_STATUSES, featureCentroid, estRooms,
-  ROOM_SOURCE_EXPLAIN, transientRooms, parseJsonProp, buildRecordLinks, distinctAddresses,
+  ROOM_SOURCE_EXPLAIN, parseJsonProp, buildRecordLinks, distinctAddresses,
   computeScore, buildScoreSignals, buildFeasibilityItems, buildConsiderations,
   buildDistressSignals,
 } from "./propertyFacts";
@@ -72,8 +72,6 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
     ["any",
       [">=",
         ["case",
-          // estRooms, in the order it reads: the build's own count first.
-          [">", ["to-number", ["get", "transient_rooms_gross"], 0], 0], ["to-number", ["get", "transient_rooms"], 0],
           [">", ["to-number", ["get", "hpd_class_b"], 0], 0], ["to-number", ["get", "hpd_class_b"], 0],
           [">", ["to-number", ["get", "coo_dwelling_units"], 0], 0], ["to-number", ["get", "coo_dwelling_units"], 0],
           ["all", ["==", ["slice", ["get", "bldgclass"], 0, 1], "H"], [">=", ["to-number", ["get", "numfloors"], 0], 3]],
@@ -89,8 +87,7 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
 
   if (minClassB > 0) {
     conditions.push(["any",
-      // transientRooms(p), in the map's expression language.
-      [">=", ["to-number", ["coalesce", ["get", "transient_rooms"], ["get", "hpd_class_b"]], 0], minClassB],
+      [">=", ["to-number", ["get", "hpd_class_b"], 0], minClassB],
       ["==", ["get", "segment"], "partial"],
       ["==", ["get", "segment"], "active_hotel"],
       alwaysShowFilter,
@@ -131,14 +128,7 @@ function buildFilter(activeSegments, showPriorOps, showReversion, minUnits, minC
     refinements.push(["!", ["has", "hotel_name"]]);
   }
   if (hideCondos) {
-    // coalesce: buildings.geojson built before has_separately_owned_units
-    // existed only carries is_condo. Drop the fallback once a build with the
-    // new field has shipped.
-    refinements.push([
-      "!=",
-      ["coalesce", ["get", "has_separately_owned_units"], ["get", "is_condo"]],
-      true,
-    ]);
+    refinements.push(["!=", ["get", "is_condo"], true]);
   }
   if (hideRestricted) {
     refinements.push(["!=", ["get", "restricted_class"], true]);
@@ -854,7 +844,6 @@ function DetailPanel({ feature, onClose, onAddToList, isInList, notes, onSaveNot
                     <span className="absolute bottom-full left-0 mb-1 w-56 bg-gray-900 text-white text-[10px] leading-snug rounded-lg px-3 py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50 shadow-lg">
                       <span className="font-semibold text-blue-300">Source: {rooms.source}</span><br/>
                       {sourceExplain[rooms.source]}
-                      {rooms.note && <><br/>{rooms.note}</>}
                     </span>
                   </span>
                 </div>
@@ -1611,8 +1600,8 @@ function FilterPanel({
                 </svg>
               )}
             </span>
-            <span className="text-xs text-gray-700">Hide multi-owner condos</span>
-            <InfoTip text="Exclude condominiums whose units have been sold off to separate owners — there is no single party to deal with, only a board or dozens of unit owners. A condominium regime still held by one owner is a normal single-owner deal and is not hidden." />
+            <span className="text-xs text-gray-700">Hide condos</span>
+            <InfoTip text="Exclude condominium buildings. Condos require board approval or commercial condo owner negotiation — a different deal structure than single-owner rentals." />
           </label>
 
           <label className="flex items-center gap-2.5 cursor-pointer px-2.5 mt-0.5">
@@ -1648,7 +1637,7 @@ function FilterPanel({
             />
           </div>
           <div className="flex items-center justify-between px-2.5 mt-1">
-            <span className="text-xs text-gray-700">Min transient rooms</span>
+            <span className="text-xs text-gray-700">Min Class B</span>
             <input
               type="number"
               min={0}
@@ -1966,7 +1955,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
     if (!segOk && !overlayOk) return false;
 
     if (!overlayOk && estRooms(p).value < minUnits) return false;
-    if (!overlayOk && minClassB > 0 && transientRooms(p) < minClassB && p.segment !== "partial" && p.segment !== "active_hotel") return false;
+    if (!overlayOk && minClassB > 0 && (p.hpd_class_b || 0) < minClassB && p.segment !== "partial" && p.segment !== "active_hotel") return false;
 
     if (!overlayOk) {
       if (filters.filterTempCoo && !p.coo_has_temporary) return false;
@@ -1983,8 +1972,7 @@ function applyFilters(features, activeSegments, showPriorOps, showReversion, min
         if (!hasDistress) return false;
       }
       if (noOperatorOnly && p.hotel_name) return false;
-      const multiOwner = p.has_separately_owned_units ?? p.is_condo;
-      if (hideCondos && multiOwner) return false;
+      if (hideCondos && p.is_condo) return false;
       if (hideRestricted && p.restricted_class) return false;
     }
 
@@ -2253,7 +2241,7 @@ function TableView({ features, onSelectFeature, exportList, onAddToList, extraFi
             />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-gray-500">Min transient rooms</span>
+            <span className="text-[11px] text-gray-500">Min Class B</span>
             <input
               type="number"
               min={0}
