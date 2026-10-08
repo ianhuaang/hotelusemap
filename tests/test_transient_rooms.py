@@ -15,11 +15,19 @@ def rooms(**record):
     return _transient_rooms(record)
 
 
-def test_a_hotel_hpd_never_registered_is_counted_from_dob():
-    """333 West 86 Street: H6, 5 Class B, 219 transient units on DOB. The
-    ten-room filter dropped it on the registration."""
-    net, gross, stab, basis = rooms(bldgclass="H6", hpd_class_b=5, dob_transient_units=219)
-    assert (net, basis) == (219, "dob_transient_units")
+def test_a_hotel_hpd_registers_few_rooms_in_is_counted_from_dob():
+    """102 West 128 Street: HH, 9 Class B, no Class A, 27 DOB transient."""
+    net, gross, stab, basis = rooms(bldgclass="HH", hpd_class_b=9, dob_transient_units=27)
+    assert (net, basis) == (27, "dob_transient_units")
+
+
+def test_dob_units_are_the_apartments_where_hpd_registers_apartments():
+    """333 West 86 Street: H6, 219 DOB units, 216 Class A. The DOB figure is
+    the apartments, not hotel rooms. 410 East 58 Street has 125 of each."""
+    assert rooms(bldgclass="H6", hpd_class_a=216, hpd_class_b=5,
+                 dob_transient_units=219)[::3] == (5, "hpd_class_b")
+    assert rooms(bldgclass="HS", hpd_class_a=125, hpd_class_b=0,
+                 dob_transient_units=125)[::3] == (0, "none")
 
 
 def test_no_registration_at_all_reads_dob():

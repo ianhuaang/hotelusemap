@@ -693,10 +693,13 @@ def _transient_rooms(record: dict) -> tuple[int, int, int, str]:
     counts rooms with permanent tenants in them: 477 West 57 Street registers
     222 when 179 are rent-stabilised homes.
 
-    Gross is Class B, unless DOB's transient-unit count is larger AND either
-    HPD registers no Class B at all or the building class is a hotel. The
-    guard is what keeps an old R-1 filing from inflating an apartment house
-    -- 11 West 67 Street is D4 with 153 DOB units and 4 Class B. An H-class
+    Gross is Class B, unless DOB's transient-unit count is larger, HPD
+    registers no Class A apartments, and either no Class B or a hotel
+    building class. The Class A guard is load-bearing: where HPD registers
+    apartments, DOB's figure is usually those same apartments off an old
+    R-1 filing -- 333 West 86 Street is H6 with 219 DOB units and 216 Class
+    A, 410 East 58 Street has 125 of each. 187 of the 415 buildings the
+    looser rule credited to DOB had Class A registered. An H-class
     building with no Class A units falls back to its C of O count, as the
     guest-room count does. The floor estimate never counts here: a guess is
     not a room.
@@ -707,14 +710,15 @@ def _transient_rooms(record: dict) -> tuple[int, int, int, str]:
     under the Act is a legal reading, not this function's.
     """
     class_b = int(record.get("hpd_class_b") or 0)
+    class_a = int(record.get("hpd_class_a") or 0)
     dob = int(record.get("dob_transient_units") or 0)
     bldgclass = (record.get("bldgclass") or "").upper()
     hotel_class = bldgclass.startswith("H")
 
     gross, basis = class_b, ("hpd_class_b" if class_b else "none")
-    if dob > gross and (class_b == 0 or hotel_class):
+    if dob > gross and not class_a and (class_b == 0 or hotel_class):
         gross, basis = dob, "dob_transient_units"
-    if not gross and hotel_class and not int(record.get("hpd_class_a") or 0):
+    if not gross and hotel_class and not class_a:
         coo = int(record.get("coo_dwelling_units") or 0)
         if coo:
             gross, basis = coo, "coo_dwelling_units"
