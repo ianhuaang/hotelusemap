@@ -935,3 +935,74 @@ def test_stripping_the_class_leaves_the_address_behind():
 
 def test_a_records_mirror_is_not_a_trusted_host():
     assert "propertyshark.com" not in ew.TRUSTED_HOST_HINTS
+
+
+# --- not yet, and not quoted (the 2026-10-08 re-run) ------------------------
+
+def _page(title, snippet, host="https://newyorkyimby.com/x"):
+    return {"title": title, "snippet": snippet, "link": host}
+
+
+def test_a_conversion_in_the_headline_is_not_the_building_now():
+    """371 Seventh Avenue. The body names the Stewart Hotel; the headline
+    says it is being made into affordable housing."""
+    v = classify([_page(
+        "Affordable Housing Conversion Begins At 371 Seventh Avenue In Midtown",
+        "Slate Property Group and Breaking Ground have completed the "
+        "acquisition of the Stewart Hotel at 371 Seventh Avenue in Midtown, "
+        "Manhattan.")], ["371 7 AVENUE", "371 SEVENTH AVENUE"])
+    assert v["disposition"] == "flag"
+    assert v["changing_marker"] == "conversion"
+
+
+def test_a_shelter_slated_to_open_is_not_a_shelter_yet():
+    v = classify([_page(
+        "New homeless shelter slated for Hoyt Street next year • Brooklyn Paper",
+        "A new homeless shelter is slated to open in Downtown Brooklyn early "
+        "next year, bringing 160 beds for single adult men to the facility at "
+        "1 Hoyt St.", "https://www.brooklynpaper.com/x")], ["1 HOYT STREET"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_hotel_under_construction_is_not_a_hotel_yet():
+    v = classify([_page(
+        "Construction Update: 32 West 29th Street",
+        "The new hotel at 32 West 29th Street is well above ground, with "
+        "concrete already at the 11th floor.")], ["32 WEST 29 STREET"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_closed_hotel_being_converted_away_is_not_a_hotel():
+    v = classify([_page(
+        "960 Sixth Avenue",
+        "The Yard Will Convert Closed Marriott Hotel to Flex Office Space. "
+        "960 Sixth Avenue", "https://commercialobserver.com/x")],
+        ["960 AVENUE OF THE AMERICAS", "960 SIXTH AVENUE"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_title_alone_never_removes_a_building():
+    """No quote means nothing in the body was read. A person can open the
+    page; this function cannot."""
+    v = classify([_page("Hotel at 711 Seventh Avenue", "",
+                        "https://therealdeal.com/x")], ["711 7 AVENUE", "711 SEVENTH AVENUE"])
+    assert v["quoted"] is False
+    assert v["disposition"] == "flag"
+    assert "title only" in v["basis"]
+
+
+def test_a_finished_conversion_still_removes():
+    """'Converted' is not a not-yet marker. The Crain's sentence is the
+    strongest evidence 35-02 37 Avenue has and it must keep removing."""
+    v = classify([CRAINS], LIC)
+    assert v["changing_marker"] is None
+    assert v["disposition"] == "remove"
+
+
+def test_a_current_operator_on_a_trusted_page_still_removes():
+    v = classify([_page(
+        "330 East 56th Street",
+        "Pension fund's stake in Sutton Place extended-stay hotel valued at "
+        "$106M. CalSTRS owns 91% of AKA Sutton, records show. 330 East 56th "
+        "Street", "https://therealdeal.com/x")], ["330 EAST 56 STREET"])
+    assert v["disposition"] == "remove"

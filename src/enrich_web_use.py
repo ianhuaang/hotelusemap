@@ -321,6 +321,23 @@ STALE_MARKERS = (
     "prior to", "originally",
 )
 
+# The other way a sentence is not about now: the building is about to become
+# something, or is being made into it. All five bad removes in the 2026-10-08
+# re-run were this — "Affordable Housing Conversion Begins At 371 Seventh
+# Avenue", "Construction Update: 32 West 29th Street", "Jeff Sutton's Planned
+# 340-Key Midtown Hotel Enters Demolition Phase", "Will Convert Closed
+# Marriott Hotel to Flex Office", "shelter is slated to open". "Converted" is
+# deliberately absent: a finished conversion describes what the building is
+# now, and it is the strongest evidence 35-02 37 Avenue has.
+CHANGING_MARKERS = (
+    "conversion", "will convert", "to convert", "converting", "redevelop",
+    "planned", "plans", "proposed", "slated", "rumored", "replacement",
+    "will open", "to open", "will be", "set to", "coming soon",
+    "under construction", "construction", "permits filed", "permit",
+    "filing", "demolition", "groundbreaking", "breaks ground", "topped out",
+    "above ground",
+)
+
 
 # The first digit of a BBL. Derived rather than read off the feature: the
 # build has never carried a `borough` property, so both modes below were
@@ -546,7 +563,8 @@ def strip_class_strings(text: str) -> str:
     return CLASS_LEAD_CODE_RE.sub(" ", text)
 
 
-def stale_evidence(text: str, phrase: str) -> str | None:
+def stale_evidence(text: str, phrase: str,
+                   markers: tuple = STALE_MARKERS) -> str | None:
     """The past-tense marker attached to `phrase`, if there is one.
 
     Read around the matched phrase rather than over the whole result, because
@@ -587,10 +605,28 @@ def stale_evidence(text: str, phrase: str) -> str | None:
 
     window = low[start:end]
     return next(
-        (m for m in STALE_MARKERS if re.search(rf"\b{re.escape(m)}", window)), None)
+        (m for m in markers if re.search(rf"\b{re.escape(m)}", window)), None)
 
 
-def disposition_for(trusted: bool, stale: str | None) -> str:
+def changing_evidence(title: str, blob: str, phrase: str) -> str | None:
+    """The future or in-progress marker on this reading, if there is one.
+
+    Read in the clause around the phrase, like the past tense, and also
+    anywhere in the title. A headline is what the whole page is about, and
+    the development trades put the change there and the building's name in
+    the body: "Permits Filed: 13-Story Hotel at 37-35 21st Street" says the
+    hotel does not exist yet, though no clause in the body has to.
+    """
+    hit = stale_evidence(blob, phrase, CHANGING_MARKERS)
+    if hit:
+        return hit
+    low = title.lower()
+    return next((m for m in CHANGING_MARKERS
+                 if re.search(rf"\b{re.escape(m)}", low)), None)
+
+
+def disposition_for(trusted: bool, stale: str | None,
+                    changing: str | None = None, quoted: bool = True) -> str:
     """What a reading licenses: dropping the building, or a person looking.
 
     Only evidence that describes the building now, on a source that is about
@@ -605,8 +641,16 @@ def disposition_for(trusted: bool, stale: str | None) -> str:
     229 Duffield Street" on a university's accommodations page — and is simply
     three years out of date. A tense test alone would have removed a building
     the Webster Apartments runs as housing.
+
+    Two more halves, from the re-run. A building about to become something,
+    or being made into it, is not that thing yet (`changing`). And a reading
+    with no quote rests on a page title alone, which a person can check and
+    this function cannot: four of the fifteen removes were title-only YIMBY
+    and Real Deal pages (`quoted`).
     """
-    return "remove" if (trusted and not stale) else "flag"
+    if trusted and not stale and not changing and quoted:
+        return "remove"
+    return "flag"
 
 
 def classify(results: list[dict], addresses: list[str]) -> dict | None:
@@ -623,15 +667,22 @@ def classify(results: list[dict], addresses: list[str]) -> dict | None:
             host = urllib.parse.urlparse(r["link"]).netloc.lower()
             trusted = any(h in host for h in TRUSTED_HOST_HINTS)
             stale = stale_evidence(blob, hit)
+            changing = changing_evidence(
+                strip_class_strings(r["title"]), blob, hit)
+            quoted = bool((r.get("snippet") or "").strip())
             return {
                 "current_use": use,
                 "current_use_label": label,
                 "transient_ok": transient_ok,
                 "use_confidence": "medium" if trusted else "low",
-                "disposition": disposition_for(trusted, stale),
+                "disposition": disposition_for(trusted, stale, changing, quoted),
                 "stale_marker": stale,
+                "changing_marker": changing,
+                "quoted": quoted,
                 "basis": (f"web:{hit!r} in {host}"
-                          + (f", past tense ({stale!r})" if stale else "")),
+                          + (f", past tense ({stale!r})" if stale else "")
+                          + (f", not yet ({changing!r})" if changing else "")
+                          + ("" if quoted else ", title only")),
                 "evidence": [
                     {"title": r["title"], "snippet": r["snippet"], "link": r["link"]}
                 ],
@@ -946,9 +997,12 @@ def main() -> None:
     ap.add_argument("--corroborate", action="store_true",
                     help="put the open Places claims to the web instead of "
                          "reading a use for buildings Places could not see")
+    ap.add_argument("--replay", action="store_true",
+                    help="re-classify the cached evidence under the current "
+                         "rules; no searches, no cost")
     args = ap.parse_args()
 
-    if not API_KEY:
+    if not API_KEY and not args.replay:
         sys.exit(
             "Set ANTHROPIC_API_KEY.\n"
             "  This is not the Places key — the web screen moved off\n"
@@ -966,6 +1020,19 @@ def main() -> None:
     targets = load_targets(args.all, args.bbl)
     if args.limit:
         targets = targets[: args.limit]
+    if args.replay:
+        # A cached verdict is otherwise reused verbatim, so a rule change did
+        # nothing until the cache was moved aside and the searches paid for
+        # again. Only the reading that won is stored, so a replay can demote
+        # it or drop it but cannot find a better result the search also
+        # returned; a stricter rule errs towards flag, which is the safe side.
+        missing = [t for t in targets if t["bbl"] not in cache]
+        if missing:
+            sys.exit(f"--replay needs every target cached; {len(missing)} are not")
+        for t in targets:
+            v = cache[t["bbl"]]
+            if v:
+                cache[t["bbl"]] = classify(v["evidence"], t["addresses"])
     log(f"  checking {len(targets)} buildings on the open web")
 
     rows, found = [], 0
