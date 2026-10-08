@@ -243,9 +243,16 @@ TRUSTED_HOST_HINTS = (
     "nytimes.com", "ny1.com", "brooklynpaper.com", "patch.com", "6sqft.com",
     "bisnow.com", "curbed.com", "cityandstateny.com", "nypost.com", "bkrea.com",
     "citylimits.org", "documentedny.com", "thecity.nyc",
-    "newyorkyimby.com", "propertyshark.com", "landmarkwest.org",
+    "newyorkyimby.com", "landmarkwest.org",
     "compstak.com", "affordablehousing411.com",
 )
+# propertyshark.com was here and has been taken out. It is a records mirror,
+# not a source about occupancy: what it publishes for an address is the DOF
+# class and the sales history, which the pipeline already holds. Trusting it
+# turned eleven class strings into removes in the 241-building run, each one
+# the city record arriving back as if it were independent corroboration. The
+# class strings are stripped now, but the host should not be trusted either --
+# a records mirror cannot corroborate the records.
 
 # A building-class field, not a sentence about the building. PropertyShark and
 # the DOF records print the class as a run of categories joined by slashes —
@@ -263,6 +270,32 @@ CLASS_WORD = (
 CLASS_STRING_RE = re.compile(
     rf"\b{CLASS_WORD}(?:\s*/\s*{CLASS_WORD})+\b", re.I)
 
+# The same field written long. The slash form above was only ever half of it:
+# the records mirrors also print the class as a sentence ending in the DOF
+# code, and that form has no slashes to catch.
+#
+#     This Converted Dwellings or Rooming House (C5) located at 251 West 15th
+#     Building class SRO - 1 or 2 People Housed in Individual Rooms ... (HR)
+#     This Hostel - Bed Rentals in Dormitory Like Setting ... (HH) located at
+#
+# Eleven of the thirty-one removes in the 241-building run were this, which is
+# worse than a wrong reading: the pipeline already holds bldgclass, so the
+# screen was buying back the city record off a property site and recording it
+# as independent web evidence. One source cannot both make a claim and
+# corroborate it.
+#
+# Anchored on the parenthesised class code, or on the words "building class",
+# because those are what make it a classification rather than a sentence. The
+# bound stops at markdown and sentence punctuation so the street address on
+# the rest of the line survives — mentions_address still has to find it.
+CLASS_DESCRIPTION_RE = re.compile(
+    r"(?:\bthis\b|\bbuilding class\b)[^.#|]{0,120}?\(\s*[A-Z][0-9A-Z]\s*\)",
+    re.I)
+CLASS_FIELD_RE = re.compile(
+    r"\bbuilding class\b\s*[:·-]?\s*[^.#|]{0,90}", re.I)
+CLASS_LEAD_CODE_RE = re.compile(
+    r"^[^.#|]{0,120}?\(\s*[A-Z][0-9A-Z]\s*\)")
+
 # Evidence that describes the building in the past. A hit here does not throw
 # the reading away — it stops it short of removing the building and sends it to
 # a person instead, because "this was a hotel" and "this is a hotel" are the
@@ -272,6 +305,14 @@ CLASS_STRING_RE = re.compile(
 # restaurant and hotel at 893 Broadway (2015, pre-redevelopment), and the thirty
 # years of transitional housing at 50 Nevins Street that preceded the building
 # standing there now.
+# Where a clause ends, for stale_evidence. A hyphen only counts when it is
+# spaced, so "Mental Health-licensed" stays one clause.
+CLAUSE_BOUNDARY_RE = re.compile(r"[.;,:!?\n]|\s[-\u2013\u2014]\s")
+
+# How far the clause walk may run before giving up, so a paragraph without
+# punctuation cannot widen this back into a whole-string test.
+STALE_CLAUSE_CAP = 200
+
 STALE_MARKERS = (
     "formerly", "former", "previously", "used to be", "once was", "once a",
     "was converted", "was occupied", "was a", "was the", "had been",
@@ -491,13 +532,18 @@ def mentions_address(text: str, addresses: list[str]) -> bool:
 
 
 def strip_class_strings(text: str) -> str:
-    """Drop building-class runs before the phrases are matched.
+    """Drop the assessor's building class before the phrases are matched.
 
-    See CLASS_STRING_RE. "Hotel/Motel/Hostel/B&B at 37-35 21st Street" is the
-    assessor's category for the lot, not a sentence about what trades there,
-    and it satisfies four rules at once.
+    Three forms of the same field. "Hotel/Motel/Hostel/B&B at 37-35 21st
+    Street" is the slash run; "This Converted Dwellings or Rooming House (C5)
+    located at 251 West 15th Street" and "Building class · Hostel - Bed
+    Rentals" are the long ones. None of them is a sentence about what trades
+    in the building, and each satisfies several rules at once.
     """
-    return CLASS_STRING_RE.sub(" ", text)
+    text = CLASS_STRING_RE.sub(" ", text)
+    text = CLASS_DESCRIPTION_RE.sub(" ", text)
+    text = CLASS_FIELD_RE.sub(" ", text)
+    return CLASS_LEAD_CODE_RE.sub(" ", text)
 
 
 def stale_evidence(text: str, phrase: str) -> str | None:
@@ -510,16 +556,36 @@ def stale_evidence(text: str, phrase: str) -> str | None:
     reads its "Former" — which belongs to the hotel the building stopped being
     — and flags the sentence that establishes it is a shelter now.
 
-    So: a window before the phrase, where a qualifier would sit ("was occupied
-    by a restaurant and hotel", "operated the building as an OMH-licensed
-    transitional housing facility"), and a short one after, where a trailing
-    one would ("Hotel Commander (former); the Tempo (current)").
+    The window is the clause the phrase sits in, not a character count. A
+    count cannot do this job: 50 Nevins Street needs at least 61 characters of
+    lookback to see "operated the building as", and 35-02 37 Avenue breaks at
+    about 95 when the lookback reaches back to "Former". It was 60, and missed
+    50 Nevins by a single character — "operated" began at 38 and the window
+    opened at 39.
+
+    A clause is the right unit anyway, because that is the span a past-tense
+    qualifier governs. "Long Island City, Queens Converted into Homeless
+    Shelter" does not inherit the "Former" from before the comma; "the
+    developer operated the building as an Office of Mental Health-licensed
+    transitional housing facility" does carry its verb across the whole of
+    itself. The cap is there so one unpunctuated paragraph cannot widen this
+    back into the whole-string test it replaced.
     """
     low, want = text.lower(), phrase.lower()
     i = low.find(want)
     if i < 0:
         return None
-    window = low[max(0, i - 60): i + len(want) + 25]
+
+    before = low[max(0, i - STALE_CLAUSE_CAP):i]
+    bounds = list(CLAUSE_BOUNDARY_RE.finditer(before))
+    start = (i - len(before)) + (bounds[-1].end() if bounds else 0)
+
+    j = i + len(want)
+    after = low[j:j + STALE_CLAUSE_CAP]
+    ahead = CLAUSE_BOUNDARY_RE.search(after)
+    end = j + (ahead.start() if ahead else len(after))
+
+    window = low[start:end]
     return next(
         (m for m in STALE_MARKERS if re.search(rf"\b{re.escape(m)}", window)), None)
 

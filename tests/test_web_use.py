@@ -14,8 +14,11 @@ These are pure-function tests on the reading, not on the network.
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import src.enrich_web_use as ew
 from src.enrich_web_use import (
     borough_of, classify, corroborate, distinctive_tokens, mentions_address,
     names_the_place, query_addresses, results_from_message,
@@ -871,3 +874,64 @@ def test_a_result_with_no_url_is_dropped():
             {"type": "web_search_result_location", "url": "",
              "title": "T", "cited_text": "a shelter"}]},
     ]}) == []
+
+
+# --- the 241-building run's two regressions ---------------------------------
+
+def test_50_nevins_past_tense_is_not_missed_by_one_character():
+    """The clause-bounded window exists because a character count could not do
+    this. At 60 characters "operated" began at 38 and the window opened at 39,
+    so 50 Nevins Street was removed on a sentence about the previous thirty
+    years. Widening the count far enough to catch it would have reached back
+    past the comma in the 35-02 37 Avenue title and broken that instead."""
+    text = ("Over the last 30 years, the developer operated the building as an "
+            "Office of Mental Health-licensed transitional housing facility.")
+    assert ew.stale_evidence(text, "transitional housing") == "operated the building"
+
+
+def test_a_qualifier_does_not_reach_across_a_clause_boundary():
+    """The other half of the same test. "Former" belongs to the hotel this
+    building stopped being, not to the shelter it now is."""
+    title = ("Former Hotel Sold for $34.75M at 37-06 36th Street in Long "
+             "Island City, Queens Converted into Homeless Shelter")
+    assert ew.stale_evidence(title, "homeless shelter") is None
+
+
+def test_a_trailing_qualifier_still_counts():
+    assert ew.stale_evidence("Hotel Commander (former); the Tempo (current)",
+                             "hotel") == "former"
+
+
+@pytest.mark.parametrize("snippet,phrase", [
+    ("This Converted Dwellings or Rooming House (C5) located at 251 West 15th Street",
+     "rooming house"),
+    ("Buildings on lot 1 Building class SRO - 1 or 2 People Housed in Individual "
+     "Rooms in Multiple Dwelling Affordable Housing (HR) Year built 1926",
+     " sro "),
+    ("This Hostel - Bed Rentals in Dormitory Like Setting with Shared Rooms & "
+     "Bathrooms (HH) located at 850 West End Avenue", "hostel"),
+    ("This Hotel - Private Club, Luxury Type (H5) located at 560 Park Avenue",
+     "private club"),
+    ("## About 22 North Loop Road, New York This Full Service Hotel (H2) located "
+     "at Cornell Tech Campus", "hotel"),
+])
+def test_a_building_class_description_is_not_evidence(snippet, phrase):
+    """Eleven of thirty-one removes were the assessor's class read back off a
+    records mirror. The pipeline already holds bldgclass; buying it back off
+    the web and calling it corroboration is the city record laundering
+    itself."""
+    assert phrase in snippet.lower()
+    assert phrase not in ew.strip_class_strings(snippet).lower()
+
+
+def test_stripping_the_class_leaves_the_address_behind():
+    """mentions_address runs on the stripped text, so over-stripping would
+    throw away good results rather than bad readings."""
+    out = ew.strip_class_strings(
+        "This Converted Dwellings or Rooming House (C5) located at 251 West "
+        "15th Street, New York, NY 10011")
+    assert "251 west 15th street" in out.lower()
+
+
+def test_a_records_mirror_is_not_a_trusted_host():
+    assert "propertyshark.com" not in ew.TRUSTED_HOST_HINTS
