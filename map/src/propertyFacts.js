@@ -54,7 +54,31 @@ export function featureCentroid(f) {
   return [cx / ring.length, cy / ring.length];
 }
 
+// The build's one room count (transient_rooms in src/enrich.py) and where it
+// came from. Older builds do not carry it, and a building it found no rooms in
+// says so with a gross of 0; both fall through to the estimate chain below.
+const TRANSIENT_ROOMS_SOURCE = {
+  hpd_class_b: "HPD Class B",
+  dob_transient_units: "DOB transient",
+  coo_dwelling_units: "C of O",
+};
+
+// The number the ten-room filter compares against: the build's count where it
+// has one, the Class B registration where it predates the field. Drop the
+// fallback once a build has shipped with transient_rooms.
+export function transientRooms(p) {
+  return p.transient_rooms != null ? Number(p.transient_rooms) || 0 : (p.hpd_class_b || 0);
+}
+
 export function estRooms(p) {
+  if ((p.transient_rooms_gross || 0) > 0) {
+    const stab = p.transient_rooms_stabilized || 0;
+    return {
+      value: p.transient_rooms || 0,
+      source: TRANSIENT_ROOMS_SOURCE[p.transient_rooms_basis] || "HPD Class B",
+      note: stab > 0 ? `${p.transient_rooms_gross} rooms, less ${stab} with rent-stabilised tenants.` : "",
+    };
+  }
   const classB = p.hpd_class_b || 0;
   const cooUnits = p.coo_dwelling_units ? parseInt(p.coo_dwelling_units, 10) || 0 : 0;
   const isHotel = (p.bldgclass || "").startsWith("H");
@@ -70,6 +94,7 @@ export function estRooms(p) {
 
 export const ROOM_SOURCE_EXPLAIN = {
   "HPD Class B": "Transient (Class B) rooms registered with HPD under the Multiple Dwelling Law. Renewed annually by building owners — the most current signal of active transient capacity.",
+  "DOB transient": "Transient (R-1/J-1) units on DOB occupancy filings. Used where HPD has no Class B registration or the building is in a hotel class, since hotels often never register with HPD.",
   "C of O": "From DOB Certificate of Occupancy — the approved dwelling unit count. Reliable but may include residential units.",
   "Floor est.": "Estimated at ~15 rooms/floor. No HPD registration or C of O on file for this hotel.",
   "PLUTO": "From Dept. of Finance tax lot data. Counts residential dwelling units, not hotel rooms — accurate for residential buildings but undercounts hotels.",
