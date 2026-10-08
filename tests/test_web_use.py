@@ -14,8 +14,11 @@ These are pure-function tests on the reading, not on the network.
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import src.enrich_web_use as ew
 from src.enrich_web_use import (
     borough_of, classify, corroborate, distinctive_tokens, mentions_address,
     names_the_place, query_addresses, results_from_message,
@@ -871,3 +874,147 @@ def test_a_result_with_no_url_is_dropped():
             {"type": "web_search_result_location", "url": "",
              "title": "T", "cited_text": "a shelter"}]},
     ]}) == []
+
+
+# --- the 241-building run's two regressions ---------------------------------
+
+def test_50_nevins_past_tense_is_not_missed_by_one_character():
+    """The clause-bounded window exists because a character count could not do
+    this. At 60 characters "operated" began at 38 and the window opened at 39,
+    so 50 Nevins Street was removed on a sentence about the previous thirty
+    years. Widening the count far enough to catch it would have reached back
+    past the comma in the 35-02 37 Avenue title and broken that instead."""
+    text = ("Over the last 30 years, the developer operated the building as an "
+            "Office of Mental Health-licensed transitional housing facility.")
+    assert ew.stale_evidence(text, "transitional housing") == "operated the building"
+
+
+def test_a_qualifier_does_not_reach_across_a_clause_boundary():
+    """The other half of the same test. "Former" belongs to the hotel this
+    building stopped being, not to the shelter it now is."""
+    title = ("Former Hotel Sold for $34.75M at 37-06 36th Street in Long "
+             "Island City, Queens Converted into Homeless Shelter")
+    assert ew.stale_evidence(title, "homeless shelter") is None
+
+
+def test_a_trailing_qualifier_still_counts():
+    assert ew.stale_evidence("Hotel Commander (former); the Tempo (current)",
+                             "hotel") == "former"
+
+
+@pytest.mark.parametrize("snippet,phrase", [
+    ("This Converted Dwellings or Rooming House (C5) located at 251 West 15th Street",
+     "rooming house"),
+    ("Buildings on lot 1 Building class SRO - 1 or 2 People Housed in Individual "
+     "Rooms in Multiple Dwelling Affordable Housing (HR) Year built 1926",
+     " sro "),
+    ("This Hostel - Bed Rentals in Dormitory Like Setting with Shared Rooms & "
+     "Bathrooms (HH) located at 850 West End Avenue", "hostel"),
+    ("This Hotel - Private Club, Luxury Type (H5) located at 560 Park Avenue",
+     "private club"),
+    ("## About 22 North Loop Road, New York This Full Service Hotel (H2) located "
+     "at Cornell Tech Campus", "hotel"),
+])
+def test_a_building_class_description_is_not_evidence(snippet, phrase):
+    """Eleven of thirty-one removes were the assessor's class read back off a
+    records mirror. The pipeline already holds bldgclass; buying it back off
+    the web and calling it corroboration is the city record laundering
+    itself."""
+    assert phrase in snippet.lower()
+    assert phrase not in ew.strip_class_strings(snippet).lower()
+
+
+def test_stripping_the_class_leaves_the_address_behind():
+    """mentions_address runs on the stripped text, so over-stripping would
+    throw away good results rather than bad readings."""
+    out = ew.strip_class_strings(
+        "This Converted Dwellings or Rooming House (C5) located at 251 West "
+        "15th Street, New York, NY 10011")
+    assert "251 west 15th street" in out.lower()
+
+
+def test_a_records_mirror_is_not_a_trusted_host():
+    assert "propertyshark.com" not in ew.TRUSTED_HOST_HINTS
+
+
+# --- not yet, and not quoted (the 2026-10-08 re-run) ------------------------
+
+def _page(title, snippet, host="https://newyorkyimby.com/x"):
+    return {"title": title, "snippet": snippet, "link": host}
+
+
+def test_a_conversion_in_the_headline_is_not_the_building_now():
+    """371 Seventh Avenue. The body names the Stewart Hotel; the headline
+    says it is being made into affordable housing."""
+    v = classify([_page(
+        "Affordable Housing Conversion Begins At 371 Seventh Avenue In Midtown",
+        "Slate Property Group and Breaking Ground have completed the "
+        "acquisition of the Stewart Hotel at 371 Seventh Avenue in Midtown, "
+        "Manhattan.")], ["371 7 AVENUE", "371 SEVENTH AVENUE"])
+    assert v["disposition"] == "flag"
+    assert v["changing_marker"] == "conversion"
+
+
+def test_a_shelter_slated_to_open_is_not_a_shelter_yet():
+    v = classify([_page(
+        "New homeless shelter slated for Hoyt Street next year • Brooklyn Paper",
+        "A new homeless shelter is slated to open in Downtown Brooklyn early "
+        "next year, bringing 160 beds for single adult men to the facility at "
+        "1 Hoyt St.", "https://www.brooklynpaper.com/x")], ["1 HOYT STREET"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_hotel_under_construction_is_not_a_hotel_yet():
+    v = classify([_page(
+        "Construction Update: 32 West 29th Street",
+        "The new hotel at 32 West 29th Street is well above ground, with "
+        "concrete already at the 11th floor.")], ["32 WEST 29 STREET"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_closed_hotel_being_converted_away_is_not_a_hotel():
+    v = classify([_page(
+        "960 Sixth Avenue",
+        "The Yard Will Convert Closed Marriott Hotel to Flex Office Space. "
+        "960 Sixth Avenue", "https://commercialobserver.com/x")],
+        ["960 AVENUE OF THE AMERICAS", "960 SIXTH AVENUE"])
+    assert v["disposition"] == "flag"
+
+
+def test_a_title_alone_never_removes_a_building():
+    """No quote means nothing in the body was read. A person can open the
+    page; this function cannot."""
+    v = classify([_page("Hotel at 711 Seventh Avenue", "",
+                        "https://therealdeal.com/x")], ["711 7 AVENUE", "711 SEVENTH AVENUE"])
+    assert v["quoted"] is False
+    assert v["disposition"] == "flag"
+    assert "title only" in v["basis"]
+
+
+def test_a_finished_conversion_still_removes():
+    """'Converted' is not a not-yet marker. The Crain's sentence is the
+    strongest evidence 35-02 37 Avenue has and it must keep removing."""
+    v = classify([CRAINS], LIC)
+    assert v["changing_marker"] is None
+    assert v["disposition"] == "remove"
+
+
+def test_a_current_operator_on_a_trusted_page_still_removes():
+    v = classify([_page(
+        "330 East 56th Street",
+        "Pension fund's stake in Sutton Place extended-stay hotel valued at "
+        "$106M. CalSTRS owns 91% of AKA Sutton, records show. 330 East 56th "
+        "Street", "https://therealdeal.com/x")], ["330 EAST 56 STREET"])
+    assert v["disposition"] == "remove"
+
+
+def test_corroboration_inherits_not_yet():
+    """235 West 107 Street, corroborate mode. The web names something other
+    than the Places claim, but on a headline about redeveloping into it: the
+    verdict still keeps the building off the list, the disposition is a
+    person's, not a remove."""
+    page = _page("Developers Secure $38M to Redevelop Illegal Hotel into Permanent "
+                 "Supportive Housing at 235 West 107th Street", "")
+    v = corroborate([page], ["235 WEST 107 STREET"], "Some Bodega")
+    assert v["verdict"] == "confirmed"
+    assert v["disposition"] == "flag"

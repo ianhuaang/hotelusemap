@@ -25,6 +25,15 @@ choose which passages become evidence. A sentence it declines to quote is a
 rule that never fires. SEARCH_SYSTEM is written against exactly that, and
 results it found but never quoted are still returned, on their titles.
 
+An eleven-building screen against hand-verified buildings put a number on
+that worry and found a larger one behind it. The quoting was not the weak
+link; the query was. A rule can only fire on text the query surfaced, and the
+query had drifted out of step with the table it feeds -- see USE_VOCABULARY.
+The same run showed the second failure the rules could not see: a phrase
+table cannot tell "this is a hotel" from "this was a hotel", and four of ten
+readings rested on the building's past. Hence disposition_for(), and the rule
+that only current evidence on a source about the building removes anything.
+
 This replaced Programmable Search, which could only ever search a slice of
 the web on our account -- an engine has to be pointed at sites, and "the
 entire web" is a setting that approximates one. The cost model inverted with
@@ -37,6 +46,19 @@ occupied on a single Places reading with nothing agreeing with it. There the
 question is not "what is this building" but "does anything outside Google say
 the same thing", and the answer decides whether the claim closes as occupied,
 goes back for review, or leaves the building undetermined.
+
+Both modes write a `disposition` alongside what they already wrote:
+
+    remove      current evidence, on a source about the building, that
+                something disqualifying occupies it
+    confirm     corroborate() only -- the web named the Places claim itself
+    flag        a reading a person should look at before anything acts on
+                it: past-tense evidence, an untrusted host, or a
+                contradiction
+    no answer   the web was asked and had nothing
+
+`verdict` is unchanged and still carries confirmed/contradicted/none, because
+src/deal_readiness.py reads those. Nothing reads `disposition` yet.
 
     ANTHROPIC_API_KEY=... python3 src/enrich_web_use.py
     ... --bbl 4003770013            one building, prints its evidence
@@ -66,11 +88,20 @@ CORROBORATE_CACHE = DATA_RAW / "web_corroboration_cache.json"
 
 API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
-# The model is the search client, not the judge -- see search(). Opus 5
+# The model is the search client, not the judge -- see search(). Sonnet 5
 # because the job is reading pages and quoting the right sentence out of
 # them, and a miss here is silent: a passage never quoted is a rule that
 # never fires, and the building comes back unconfirmed rather than wrong.
-MODEL = os.environ.get("WEB_USE_MODEL", "claude-opus-5")
+#
+# This was Opus 5, on the argument that quoting the right sentence is worth
+# the better reader. The eleven-building screen is what changed it: the one
+# building the screen missed, 203 West 113 Street, was missed because the
+# query never asked for supportive housing -- see USE_VOCABULARY -- and not
+# because the model read the results badly. A model that is handed the wrong
+# search results cannot quote its way out of them. Sonnet 5 at $3/$15 against
+# Opus 5 at $5/$25, with the test set as the check on whether the quoting
+# degrades.
+MODEL = os.environ.get("WEB_USE_MODEL", "claude-sonnet-5")
 
 # Basic search on purpose, not for want of a newer one. web_search_20260209
 # and _20260318 add dynamic filtering, which runs code to drop irrelevant
@@ -166,15 +197,145 @@ CLASSIFY_RULES = [
     )),
 ]
 
+# The search terms, in one place because they belong to the table above.
+#
+# A rule can only fire on text the query surfaced, so this list and
+# CLASSIFY_RULES have to be read together — and they drifted. The query was
+# written inline in two functions as
+#
+#     (shelter OR hostel OR dormitory OR "single room occupancy" OR club OR hotel)
+#
+# and when the supportive_housing category was added to the table for 203 West
+# 113 Street, nothing added it here. The category existed, its twenty-two
+# phrases existed, and the screen never searched for a word of it: the
+# eleven-building run found both PropertyShark pages for the address, matched
+# them, and had nothing to match against but the ZIP and the tax year. The
+# building came back unanswered and the rule written for it never ran.
+#
+# Not every phrase in the table — a query is not a vocabulary dump, and the
+# long clinical phrasings are there to survive a false positive once a page is
+# in hand, which is a different job from finding the page. One or two of the
+# most distinctive terms per category, and student_housing gains the two terms
+# that actually appear in print ("dormitory" alone missed Monarch Heights,
+# which surfaced on its title by luck).
+USE_VOCABULARY = (
+    'shelter OR hostel OR dormitory OR "student housing" OR "residence hall" '
+    'OR "single room occupancy" OR "supportive housing" OR "transitional housing" '
+    'OR "treatment program" OR club OR hotel'
+)
+
 # A hit inside these is about the building. A hit on a booking aggregator or a
 # listings farm is about a page that mentions the address, and those pages
 # describe whatever the building was whenever the page was written.
+#
+# The second group is the one the eleven-building screen added. Every verdict
+# in that run came back `low` — not one source matched this list, because the
+# list was all newsrooms and the pages that actually answer an address question
+# are property records and development trades. newyorkyimby.com is a working
+# NYC development newsroom; PropertyShark and CompStak are records; LandmarkWest
+# is a research archive. Two sources are deliberately absent: pratt.edu, whose
+# stale accommodations page is what read 229 Duffield Street as a hotel three
+# years after the Webster Apartments bought it, and l3capital.com, an owner
+# marketing page written in the past tense.
 TRUSTED_HOST_HINTS = (
     "nyc.gov", "crainsnewyork.com", "commercialobserver.com", "therealdeal.com",
     "qns.com", "queenspost.com", "qgazette.com", "amny.com", "gothamist.com",
     "nytimes.com", "ny1.com", "brooklynpaper.com", "patch.com", "6sqft.com",
     "bisnow.com", "curbed.com", "cityandstateny.com", "nypost.com", "bkrea.com",
     "citylimits.org", "documentedny.com", "thecity.nyc",
+    "newyorkyimby.com", "landmarkwest.org",
+    "compstak.com", "affordablehousing411.com",
+)
+# propertyshark.com was here and has been taken out. It is a records mirror,
+# not a source about occupancy: what it publishes for an address is the DOF
+# class and the sales history, which the pipeline already holds. Trusting it
+# turned eleven class strings into removes in the 241-building run, each one
+# the city record arriving back as if it were independent corroboration. The
+# class strings are stripped now, but the host should not be trusted either --
+# a records mirror cannot corroborate the records.
+
+# A building-class field, not a sentence about the building. PropertyShark and
+# the DOF records print the class as a run of categories joined by slashes —
+# "Hotel/Motel/Hostel/B&B" — and the hostel rule is tested before the hotel
+# rule, so the Comfort Inn at 37-35 21 Street came back a hostel on a string
+# that names four things it might be. Stripped before the phrases are matched:
+# a classification code is not evidence of what occupies the building, whatever
+# words it happens to contain.
+CLASS_WORD = (
+    r"(?:hotels?|motels?|hostels?|b&b|bed\s*&\s*breakfast|inns?|apartments?|"
+    r"condos?|co-?ops?|offices?|retail|warehouses?|garages?|lofts?|"
+    r"walk-?ups?|elevators?|dwellings?|stores?|factory|industrial|"
+    r"one\s+family|two\s+family|multi-?family|mixed\s+use|vacant\s+land)"
+)
+CLASS_STRING_RE = re.compile(
+    rf"\b{CLASS_WORD}(?:\s*/\s*{CLASS_WORD})+\b", re.I)
+
+# The same field written long. The slash form above was only ever half of it:
+# the records mirrors also print the class as a sentence ending in the DOF
+# code, and that form has no slashes to catch.
+#
+#     This Converted Dwellings or Rooming House (C5) located at 251 West 15th
+#     Building class SRO - 1 or 2 People Housed in Individual Rooms ... (HR)
+#     This Hostel - Bed Rentals in Dormitory Like Setting ... (HH) located at
+#
+# Eleven of the thirty-one removes in the 241-building run were this, which is
+# worse than a wrong reading: the pipeline already holds bldgclass, so the
+# screen was buying back the city record off a property site and recording it
+# as independent web evidence. One source cannot both make a claim and
+# corroborate it.
+#
+# Anchored on the parenthesised class code, or on the words "building class",
+# because those are what make it a classification rather than a sentence. The
+# bound stops at markdown and sentence punctuation so the street address on
+# the rest of the line survives — mentions_address still has to find it.
+CLASS_DESCRIPTION_RE = re.compile(
+    r"(?:\bthis\b|\bbuilding class\b)[^.#|]{0,120}?\(\s*[A-Z][0-9A-Z]\s*\)",
+    re.I)
+CLASS_FIELD_RE = re.compile(
+    r"\bbuilding class\b\s*[:·-]?\s*[^.#|]{0,90}", re.I)
+CLASS_LEAD_CODE_RE = re.compile(
+    r"^[^.#|]{0,120}?\(\s*[A-Z][0-9A-Z]\s*\)")
+
+# Evidence that describes the building in the past. A hit here does not throw
+# the reading away — it stops it short of removing the building and sends it to
+# a person instead, because "this was a hotel" and "this is a hotel" are the
+# same sentence to a phrase table and opposite answers to the question the list
+# is asking. Four of the ten answered verdicts in the eleven-building run rested
+# on evidence like this: the Hotel Commander at 240 West 73 Street (former), the
+# restaurant and hotel at 893 Broadway (2015, pre-redevelopment), and the thirty
+# years of transitional housing at 50 Nevins Street that preceded the building
+# standing there now.
+# Where a clause ends, for stale_evidence. A hyphen only counts when it is
+# spaced, so "Mental Health-licensed" stays one clause.
+CLAUSE_BOUNDARY_RE = re.compile(r"[.;,:!?\n]|\s[-\u2013\u2014]\s")
+
+# How far the clause walk may run before giving up, so a paragraph without
+# punctuation cannot widen this back into a whole-string test.
+STALE_CLAUSE_CAP = 200
+
+STALE_MARKERS = (
+    "formerly", "former", "previously", "used to be", "once was", "once a",
+    "was converted", "was occupied", "was a", "was the", "had been",
+    "operated as", "operated the building", "replaced", "closed in",
+    "no longer", "since closed", "renamed", "until 19", "until 20",
+    "prior to", "originally",
+)
+
+# The other way a sentence is not about now: the building is about to become
+# something, or is being made into it. All five bad removes in the 2026-10-08
+# re-run were this — "Affordable Housing Conversion Begins At 371 Seventh
+# Avenue", "Construction Update: 32 West 29th Street", "Jeff Sutton's Planned
+# 340-Key Midtown Hotel Enters Demolition Phase", "Will Convert Closed
+# Marriott Hotel to Flex Office", "shelter is slated to open". "Converted" is
+# deliberately absent: a finished conversion describes what the building is
+# now, and it is the strongest evidence 35-02 37 Avenue has.
+CHANGING_MARKERS = (
+    "conversion", "will convert", "to convert", "converting", "redevelop",
+    "planned", "plans", "proposed", "slated", "rumored", "replacement",
+    "will open", "to open", "will be", "set to", "coming soon",
+    "under construction", "construction", "permits filed", "permit",
+    "filing", "demolition", "groundbreaking", "breaks ground", "topped out",
+    "above ground",
 )
 
 
@@ -288,7 +449,22 @@ def search(query: str, retries: int = 3) -> list[dict]:
                 message = client().messages.create(
                     model=MODEL,
                     max_tokens=8000,
-                    system=SEARCH_SYSTEM,
+                    # Cached across every building in a run. The breakpoint
+                    # sits on the system block, and tools render before
+                    # system, so the entry covers both — which is where the
+                    # tokens are: the prompt is 702 characters and the
+                    # web_search schema takes the prefix to ~3,000 tokens,
+                    # over Sonnet 5's 1,024-token floor with room to spare.
+                    # The query is in messages, after the breakpoint, so it
+                    # varies without invalidating anything.
+                    #
+                    # This is the small half of the bill. The search results
+                    # come back into context on the second hop at roughly
+                    # 45,000 tokens a building and are unique to each query,
+                    # so nothing can cache them; that is what basic search
+                    # loading every result costs, and it is deliberate.
+                    system=[{"type": "text", "text": SEARCH_SYSTEM,
+                             "cache_control": {"type": "ephemeral"}}],
                     tools=[WEB_SEARCH_TOOL],
                     messages=messages,
                 )
@@ -372,11 +548,116 @@ def mentions_address(text: str, addresses: list[str]) -> bool:
     return False
 
 
+def strip_class_strings(text: str) -> str:
+    """Drop the assessor's building class before the phrases are matched.
+
+    Three forms of the same field. "Hotel/Motel/Hostel/B&B at 37-35 21st
+    Street" is the slash run; "This Converted Dwellings or Rooming House (C5)
+    located at 251 West 15th Street" and "Building class · Hostel - Bed
+    Rentals" are the long ones. None of them is a sentence about what trades
+    in the building, and each satisfies several rules at once.
+    """
+    text = CLASS_STRING_RE.sub(" ", text)
+    text = CLASS_DESCRIPTION_RE.sub(" ", text)
+    text = CLASS_FIELD_RE.sub(" ", text)
+    return CLASS_LEAD_CODE_RE.sub(" ", text)
+
+
+def stale_evidence(text: str, phrase: str,
+                   markers: tuple = STALE_MARKERS) -> str | None:
+    """The past-tense marker attached to `phrase`, if there is one.
+
+    Read around the matched phrase rather than over the whole result, because
+    the two are routinely about different uses. "Former Hotel Sold for $34.75m
+    ... Converted into Homeless Shelter" is the strongest current-use evidence
+    the 35-02 37 Avenue case has, and a marker test over the whole string
+    reads its "Former" — which belongs to the hotel the building stopped being
+    — and flags the sentence that establishes it is a shelter now.
+
+    The window is the clause the phrase sits in, not a character count. A
+    count cannot do this job: 50 Nevins Street needs at least 61 characters of
+    lookback to see "operated the building as", and 35-02 37 Avenue breaks at
+    about 95 when the lookback reaches back to "Former". It was 60, and missed
+    50 Nevins by a single character — "operated" began at 38 and the window
+    opened at 39.
+
+    A clause is the right unit anyway, because that is the span a past-tense
+    qualifier governs. "Long Island City, Queens Converted into Homeless
+    Shelter" does not inherit the "Former" from before the comma; "the
+    developer operated the building as an Office of Mental Health-licensed
+    transitional housing facility" does carry its verb across the whole of
+    itself. The cap is there so one unpunctuated paragraph cannot widen this
+    back into the whole-string test it replaced.
+    """
+    low, want = text.lower(), phrase.lower()
+    i = low.find(want)
+    if i < 0:
+        return None
+
+    before = low[max(0, i - STALE_CLAUSE_CAP):i]
+    bounds = list(CLAUSE_BOUNDARY_RE.finditer(before))
+    start = (i - len(before)) + (bounds[-1].end() if bounds else 0)
+
+    j = i + len(want)
+    after = low[j:j + STALE_CLAUSE_CAP]
+    ahead = CLAUSE_BOUNDARY_RE.search(after)
+    end = j + (ahead.start() if ahead else len(after))
+
+    window = low[start:end]
+    return next(
+        (m for m in markers if re.search(rf"\b{re.escape(m)}", window)), None)
+
+
+def changing_evidence(title: str, blob: str, phrase: str) -> str | None:
+    """The future or in-progress marker on this reading, if there is one.
+
+    Read in the clause around the phrase, like the past tense, and also
+    anywhere in the title. A headline is what the whole page is about, and
+    the development trades put the change there and the building's name in
+    the body: "Permits Filed: 13-Story Hotel at 37-35 21st Street" says the
+    hotel does not exist yet, though no clause in the body has to.
+    """
+    hit = stale_evidence(blob, phrase, CHANGING_MARKERS)
+    if hit:
+        return hit
+    low = title.lower()
+    return next((m for m in CHANGING_MARKERS
+                 if re.search(rf"\b{re.escape(m)}", low)), None)
+
+
+def disposition_for(trusted: bool, stale: str | None,
+                    changing: str | None = None, quoted: bool = True) -> str:
+    """What a reading licenses: dropping the building, or a person looking.
+
+    Only evidence that describes the building now, on a source that is about
+    the building, removes it from the available list. Everything else that
+    read as something is a flag — the reading is probably right and nothing
+    downstream should act on "probably" without a person.
+
+    Both halves are load-bearing and they catch different failures. The tense
+    test catches 893 Broadway, where the sentence says the building *was*
+    occupied by a hotel in 2015. The host test catches 229 Duffield Street,
+    where the sentence has no tense problem at all — "Hotel Indigo Brooklyn
+    229 Duffield Street" on a university's accommodations page — and is simply
+    three years out of date. A tense test alone would have removed a building
+    the Webster Apartments runs as housing.
+
+    Two more halves, from the re-run. A building about to become something,
+    or being made into it, is not that thing yet (`changing`). And a reading
+    with no quote rests on a page title alone, which a person can check and
+    this function cannot: four of the fifteen removes were title-only YIMBY
+    and Real Deal pages (`quoted`).
+    """
+    if trusted and not stale and not changing and quoted:
+        return "remove"
+    return "flag"
+
+
 def classify(results: list[dict], addresses: list[str]) -> dict | None:
     """Read the results for a use, keeping what the reading rests on."""
     for use, label, transient_ok, phrases in CLASSIFY_RULES:
         for r in results:
-            blob = f"{r['title']} {r['snippet']}"
+            blob = strip_class_strings(f"{r['title']} {r['snippet']}")
             low = blob.lower()
             hit = next((p for p in phrases if p in low), None)
             if not hit:
@@ -385,12 +666,23 @@ def classify(results: list[dict], addresses: list[str]) -> dict | None:
                 continue
             host = urllib.parse.urlparse(r["link"]).netloc.lower()
             trusted = any(h in host for h in TRUSTED_HOST_HINTS)
+            stale = stale_evidence(blob, hit)
+            changing = changing_evidence(
+                strip_class_strings(r["title"]), blob, hit)
+            quoted = bool((r.get("snippet") or "").strip())
             return {
                 "current_use": use,
                 "current_use_label": label,
                 "transient_ok": transient_ok,
                 "use_confidence": "medium" if trusted else "low",
-                "basis": f"web:{hit!r} in {host}",
+                "disposition": disposition_for(trusted, stale, changing, quoted),
+                "stale_marker": stale,
+                "changing_marker": changing,
+                "quoted": quoted,
+                "basis": (f"web:{hit!r} in {host}"
+                          + (f", past tense ({stale!r})" if stale else "")
+                          + (f", not yet ({changing!r})" if changing else "")
+                          + ("" if quoted else ", title only")),
                 "evidence": [
                     {"title": r["title"], "snippet": r["snippet"], "link": r["link"]}
                 ],
@@ -463,36 +755,64 @@ def corroborate(results: list[dict], addresses: list[str], claim_name: str) -> d
 
     A verdict of "none" is a real answer and not a failure: it means the web
     was asked and had nothing, which leaves the building undetermined.
+
+    `verdict` keeps its three values because src/deal_readiness.py reads them.
+    `disposition` is the separate field, and it splits the confirming case in
+    two, because the two halves are not the same answer:
+
+        confirm   the web named the Places claim at the address
+        remove    the web named something else running the building
+
+    35-02 37 Avenue is why. The Places claim there is "Citi Bike: 37 Ave & 35
+    St" — the dock at the kerb — and the web answers with a 125-room former
+    hotel under a city shelter contract. Nothing corroborated the bike dock.
+    Reporting that as `confirm` says the Places reading was checked and stood,
+    when what happened is that the reading was useless and the building is
+    disqualified for a reason Places never saw. Both outcomes keep the building
+    off the prospect list, which is why the distinction survived this long
+    unnoticed; they are different sentences to the person reading the column.
     """
-    confirming = contradicting = None
+    confirming = naming = contradicting = None
     for r in results:
         blob = f"{r['title']} {r['snippet']}"
         if not mentions_address(blob, addresses):
             continue
         host = urllib.parse.urlparse(r["link"]).netloc.lower()
         if names_the_place(blob, claim_name):
-            confirming = confirming or (r, f"web names {claim_name!r} at the address, in {host}")
+            naming = naming or (r, f"web names {claim_name!r} at the address, in {host}")
             continue
-        # Somebody running the building under another name still confirms that
-        # somebody is running it. The Places reading may be wrong about what
-        # it is and right that the rooms are spoken for.
+        # Somebody running the building under another name still answers the
+        # question the list is asking. The Places reading may be wrong about
+        # what it is and right that the rooms are spoken for.
         other = classify([r], addresses)
         if other:
-            confirming = confirming or (r, f"web reads the address as {other['current_use_label']} ({other['basis']})")
+            confirming = confirming or (
+                r,
+                f"web reads the address as {other['current_use_label']} ({other['basis']})",
+                other["disposition"],
+            )
             continue
         low = blob.lower()
         hit = next((m for m in CONTRADICTION_MARKERS if m in low), None)
         if hit:
             contradicting = contradicting or (r, f"web:{hit!r} in {host}")
 
-    chosen, verdict = (confirming, "confirmed") if confirming else (
-        (contradicting, "contradicted") if contradicting else (None, "none"))
-    if not chosen:
-        return {"verdict": "none", "basis": "the web was asked and named nothing at this address",
+    if naming:
+        r, basis = naming
+        verdict, disposition = "confirmed", "confirm"
+    elif confirming:
+        r, basis, disposition = confirming
+        verdict = "confirmed"
+    elif contradicting:
+        r, basis = contradicting
+        verdict, disposition = "contradicted", "flag"
+    else:
+        return {"verdict": "none", "disposition": "no answer",
+                "basis": "the web was asked and named nothing at this address",
                 "evidence": []}
-    r, basis = chosen
     return {
         "verdict": verdict,
+        "disposition": disposition,
         "basis": basis,
         "evidence": [{"title": r["title"], "snippet": r["snippet"], "link": r["link"]}],
     }
@@ -553,8 +873,18 @@ def run_corroboration(args) -> None:
     if args.limit:
         targets = targets[: args.limit]
     log(f"  {len(targets)} building(s) occupied on a lone Places reading")
+    if args.replay:
+        # As in the default mode: re-read the one stored result under the
+        # current rules. A "none" stored no evidence and stays "none".
+        missing = [t for t in targets if t["claim_name"] and t["bbl"] not in cache]
+        if missing:
+            sys.exit(f"--replay needs every target cached; {len(missing)} are not")
+        for t in targets:
+            v = cache.get(t["bbl"])
+            if v and v.get("evidence"):
+                cache[t["bbl"]] = corroborate(v["evidence"], t["addresses"], t["claim_name"])
 
-    rows, tally = [], {"confirmed": 0, "contradicted": 0, "none": 0}
+    rows, tally = [], {"remove": 0, "flag": 0, "confirm": 0, "no answer": 0}
     for i, t in enumerate(targets, 1):
         if not t["claim_name"]:
             # Nothing to search for. Left out of the output entirely so the
@@ -566,7 +896,11 @@ def run_corroboration(args) -> None:
         else:
             verdict = None
             for addr in query_addresses(t["addresses"]):
-                q = f'"{addr}" {t["borough"]} "{t["claim_name"]}"'
+                # The claim name or any use vocabulary: corroborate() answers
+                # on either, and a query for the name alone only ever surfaces
+                # pages that already agree with Places.
+                q = (f'"{addr}" {t["borough"]} '
+                     f'("{t["claim_name"]}" OR {USE_VOCABULARY})')
                 v = corroborate(search(q), t["addresses"], t["claim_name"])
                 if v["verdict"] != "none":
                     verdict = v
@@ -577,12 +911,12 @@ def run_corroboration(args) -> None:
                 CORROBORATE_CACHE.write_text(json.dumps(cache, indent=2))
             time.sleep(0.2)
 
-        tally[verdict["verdict"]] = tally.get(verdict["verdict"], 0) + 1
+        tally[verdict["disposition"]] = tally.get(verdict["disposition"], 0) + 1
         rows.append({"bbl": t["bbl"], "address": t["address"],
                      "claim_name": t["claim_name"], "claim_basis": t["claim_basis"],
                      **verdict})
         log(f"  [{i}/{len(targets)}] {t['address'][:34]:36s} -> "
-            f"{verdict['verdict']:13s} {verdict['basis'][:48]}")
+            f"{verdict['disposition']:10s} {verdict['basis'][:52]}")
         if args.bbl:
             for e in verdict["evidence"]:
                 log(f"        {e['link']}\n        {e['snippet'][:160]}")
@@ -594,9 +928,10 @@ def run_corroboration(args) -> None:
     merged.update({r["bbl"]: r for r in rows})
     CORROBORATE_FILE.write_text(json.dumps(list(merged.values()), indent=2))
 
-    log(f"\n  confirmed {tally['confirmed']} (stays occupied), "
-        f"contradicted {tally['contradicted']} (back for review), "
-        f"nothing found {tally['none']} (undetermined)")
+    log(f"\n  remove {tally['remove']} (something else runs the building), "
+        f"confirm {tally['confirm']} (the Places claim stood), "
+        f"flag {tally['flag']} (needs a person), "
+        f"no answer {tally['no answer']} (undetermined)")
     log(f"  wrote {CORROBORATE_FILE.relative_to(ROOT)} ({len(merged)} rows)")
 
 
@@ -672,9 +1007,12 @@ def main() -> None:
     ap.add_argument("--corroborate", action="store_true",
                     help="put the open Places claims to the web instead of "
                          "reading a use for buildings Places could not see")
+    ap.add_argument("--replay", action="store_true",
+                    help="re-classify the cached evidence under the current "
+                         "rules; no searches, no cost")
     args = ap.parse_args()
 
-    if not API_KEY:
+    if not API_KEY and not args.replay:
         sys.exit(
             "Set ANTHROPIC_API_KEY.\n"
             "  This is not the Places key — the web screen moved off\n"
@@ -692,6 +1030,19 @@ def main() -> None:
     targets = load_targets(args.all, args.bbl)
     if args.limit:
         targets = targets[: args.limit]
+    if args.replay:
+        # A cached verdict is otherwise reused verbatim, so a rule change did
+        # nothing until the cache was moved aside and the searches paid for
+        # again. Only the reading that won is stored, so a replay can demote
+        # it or drop it but cannot find a better result the search also
+        # returned; a stricter rule errs towards flag, which is the safe side.
+        missing = [t for t in targets if t["bbl"] not in cache]
+        if missing:
+            sys.exit(f"--replay needs every target cached; {len(missing)} are not")
+        for t in targets:
+            v = cache[t["bbl"]]
+            if v:
+                cache[t["bbl"]] = classify(v["evidence"], t["addresses"])
     log(f"  checking {len(targets)} buildings on the open web")
 
     rows, found = [], 0
@@ -706,9 +1057,7 @@ def main() -> None:
             # second query.
             verdict = None
             for addr in query_addresses(t["addresses"]):
-                q = (f'"{addr}" {t["borough"]} '
-                     f'(shelter OR hostel OR dormitory OR "single room occupancy" '
-                     f'OR club OR hotel)')
+                q = f'"{addr}" {t["borough"]} ({USE_VOCABULARY})'
                 verdict = classify(search(q), t["addresses"])
                 if verdict:
                     break
