@@ -26,11 +26,25 @@ DATASET_ID = "muvi-b6kx"
 BATCH_SIZE = 5000
 TODAY = date.today().strftime("%Y%m%d")
 
-# 421-a: exmp_codes 1010, 1015, 1019 (nys_exmp_code 418xx)
-# J-51: exmp_codes 1920, 1925, 1985, 1986, 51xx series (nys_exmp_code 480xx/479xx)
-CODES_421A = {"1010", "1015", "1019"}
-CODES_J51 = {"1920", "1925", "1985", "1986"}
-# 51xx codes are also J-51 (5101, 5106, 5110-5130)
+# Exemption codes, from DOF's own table (NYC Open Data myn9-hwsy, checked
+# 2026-10-08). Every one of these carries rent-stabilisation obligations.
+#
+# This used to read 1010, 1015 and 1019 as 421-a. They are veterans', Senior
+# Citizen Homeowner and Disabled Homeowner exemptions -- personal exemptions
+# claimed on individual apartments, which is why they fired on pre-war co-ops
+# -- while the real 421-a codes (51xx) were never pulled at all.
+CODES = {
+    # 421-a, every term variant DOF lists (RPTL 421A)
+    **{c: "421-a" for c in ("5110", "5113", "5114", "5116", "5117", "5118",
+                             "5119", "5120", "5121", "5122", "5123")},
+    # its successors, filed under the same legal reference
+    **{c: "467-m" for c in ("5124", "5125", "5126", "5127", "5128", "5131")},
+    **{c: "485-x" for c in ("5132", "5133", "5134", "5135", "5136", "5137")},
+    # J-51 (DOF1214, and the A4-489 abatement schedules)
+    **{c: "J-51" for c in ("1920", "1985", "1986")},
+    # 421-g, Lower Manhattan commercial-to-residential conversions
+    "1925": "421-g",
+}
 TARGET_BOROUGHS = ("1", "3", "4")  # MN, BK, QN
 
 
@@ -53,7 +67,7 @@ def pull_tax_benefits() -> Path:
     current_year = date.today().year
 
     borough_list = ",".join(f"'{b}'" for b in TARGET_BOROUGHS)
-    all_codes = ",".join(f"'{c}'" for c in (CODES_421A | CODES_J51))
+    all_codes = ",".join(f"'{c}'" for c in CODES)
 
     by_bbl = {}
     offset = 0
@@ -111,7 +125,7 @@ def pull_tax_benefits() -> Path:
 
             # No term on the row is unknown, not active forever. See enrich.
             is_active = expires is not None and expires >= current_year
-            benefit_type = "421-a" if exmp_code in CODES_421A else "J-51"
+            benefit_type = CODES.get(exmp_code, "unknown")
 
             if bbl not in by_bbl or (is_active and not by_bbl[bbl]["is_active"]) or \
                (is_active and expires and (by_bbl[bbl].get("benefit_expires") is None or expires > by_bbl[bbl]["benefit_expires"])):
