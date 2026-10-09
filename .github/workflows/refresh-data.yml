@@ -6,7 +6,7 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch: # Allow manual trigger
 
-# The refreshed geojson is published to ianhuaang/kasa-sourcing, which needs
+# The refreshed geojson is published to kasadev/kasa-sourcing, which needs
 # KASA_SOURCING_TOKEN rather than GITHUB_TOKEN — a token can only ever reach
 # its own repository. contents: write is kept for the checkout itself.
 permissions:
@@ -310,7 +310,7 @@ jobs:
           KASA_SOURCING_TOKEN: ${{ secrets.KASA_SOURCING_TOKEN }}
         run: |
           git clone --depth 1 --quiet \
-            "https://x-access-token:${KASA_SOURCING_TOKEN}@github.com/ianhuaang/kasa-sourcing.git" /tmp/prev
+            "https://x-access-token:${KASA_SOURCING_TOKEN}@github.com/kasadev/kasa-sourcing.git" /tmp/prev
           test -s /tmp/prev/map/public/buildings.geojson
 
       # Completing is not the same as arriving whole. This compares what each
@@ -457,7 +457,7 @@ jobs:
       - name: Check the build against ground truth
         run: python -m pytest tests/test_ground_truth.py -q
 
-      # The map lives in ianhuaang/kasa-sourcing now, not here. Publishing into
+      # The map lives in kasadev/kasa-sourcing now, not here. Publishing into
       # this repo would refresh a file nothing reads, so push straight to the
       # app repo instead. Needs KASA_SOURCING_TOKEN — a fine-grained PAT with
       # Contents: read and write on kasa-sourcing only. The default
@@ -475,7 +475,7 @@ jobs:
           test -s "$SRC" || { echo "::error::$SRC missing or empty"; exit 1; }
 
           git clone --depth 1 --quiet \
-            "https://x-access-token:${KASA_SOURCING_TOKEN}@github.com/ianhuaang/kasa-sourcing.git" /tmp/app
+            "https://x-access-token:${KASA_SOURCING_TOKEN}@github.com/kasadev/kasa-sourcing.git" /tmp/app
           cp "$SRC" /tmp/app/map/public/buildings.geojson
 
           cd /tmp/app
