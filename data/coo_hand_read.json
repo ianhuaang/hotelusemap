@@ -1,0 +1,978 @@
+{
+ "note": "Certificates of Occupancy read by eye where OCR could not. Each floor's kind was decided by the reader, not by parse_coo_pdf.floor_kind, whose rules were tuned on newer certificates and misread old-law terms (Class B hotel apartments, lodging-house cubicles). Certificates that turned out to describe a predecessor building on the lot are left out. Read 2026-10-09.",
+ "certificates": [
+  {
+   "bin": "1001707",
+   "address": "9 CHATHAM SQUARE",
+   "file": "1001707_M000071932.PDF",
+   "co_type": "Final",
+   "effective_date": "04/18/1972",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1001707",
+   "read_on": "2026-10-09",
+   "note": "Heretofore erected Class B multiple dwelling; lodging house on floors 3-5, 212 cubicles.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "ACCESSORY STORAGE, BOILER ROOM",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "6",
+     "description": "EATING AND DRINKING ESTABLISHMENT",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "6",
+     "description": "STORE, MEETING ROOM, ACCESSORY OFFICE",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "LODGING HOUSE (CLASS B) SEVENTY (70) CUBICLES",
+     "units_described": 70,
+     "kind": "transient"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "LODGING HOUSE (CLASS B) SEVENTY-TWO (72) CUBICLES",
+     "units_described": 72,
+     "kind": "transient"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "LODGING HOUSE (CLASS B) SEVENTY (70) CUBICLES",
+     "units_described": 70,
+     "kind": "transient"
+    }
+   ]
+  },
+  {
+   "bin": "1013760",
+   "address": "251 WEST 15 STREET",
+   "file": "1013760_M000021368.PDF",
+   "co_type": "Final",
+   "effective_date": "06/18/1936",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1013760",
+   "read_on": "2026-10-09",
+   "note": "Whole building Class B multiple dwelling, furnished rooms; no room count printed.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "BOILER ROOM",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "BAS",
+     "use_group": "",
+     "description": "FURNISHED ROOMS (CLASS B)",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "UPPER",
+     "use_group": "",
+     "description": "FURNISHED ROOMS ON EACH STORY (CLASS B); STORY RANGE ILLEGIBLE",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    }
+   ]
+  },
+  {
+   "bin": "1014520",
+   "address": "139 WEST 14 STREET",
+   "file": "1014520_M000072810.PDF",
+   "co_type": "Final",
+   "effective_date": "12/26/1972",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1014520",
+   "read_on": "2026-10-09",
+   "note": "Class B multiple dwelling: 21 furnished rooms and 1 apartment over a store. Amends CO 33623 (1948).",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "STORAGE, BOILER ROOM",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "6",
+     "description": "STORE",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "ONE (1) APARTMENT",
+     "units_described": 1,
+     "kind": "residential"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "THREE (3) FURNISHED ROOMS (CLASS B)",
+     "units_described": 3,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "SIX (6) FURNISHED ROOMS (CLASS B)",
+     "units_described": 6,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "SIX (6) FURNISHED ROOMS (CLASS B)",
+     "units_described": 6,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "SIX (6) FURNISHED ROOMS (CLASS B)",
+     "units_described": 6,
+     "kind": "sleeping_unclassified"
+    }
+   ]
+  },
+  {
+   "bin": "1025448",
+   "address": "335 WEST 55 STREET",
+   "file": "1025448_M000027817.PDF",
+   "co_type": "Final",
+   "effective_date": "06/17/1941",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1025448",
+   "read_on": "2026-10-09",
+   "note": "Class B multiple dwelling, 15 furnished rooms.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "STORAGE",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "BAS",
+     "use_group": "",
+     "description": "THREE (3) FURNISHED ROOMS (CLASS B)",
+     "units_described": 3,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "FOUR (4) FURNISHED ROOMS (CLASS B)",
+     "units_described": 4,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "FOUR (4) FURNISHED ROOMS (CLASS B)",
+     "units_described": 4,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "FOUR (4) FURNISHED ROOMS (CLASS B)",
+     "units_described": 4,
+     "kind": "sleeping_unclassified"
+    }
+   ]
+  },
+  {
+   "bin": "1013527",
+   "address": "317 WEST 30 STREET",
+   "file": "1013527_M000023900.PDF",
+   "co_type": "Final",
+   "effective_date": "09/01/1938",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1013527",
+   "read_on": "2026-10-09",
+   "note": "Class B rooming house, 14 furnished rooms and 1 apartment.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "STORAGE",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "BAS",
+     "use_group": "",
+     "description": "ONE (1) APARTMENT",
+     "units_described": 1,
+     "kind": "residential"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "FOUR (4) FURNISHED ROOMS (CLASS B)",
+     "units_described": 4,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "SIX (6) FURNISHED ROOMS (CLASS B)",
+     "units_described": 6,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "FOUR (4) FURNISHED ROOMS (CLASS B)",
+     "units_described": 4,
+     "kind": "sleeping_unclassified"
+    }
+   ]
+  },
+  {
+   "bin": "4021811",
+   "address": "72-05 ASTORIA BOULEVARD NORTH",
+   "file": "4021811_Q000151198.PDF",
+   "co_type": "Final",
+   "effective_date": "06/05/1963",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=4021811",
+   "read_on": "2026-10-09",
+   "note": "New building, occupancy 'Res. (Hotel)', 33 hotel rooms.",
+   "floors": [
+    {
+     "floor": "BAS",
+     "use_group": "",
+     "description": "HOTEL (7 ROOMS), MECHANICAL ROOM, LOBBY, OFFICE",
+     "units_described": 7,
+     "kind": "transient"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "HOTEL (13 ROOMS)",
+     "units_described": 13,
+     "kind": "transient"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "HOTEL (13 ROOMS)",
+     "units_described": 13,
+     "kind": "transient"
+    }
+   ]
+  },
+  {
+   "bin": "1014536",
+   "address": "140 WEST 15 STREET",
+   "file": "1014536_M000068849.PDF",
+   "co_type": "Final",
+   "effective_date": "04/08/1970",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1014536",
+   "read_on": "2026-10-09",
+   "note": "Residence building, group living quarters for 170 women; no room count, no hotel or Class B language.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "BOILER ROOM, WASH ROOM",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "LIVING QUARTERS FOR CATHOLIC WOMEN (30 PERSONS)",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "LIVING QUARTERS FOR CATHOLIC WOMEN (20 PERSONS)",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "LIVING QUARTERS FOR CATHOLIC WOMEN (60 PERSONS)",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "LIVING QUARTERS FOR CATHOLIC WOMEN (60 PERSONS)",
+     "units_described": null,
+     "kind": "sleeping_unclassified"
+    }
+   ]
+  },
+  {
+   "bin": "1048336",
+   "address": "115 EAST 92 STREET",
+   "file": "1048336_M000013860.PDF",
+   "co_type": "Final",
+   "effective_date": "04/05/1928",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1048336",
+   "read_on": "2026-10-09",
+   "note": "Tenement house (permanent apartments), cellar to penthouse.",
+   "floors": [
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "006",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "007",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "008",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    },
+    {
+     "floor": "009",
+     "use_group": "",
+     "description": "TENEMENT HOUSE",
+     "units_described": null,
+     "kind": "residential"
+    }
+   ]
+  },
+  {
+   "bin": "1033560",
+   "address": "2450 BROADWAY",
+   "file": "1033560_dl20261009.PDF",
+   "co_type": "Final",
+   "effective_date": "05/07/1953",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1033560",
+   "read_on": "2026-10-09",
+   "note": "Heretofore erected existing Class B hotel; 29 Class B units on each of floors 2-14, about 377. HPD registers no Class B here.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "BOILER ROOM, STORAGE, BAKERY",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "STORES, DINING ROOM, KITCHEN, COCKTAIL ROOM, HOTEL LOBBY",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "006",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "007",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "008",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "009",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "010",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "011",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "012",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "013",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    },
+    {
+     "floor": "014",
+     "use_group": "",
+     "description": "TWENTY-NINE (29) CLASS B APARTMENTS (EXISTING CLASS B HOTEL)",
+     "units_described": 29,
+     "kind": "transient"
+    }
+   ]
+  },
+  {
+   "bin": "1023753",
+   "address": "117 WEST 58 STREET",
+   "file": "1023753_dl20261009.PDF",
+   "co_type": "Final",
+   "effective_date": "01/08/1953",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1023753",
+   "read_on": "2026-10-09",
+   "note": "Existing Class A hotel: 29 hotel rooms on floors 2-5 and 9, about 67 apartments.",
+   "floors": [
+    {
+     "floor": "CEL",
+     "use_group": "",
+     "description": "BOILER ROOM, STORAGE, REPAIR SHOP",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "STORES, RESTAURANT, HOTEL LOBBY",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "6 APARTMENTS",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "6 HOTEL ROOMS",
+     "units_described": 6,
+     "kind": "transient"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "4 APARTMENTS",
+     "units_described": 4,
+     "kind": "residential"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "7 HOTEL ROOMS",
+     "units_described": 7,
+     "kind": "transient"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "5 APARTMENTS",
+     "units_described": 5,
+     "kind": "residential"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "4 HOTEL ROOMS",
+     "units_described": 4,
+     "kind": "transient"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "4 APARTMENTS",
+     "units_described": 4,
+     "kind": "residential"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "8 HOTEL ROOMS",
+     "units_described": 8,
+     "kind": "transient"
+    },
+    {
+     "floor": "006",
+     "use_group": "",
+     "description": "6 APARTMENTS",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "007",
+     "use_group": "",
+     "description": "6 APARTMENTS",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "008",
+     "use_group": "",
+     "description": "6 APARTMENTS",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "009",
+     "use_group": "",
+     "description": "5 APARTMENTS",
+     "units_described": 5,
+     "kind": "residential"
+    },
+    {
+     "floor": "009",
+     "use_group": "",
+     "description": "4 HOTEL ROOMS",
+     "units_described": 4,
+     "kind": "transient"
+    },
+    {
+     "floor": "010",
+     "use_group": "",
+     "description": "8 APARTMENTS",
+     "units_described": 8,
+     "kind": "residential"
+    },
+    {
+     "floor": "011",
+     "use_group": "",
+     "description": "8 APARTMENTS",
+     "units_described": 8,
+     "kind": "residential"
+    },
+    {
+     "floor": "012",
+     "use_group": "",
+     "description": "8 APARTMENTS",
+     "units_described": 8,
+     "kind": "residential"
+    },
+    {
+     "floor": "PH",
+     "use_group": "",
+     "description": "ONE (1) APARTMENT",
+     "units_described": 1,
+     "kind": "residential"
+    }
+   ]
+  },
+  {
+   "bin": "1090701",
+   "address": "603 1 AVENUE",
+   "file": "1090701_dl20261009.PDF",
+   "co_type": "Final",
+   "effective_date": "01/09/1928",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1090701",
+   "read_on": "2026-10-09",
+   "note": "Use column reads HOTEL for floors 1-5; persons only, no room count; partly obscured.",
+   "floors": [
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "HOTEL (75 PERSONS)",
+     "units_described": null,
+     "kind": "transient"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "HOTEL (34 PERSONS)",
+     "units_described": null,
+     "kind": "transient"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "HOTEL (23 PERSONS)",
+     "units_described": null,
+     "kind": "transient"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "HOTEL (23 PERSONS)",
+     "units_described": null,
+     "kind": "transient"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "HOTEL (23 PERSONS)",
+     "units_described": null,
+     "kind": "transient"
+    }
+   ]
+  },
+  {
+   "bin": "1024857",
+   "address": "204 WEST 55 STREET",
+   "file": "1024857_dl20261009.PDF",
+   "co_type": "Final",
+   "effective_date": "02/10/1938",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1024857",
+   "read_on": "2026-10-09",
+   "note": "Old-law tenement, Class A, about 47 apartments.",
+   "floors": [
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "DINING ROOM, KITCHEN, BEAUTY PARLOR, TWO (2) APARTMENTS",
+     "units_described": 2,
+     "kind": "residential"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "6 APARTMENTS (CLASS A)",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "10 APARTMENTS (CLASS A)",
+     "units_described": 10,
+     "kind": "residential"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "8 APARTMENTS (CLASS A)",
+     "units_described": 8,
+     "kind": "residential"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "8 APARTMENTS (CLASS A)",
+     "units_described": 8,
+     "kind": "residential"
+    },
+    {
+     "floor": "006",
+     "use_group": "",
+     "description": "6 APARTMENTS (CLASS A)",
+     "units_described": 6,
+     "kind": "residential"
+    },
+    {
+     "floor": "007",
+     "use_group": "",
+     "description": "4 APARTMENTS (CLASS A)",
+     "units_described": 4,
+     "kind": "residential"
+    },
+    {
+     "floor": "PH",
+     "use_group": "",
+     "description": "TWO (2) APARTMENTS",
+     "units_described": 2,
+     "kind": "residential"
+    }
+   ]
+  },
+  {
+   "bin": "1018502",
+   "address": "166 EAST 34 STREET",
+   "file": "1018502_dl20261009.PDF",
+   "co_type": "Temporary",
+   "effective_date": "02/01/1974",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1018502",
+   "read_on": "2026-10-09",
+   "note": "Printed as 488-504 Third Avenue, the same corner lot. Class A, about 218 apartments.",
+   "floors": [
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "NINE (9) APARTMENTS (CLASS A)",
+     "units_described": 9,
+     "kind": "residential"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "005",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "006",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "007",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "008",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "009",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "010",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "011",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "012",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "013",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "014",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "015",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "016",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "017",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "018",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "019",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    },
+    {
+     "floor": "020",
+     "use_group": "",
+     "description": "ELEVEN (11) APARTMENTS (CLASS A)",
+     "units_described": 11,
+     "kind": "residential"
+    }
+   ]
+  },
+  {
+   "bin": "1008435",
+   "address": "49 BOND STREET",
+   "file": "1008435_dl20261009.PDF",
+   "co_type": "Final",
+   "effective_date": "11/03/1922",
+   "url": "https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?requestid=1&allbin=1008435",
+   "read_on": "2026-10-09",
+   "note": "Business building, store and factory floors. 1922; may predate the current building.",
+   "floors": [
+    {
+     "floor": "BAS",
+     "use_group": "",
+     "description": "STORAGE",
+     "units_described": null,
+     "kind": "ancillary"
+    },
+    {
+     "floor": "001",
+     "use_group": "",
+     "description": "STORE",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "002",
+     "use_group": "",
+     "description": "FACTORY",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "003",
+     "use_group": "",
+     "description": "FACTORY",
+     "units_described": null,
+     "kind": "unclassified"
+    },
+    {
+     "floor": "004",
+     "use_group": "",
+     "description": "FACTORY",
+     "units_described": null,
+     "kind": "unclassified"
+    }
+   ]
+  }
+ ]
+}

@@ -493,6 +493,10 @@ def _coo_fields(floors: dict | None) -> dict:
             # 1960s typescript, and "ROOMING UNITS FOURTEEN (14)" came out of
             # an image, not a field.
             "ocr": floors.get("source") == "ocr",
+            # Read by a person off the scan, with a link to it, where OCR could
+            # not read it at all.
+            "hand_read": floors.get("source") == "hand",
+            "url": floors.get("url") or "",
         },
         "coo_transient_floors": floors.get("transient_floors") or [],
         "coo_residential_floors": floors.get("residential_floors") or [],
@@ -555,8 +559,50 @@ def load_coo_floors() -> dict:
         if held is None or _coo_rank(row, effective) > _coo_rank(held, effective):
             best[bin_] = row
 
+    for row in _coo_hand_read():
+        bin_ = row["bin"]
+        held = best.get(bin_)
+        if held is None or _coo_rank(row, effective) > _coo_rank(held, effective):
+            best[bin_] = row
+
     print(f"  C of O floor tables: {len(best)} buildings")
     return best
+
+
+HAND_READ_COO = DATA_RAW.parent / "coo_hand_read.json"
+
+
+def _coo_hand_read() -> list:
+    """Certificates read by eye where OCR could not, as floor-table records.
+
+    The scans are 1920s-70s typescripts; the OCR reader found no use table on
+    most of them, and the floor classifier misreads their terms ("twenty-nine
+    Class B apartments" in a Class B hotel came out residential). So a person
+    read them, and data/coo_hand_read.json carries each floor with the kind
+    that person decided. The summary is derived here by the same function the
+    parsers use, and currency against the C of O feed by the same rule, so a
+    hand-read record is shaped like any other. It ranks with a text layer,
+    above OCR, and a current certificate still beats it.
+    """
+    if not HAND_READ_COO.exists():
+        return []
+    from src.parse_coo_pdf import derive_from_floors, annotate_currency, _feed_latest
+    out = []
+    for cert in json.loads(HAND_READ_COO.read_text()).get("certificates", []):
+        floors = [dict(f) for f in cert.get("floors") or []]
+        if not floors:
+            continue
+        out.append({
+            **{k: cert.get(k) for k in ("file", "bin", "address", "co_type", "effective_date", "url", "note")},
+            "bin": str(cert.get("bin") or "").strip(),
+            "readable": True,
+            "source": "hand",
+            "floors": floors,
+            "use_groups": sorted({f["use_group"] for f in floors if f.get("use_group")}),
+            **derive_from_floors(floors),
+        })
+    annotate_currency(out, _feed_latest())
+    return out
 
 
 # A building with a demolition filed is not a deal, whatever its rooms say.
